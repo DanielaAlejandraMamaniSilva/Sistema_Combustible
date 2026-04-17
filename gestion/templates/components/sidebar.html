@@ -1,7 +1,8 @@
 <aside class="hidden md:flex w-64 h-screen bg-slate-50 flex-col py-6 px-4 shrink-0 font-['Public_Sans'] text-sm rounded-r-lg border-r border-slate-200 shadow-sm overflow-y-auto">
+    <!-- Header Logo -->
     <div class="flex items-center gap-3 px-2 mb-10">
         <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white">
-            <span class="material-symbols-outlined">productivity</span>
+            <span class="material-symbols-outlined notranslate">productivity</span>
         </div>
         <div>
             <h2 class="text-lg font-black text-primary leading-tight">Potosí</h2>
@@ -10,44 +11,71 @@
     </div>
     
     <nav class="flex-1 space-y-1">
-        <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">dashboard</span>
+        
+        <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" href="{% url 'dashboard' %}">
+            <span class="material-symbols-outlined notranslate">dashboard</span>
             <span>Dashboard (Resumen)</span>
         </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">assignment_ind</span>
-            <span>Asignación de Vehículos</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">description</span>
-            <span>Registro de Memorándums</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">history_edu</span>
-            <span>Actas de Entrega</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">work_history</span>
-            <span>Historial de Asignaciones</span>
-        </a>
-        <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-            <span class="material-symbols-outlined">published_with_changes</span>
-            <span>Control de Cambios</span>
-        </a>
+
+        {% if user.rol == 'chofer' %}
+            
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">edit_note</span>
+                <span>Registro Bitácora</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">history</span>
+                <span>Historial de Viajes</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">directions_car</span>
+                <span>Estado Vehículo</span>
+            </a>
+
+        {% else %}
+
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">assignment_ind</span>
+                <span>Asignación de Vehículos</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">description</span>
+                <span>Registro de Memorándums</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">history_edu</span>
+                <span>Actas de Entrega</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">work_history</span>
+                <span>Historial de Asignaciones</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                <span class="material-symbols-outlined notranslate">published_with_changes</span>
+                <span>Control de Cambios</span>
+            </a>
+        {% endif %}
     </nav>
 
     <div class="mt-auto pt-6 border-t border-slate-200 space-y-1">
+        {% if user.rol != 'chofer' %}
         <button class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
-            <span class="material-symbols-outlined">add</span>
+            <span class="material-symbols-outlined notranslate">add</span>
             Nuevo Activo
         </button>
-        <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="{% url 'logout' %}">
-            <span class="material-symbols-outlined">help</span>
+        {% endif %}
+
+        <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+            <span class="material-symbols-outlined notranslate">help</span>
             <span>Soporte</span>
         </a>
-        <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="{% url 'logout' %}">
-            <span class="material-symbols-outlined">logout</span>
-            <span>Cerrar Sesión</span>
-        </a>
+
+        <form action="{% url 'logout' %}" method="post" class="w-full">
+            {% csrf_token %}
+            <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg">
+                <span class="material-symbols-outlined notranslate">logout</span>
+                <span>Cerrar Sesión</span>
+            </button>
+        </form>
     </div>
 </aside>
