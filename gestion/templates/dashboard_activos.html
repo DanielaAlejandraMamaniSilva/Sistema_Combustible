@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard de Activos - Potosí Fleet Admin{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="mb-12">
+    <span class="text-primary font-bold tracking-[0.2em] uppercase text-[10px] mb-2 block">Administración Central</span>
+    <h2 class="text-editorial-lg text-4xl lg:text-5xl font-black text-on-surface leading-none mb-4">Gestión Integral de Activos y Flota</h2>
+    <div class="flex flex-wrap gap-4 items-center">
+        <div class="flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-bold text-on-surface-variant shadow-sm border">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Sistema Activo
+        </div>
+        <div class="text-on-surface-variant text-sm font-medium">Actualizado: Hoy, {% now "H:i A" %}</div>
+    </div>
+</div>
+
+<!-- Metrics Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <div class="lg:col-span-2 bg-white rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group shadow-sm border">
+        <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-500">
+            <span class="material-symbols-outlined text-[150px]">directions_car</span>
+        </div>
+        <div>
+            <p class="text-on-surface-variant font-medium mb-1">Total Vehículos en Sistema</p>
+            <h3 class="text-7xl font-black text-primary leading-none">{{ total_vehiculos }}</h3>
+        </div>
+        <div class="mt-8 flex items-end justify-between">
+            <div>
+                <div class="text-3xl font-bold text-on-surface">{{ porcentaje }}%</div>
+                <div class="text-sm text-on-surface-variant">Capacidad Operativa</div>
+            </div>
+            <div class="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full bg-primary-container rounded-full" style="width: {{ porcentaje }}%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-8">
+        <div class="flex-1 bg-white rounded-xl p-6 border-l-4 border-error shadow-sm border">
+            <div class="flex items-center justify-between mb-4">
+                <span class="material-symbols-outlined text-error">signature</span>
+                <span class="text-xs font-bold text-error bg-error-container px-2 py-0.5 rounded-full">URGENTE</span>
+            </div>
+            <p class="text-sm text-on-surface-variant font-medium">Firmas Pendientes</p>
+            <h4 class="text-3xl font-black text-on-surface">12</h4>
+            <p class="text-[11px] text-on-surface-variant mt-2">Actas de entrega y bitácoras pendientes</p>
+        </div>
+        <button class="group bg-primary-container hover:bg-primary py-6 rounded-xl flex flex-col items-center justify-center transition-all duration-300 shadow-md text-white">
+            <span class="material-symbols-outlined text-3xl mb-2 group-hover:scale-110 transition-transform">assignment_add</span>
+            <span class="font-bold tracking-tight">Asignar Nuevo Vehículo</span>
+        </button>
+    </div>
+</div>
+
+<!-- Table Section -->
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold tracking-tight text-on-surface">Asignaciones de Vehículos</h3>
+        <button class="text-primary font-bold text-sm flex items-center gap-1 hover:underline">
+            Ver todos los activos <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </button>
+    </div>
+    <div class="bg-white rounded-xl overflow-hidden shadow-sm border">
+        <table class="w-full border-collapse text-left">
+            <thead>
+                <tr class="bg-slate-50 text-on-surface-variant text-[10px] uppercase tracking-widest font-bold border-b">
+                    <th class="px-6 py-4">Identidad Vehículo</th>
+                    <th class="px-6 py-4">Conductor Actual</th>
+                    <th class="px-6 py-4">Fecha Asignación</th>
+                    <th class="px-6 py-4">Estado</th>
+                    <th class="px-6 py-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for asig in asignaciones %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
+                                <span class="material-symbols-outlined text-lg">directions_car</span>
+                            </div>
+                            <div>
+                                <div class="font-bold text-sm text-on-surface">{{ asig.vehiculo.placa }}</div>
+                                <div class="text-[11px] text-on-surface-variant">{{ asig.vehiculo.marca }} {{ asig.vehiculo.modelo }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 font-medium text-sm">{{ asig.chofer.get_full_name }}</td>
+                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ asig.fecha_asignacion|date:"d M Y" }}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-0.5 {% if asig.vehiculo.estado == 'operacional' %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %} text-[10px] font-bold rounded-full">
+                            {{ asig.vehiculo.get_estado_display|upper }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="p-1 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">more_vert</span>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 italic">No hay asignaciones activas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Personnel Grid -->
+<div class="mb-12">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-2xl font-bold tracking-tight text-on-surface">Personal de Conducción</h3>
+        <div class="flex gap-2">
+            <button class="px-4 py-2 bg-white border hover:bg-slate-50 text-on-surface text-sm font-bold rounded-lg shadow-sm transition-all">Exportar Personal</button>
+            <button class="px-4 py-2 bg-primary-container text-white text-sm font-bold rounded-lg hover:bg-primary transition-all shadow-sm">Registrar Personal</button>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {% for chofer in conductores %}
+        <div class="bg-white p-5 rounded-xl shadow-sm border hover:shadow-md transition-shadow group">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-12 h-12 rounded-full overflow-hidden bg-slate-200 border-2 border-primary/10">
+                    <img class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name={{ chofer.username }}&background=f7f9fc&color=a10508" alt="Perfil">
+                </div>
+                <div class="min-w-0">
+                    <h4 class="font-bold text-sm text-on-surface truncate">{{ chofer.get_full_name }}</h4>
+                    <p class="text-[11px] text-on-surface-variant">CI: {{ chofer.ci|default:"S/N" }}</p>
+                </div>
+            </div>
+            <div class="space-y-3 mb-5">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-on-surface-variant">Estado:</span>
+                    <span class="font-bold text-green-700">ACTIVO</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-on-surface-variant">Rol:</span>
+                    <span class="font-medium text-slate-600">Chofer Oficial</span>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button class="flex-1 py-2 text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/5 hover:bg-primary hover:text-white rounded transition-all">Detalles</button>
+                <button class="px-2 py-2 text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-lg">file_upload</span>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Add New Card -->
+        <div class="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-5 group hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50">
+            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white mb-2 transition-all shadow-sm">
+                <span class="material-symbols-outlined">person_add</span>
+            </div>
+            <span class="text-xs font-bold text-slate-400 group-hover:text-primary">Añadir Nuevo</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{% block title %}Sovereign Archive{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto:wght@300;400;500;700&family=Public+Sans:wght@400;500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "primary": "#770003",
+                "primary-container": "#a10508",
+                "surface": "#f7f9fc",
+                "on-surface": "#191c1e",
+                "on-surface-variant": "#5b403c",
+                "surface-container-low": "#f2f4f7",
+                "surface-container-high": "#e6e8eb",
+                "surface-container-highest": "#e0e3e6",
+                "surface-container-lowest": "#ffffff",
+                "error": "#ba1a1a",
+                "error-container": "#ffdad6",
+            },
+            "fontFamily": {
+                "headline": ["Montserrat"],
+                "body": ["Roboto"],
+                "label": ["Inter"],
+                "brand": ["Public Sans"]
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .text-editorial-lg { font-family: 'Montserrat', sans-serif; letter-spacing: -0.02em; }
+        :root {
+            --potosi-red: #A10508;
+            --potosi-red-dark: #7A0406;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex">
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="flex-1 flex flex-col min-w-0 bg-surface">
+        {% include 'components/topbar.html' %}
+
+        <main class="flex-1 overflow-y-auto p-8 lg:p-12">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
