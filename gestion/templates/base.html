@@ -40,7 +40,6 @@
       }
     </script>
     <style>
-        
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             display: inline-block;
@@ -50,21 +49,28 @@
             word-wrap: normal;
             white-space: nowrap;
             direction: ltr;
-            /* Esto evita que el navegador intente traducir los nombres de los iconos */
             font-family: 'Material Symbols Outlined' !important;
         }
+        /* Eliminar scrollbars visuales pero mantener funcionalidad */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-surface text-on-surface font-body min-h-screen flex">
+<body class="bg-surface text-on-surface font-body h-screen overflow-hidden flex"> <!-- Añadido h-screen overflow-hidden -->
 
     {% include 'components/sidebar.html' %}
 
-    <div class="flex-1 flex flex-col min-w-0 bg-surface">
+    <!-- Contenedor Derecho -->
+    <div class="flex-1 flex flex-col min-w-0 h-full relative">
         {% include 'components/topbar.html' %}
 
-        <main class="flex-1 overflow-y-auto p-8 lg:p-12">
-            {% block content %}{% endblock %}
+        <!-- Área de contenido con scroll independiente -->
+        <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 lg:p-12">
+            <div class="max-w-[1600px] mx-auto"> <!-- Contenedor opcional para que en pantallas gigantes no se estire tanto -->
+                {% block content %}{% endblock %}
+            </div>
         </main>
     </div>
 

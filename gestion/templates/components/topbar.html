@@ -1,33 +1,46 @@
-<header class="h-[90px] w-full bg-white flex justify-between items-center px-8 shadow-sm z-10 shrink-0">
-    <div class="flex items-center gap-12">
-        <h1 class="text-xl font-bold tracking-tight text-primary font-brand">Sovereign Archive</h1>
-        <nav class="hidden lg:flex items-center gap-6 text-slate-600 font-brand font-medium">
-            <a class="text-primary border-b-2 border-primary pb-1" href="#">Dashboard</a>
-            <a class="hover:text-primary transition-colors" href="#">Asignación</a>
-            <a class="hover:text-primary transition-colors" href="#">Memorándums</a>
-            <a class="hover:text-primary transition-colors" href="#">Actas</a>
-            <a class="hover:text-primary transition-colors" href="#">Historial</a>
+<header class="h-[90px] w-full bg-white flex justify-between items-center px-8 shadow-sm z-10 shrink-0 border-b border-slate-100">
+    <div class="flex items-center gap-8 min-w-0"> <!-- Ajustado gap y añadido min-w-0 -->
+        
+        <nav class="hidden lg:flex items-center gap-6 text-slate-600 font-brand font-medium overflow-hidden ">
+            {% if user.rol == 'chofer' %}
+                <!-- Menú para Chofer -->
+                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Bitácora</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Historial</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Vehículo</a>
+            {% else %}
+                <!-- Menú para Activos / Admin (Tu menú original) -->
+                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Asignación</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Memorándums</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Actas</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Historial</a>
+                <div class="relative hidden xl:block"> 
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar..." type="text"/>
+                </div>
+            {% endif %}
         </nav>
     </div>
     
-    <div class="flex items-center gap-4">
-        <div class="relative hidden sm:block">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-            <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-64 transition-all" placeholder="Buscar en archivo..." type="text"/>
+    <div class="flex items-center gap-4 shrink-0"> 
+        
+        <div class="flex items-center gap-2 border-r pr-4 border-slate-200">
+            <button class="p-2 text-slate-600 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button class="p-2 text-slate-600 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
         </div>
-        <button class="p-2 text-slate-600 hover:text-primary transition-colors">
-            <span class="material-symbols-outlined">notifications</span>
-        </button>
-        <button class="p-2 text-slate-600 hover:text-primary transition-colors">
-            <span class="material-symbols-outlined">settings</span>
-        </button>
-        <div class="flex items-center gap-3 ml-4 border-l pl-4">
+
+        <div class="flex items-center gap-3 pl-2">
             <div class="text-right hidden md:block">
-                <p class="text-xs font-bold text-on-surface">{{ user.get_full_name|default:user.username }}</p>
-                <p class="text-[10px] text-slate-500 uppercase">{{ user.get_rol_display }}</p>
+                <p class="text-xs font-bold text-on-surface truncate max-w-[150px]">{{ user.get_full_name|default:user.username }}</p>
+                <p class="text-[10px] text-slate-500 uppercase font-bold">{{ user.get_rol_display }}</p>
             </div>
-            <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-primary/20">
-                <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=a10508&color=fff" alt="Perfil">
+            <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-primary/20 shrink-0">
+                <img src="https://ui-avatars.com/api/?name={{ user.username }}&background=a10508&color=fff" alt="Perfil" class="w-full h-full object-cover">
             </div>
         </div>
     </div>

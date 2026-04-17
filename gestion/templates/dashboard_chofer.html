@@ -2,127 +2,207 @@
 {% block title %}Panel del Chofer - Soberano Potosí{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
-    <!-- Header Status -->
+<div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- HEADER CON MÉTRICAS SUPERIORES -->
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-2">
-            <h1 class="font-montserrat text-4xl font-black tracking-tight text-on-surface">Panel del Chofer</h1>
-            <p class="text-on-surface-variant max-w-2xl font-roboto font-medium">Control de Combustible: {{ user.get_full_name }}</p>
+            <h1 class="font-['Montserrat'] text-4xl font-black tracking-tight text-slate-900">Panel del Chofer</h1>
+            <p class="text-slate-500 font-medium">Bitácora de Control de Combustible y Kilometraje</p>
         </div>
+        
         <div class="flex items-center gap-4">
+            <!-- Estado -->
             <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 flex items-center gap-4 min-w-[200px]">
-                <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <span class="material-symbols-outlined notranslate text-emerald-600">check_circle</span>
+                <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined notranslate text-emerald-600" style="font-variation-settings: 'FILL' 1">check_circle</span>
                 </div>
                 <div>
-                    <p class="text-[10px] uppercase font-bold text-on-surface-variant">Estado</p>
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Estado Actual</p>
                     <p class="text-sm font-black text-emerald-600 uppercase tracking-widest">Disponible</p>
+                </div>
+            </div>
+            <!-- Último Consumo -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-600 flex items-center gap-4 min-w-[200px]">
+                <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined notranslate text-red-600" style="font-variation-settings: 'FILL' 1">local_gas_station</span>
+                </div>
+                <div>
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Último Consumo</p>
+                    <p class="text-sm font-black text-slate-900">12.4 Km/L</p>
                 </div>
             </div>
         </div>
     </header>
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <!-- Formulario de Registro -->
-        <section class="xl:col-span-4 space-y-8">
-            <div class="bg-white rounded-xl p-8 shadow-sm border">
+        
+        <!-- COLUMNA IZQUIERDA: FORMULARIO Y IMAGEN (4 columnas) -->
+        <div class="xl:col-span-4 space-y-8">
+            <!-- Card Formulario -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
                 <div class="flex items-center gap-3 mb-8">
-                    <span class="material-symbols-outlined notranslate text-primary">edit_note</span>
-                    <h2 class="text-xl font-bold font-montserrat">Nueva Bitácora</h2>
+                    <span class="material-symbols-outlined notranslate text-red-700">edit_note</span>
+                    <h2 class="text-xl font-bold font-['Montserrat']">Nueva Bitácora</h2>
                 </div>
                 
-                <form method="POST" class="space-y-6">
-                    {% csrf_token %}
+                <form class="space-y-5">
                     <div class="space-y-4">
                         <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-bold uppercase text-on-surface-variant">Vale de Combustible</label>
-                            <input name="nro_vale" class="bg-slate-50 border-none border-b-2 border-transparent focus:border-primary-container rounded-t-lg p-3 text-sm focus:ring-0 transition-all" placeholder="Nº 004512" type="text" required>
+                            <label class="text-[10px] font-bold uppercase text-slate-500">Fecha de Operación</label>
+                            <input type="date" class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" value="2024-05-20">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1">
-                                <label class="text-[10px] font-bold uppercase text-on-surface-variant">Cantidad (Lts)</label>
-                                <input name="litros" class="bg-slate-50 border-none border-b-2 border-transparent focus:border-primary-container rounded-t-lg p-3 text-sm focus:ring-0 transition-all" placeholder="0.00" step="0.01" type="number" required>
+                                <label class="text-[10px] font-bold uppercase text-slate-500">Vale Combustible</label>
+                                <input type="text" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="Nº 004512">
                             </div>
                             <div class="flex flex-col gap-1">
-                                <label class="text-[10px] font-bold uppercase text-on-surface-variant">Km Llegada</label>
-                                <input name="km_final" class="bg-slate-50 border-none border-b-2 border-transparent focus:border-primary-container rounded-t-lg p-3 text-sm focus:ring-0 transition-all" placeholder="{{ km_actual }}" type="number" required>
+                                <label class="text-[10px] font-bold uppercase text-slate-500">Cantidad (Lts)</label>
+                                <input type="number" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="0.00">
                             </div>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-bold uppercase text-on-surface-variant">Destino / Comisión</label>
-                            <textarea name="destino" class="bg-slate-50 border-none border-b-2 border-transparent focus:border-primary-container rounded-t-lg p-3 text-sm focus:ring-0 transition-all resize-none" rows="2" required></textarea>
+                            <label class="text-[10px] font-bold uppercase text-slate-500">Objeto de Comisión</label>
+                            <textarea class="bg-slate-50 border-none rounded-lg p-3 text-sm h-20 resize-none" placeholder="Motivo del viaje..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] font-bold uppercase text-slate-500">Km Salida</label>
+                                <input type="number" class="bg-slate-100 border-none rounded-lg p-3 text-sm font-bold" value="{{ km_actual }}" readonly>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] font-bold uppercase text-slate-500">Km Llegada</label>
+                                <input type="number" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="45XXX">
+                            </div>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-primary-container text-white py-4 rounded-xl font-black text-sm uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-lg shadow-primary/30">
+                    
+                    <div class="bg-slate-50 p-4 rounded-xl space-y-2">
+                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>Recorrido Total:</span>
+                            <span class="text-red-700 font-black">0 Km</span>
+                        </div>
+                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>Eficiencia Estimada</span>
+                            <span class="text-red-700 font-black">0 Km</span>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all">
                         Registrar Bitácora
                     </button>
                 </form>
             </div>
-        </section>
 
-        <!-- Información Vehículo e Historial -->
-        <section class="xl:col-span-8 space-y-8">
+            <!-- Imagen del Volante (Decorativa) -->
+            <div class="relative h-48 rounded-2xl overflow-hidden shadow-md">
+                <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                    <p class="text-white text-xs font-bold leading-relaxed">Mantenga sus registros actualizados para asegurar el suministro.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: GRÁFICO, AUTO Y TABLA (8 columnas) -->
+        <div class="xl:col-span-8 space-y-8">
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Info del Auto Asignado -->
-                <div class="bg-primary-container text-white p-8 rounded-xl shadow-xl relative overflow-hidden">
-                    {% if asignacion %}
+                <!-- Gráfico de Eficiencia Semanal (Simulado con barras) -->
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-start mb-6">
+                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Eficiencia Semanal</h3>
+                        <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-full">+4% vs mes ant.</span>
+                    </div>
+                    <div class="flex items-end gap-3 h-32">
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[40%]"></div>
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[60%]"></div>
+                        <div class="flex-1 bg-red-700 rounded-t-lg h-[85%]"></div>
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[55%]"></div>
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[70%]"></div>
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[45%]"></div>
+                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[80%]"></div>
+                    </div>
+                    <div class="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase">
+                        <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                    </div>
+                </div>
+
+                <!-- Tarjeta del Vehículo Asignado (LA ROJA) -->
+                <div class="bg-red-800 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden">
                     <div class="relative z-10">
-                        <h3 class="text-xs font-black uppercase opacity-80 mb-4">Vehículo Asignado</h3>
-                        <div class="flex items-center gap-4">
-                            <span class="material-symbols-outlined notranslate text-4xl">directions_car</span>
-                            <div>
-                                <p class="text-xl font-black">{{ asignacion.vehiculo.marca }} {{ asignacion.vehiculo.modelo }}</p>
-                                <p class="text-xs font-bold opacity-80 uppercase tracking-widest">Placa: {{ asignacion.vehiculo.placa }}</p>
+                        <h3 class="text-xs font-black uppercase opacity-60 mb-4">Vehículo Asignado</h3>
+                        {% if asignacion %}
+                            <div class="flex items-center gap-4">
+                                <span class="material-symbols-outlined notranslate text-5xl">directions_car</span>
+                                <div>
+                                    <p class="text-2xl font-black">{{ asignacion.vehiculo.marca }} {{ asignacion.vehiculo.modelo }}</p>
+                                    <p class="text-xs font-bold opacity-70 uppercase tracking-widest">Placa: {{ asignacion.vehiculo.placa }}</p>
+                                </div>
                             </div>
-                        </div>
+                            <div class="mt-8 grid grid-cols-2 gap-4">
+                                <div class="bg-white/10 p-3 rounded-xl">
+                                    <p class="text-[9px] uppercase font-bold opacity-60">Próximo Service</p>
+                                    <p class="text-sm font-black">48,000 Km</p>
+                                </div>
+                                <div class="bg-white/10 p-3 rounded-xl">
+                                    <p class="text-[9px] uppercase font-bold opacity-60">Combustible</p>
+                                    <p class="text-sm font-black">75%</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="flex flex-col items-center justify-center h-full py-4 text-center">
+                                <span class="material-symbols-outlined text-5xl mb-2">warning</span>
+                                <p class="font-bold">No tienes un vehículo asignado.</p>
+                                <p class="text-[10px] opacity-70">Contacta con el encargado de Activos.</p>
+                            </div>
+                        {% endif %}
                     </div>
-                    <div class="mt-6 flex gap-4 relative z-10">
-                        <div class="flex-1 bg-white/10 p-3 rounded-lg text-center">
-                            <p class="text-[9px] font-bold uppercase opacity-70">Kilometraje</p>
-                            <p class="text-sm font-black">{{ asignacion.vehiculo.kilometraje_actual }} Km</p>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="font-bold italic">No tienes un vehículo asignado.</p>
-                    {% endif %}
-                    <span class="material-symbols-outlined notranslate absolute right-[-20px] bottom-[-20px] text-[150px] opacity-10">minor_crash</span>
+                    <span class="material-symbols-outlined notranslate absolute right-[-20px] bottom-[-20px] text-[180px] opacity-10">minor_crash</span>
                 </div>
             </div>
 
-            <!-- Tabla Historial -->
-            <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div class="p-6 border-b">
-                    <h2 class="text-xl font-bold font-montserrat flex items-center gap-2">
-                        <span class="material-symbols-outlined notranslate text-primary">history</span> Historial Reciente
-                    </h2>
+            <!-- TABLA DE HISTORIAL -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-red-700">history</span> Historial de Viajes Recientes
+                    </h3>
+                    <button class="text-xs font-bold text-red-700 uppercase tracking-widest hover:underline">Ver Todo</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-[10px] uppercase font-black text-slate-500">
+                        <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase">
                             <tr>
-                                <th class="px-6 py-4">Fecha / Vale</th>
-                                <th class="px-6 py-4">Comisión</th>
-                                <th class="px-6 py-4 text-right">Km Recorrido</th>
+                                <th class="px-8 py-4">Fecha / Vale</th>
+                                <th class="px-8 py-4">Comisión / Destino</th>
+                                <th class="px-8 py-4 text-right">Km Recorrido</th>
+                                <th class="px-8 py-4 text-right">Km Consumo</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y text-sm">
+                        <tbody class="divide-y divide-slate-50">
                             {% for b in historial %}
-                            <tr class="hover:bg-slate-50">
-                                <td class="px-6 py-4">
-                                    <p class="font-bold">{{ b.fecha|date:"d M Y" }}</p>
-                                    <p class="text-[10px] text-slate-500">VALE: {{ b.nro_vale_combustible }}</p>
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-8 py-5">
+                                    <p class="text-sm font-bold text-slate-900">{{ b.fecha|date:"d M Y" }}</p>
+                                    <p class="text-[10px] text-slate-400">VALE: {{ b.nro_vale_combustible }}</p>
                                 </td>
-                                <td class="px-6 py-4">{{ b.destino }}</td>
-                                <td class="px-6 py-4 text-right font-black">{{ b.km_final|add:"-b.km_inicial" }} Km</td>
+                                <td class="px-8 py-5 text-sm font-medium text-slate-600">{{ b.destino }}</td>
+                                <td class="px-8 py-5 text-right">
+                                    <p class="text-sm font-black text-slate-900">412 Km</p>
+                                    <p class="text-[10px] text-slate-400">11.8 Km/L</p>
+                                </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="3" class="p-10 text-center italic text-slate-400">Sin registros previos.</td></tr>
+                            <tr>
+                                <td colspan="3" class="px-8 py-12 text-center text-slate-400 italic">No hay registros de viajes recientes.</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </section>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -33,6 +33,12 @@ class Vehiculo(models.Model):
     kilometraje_actual = models.PositiveIntegerField(default=0)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='operacional')
 
+    TIPOS_COMBUSTIBLE = (
+        ('Gasolina', 'Gasolina'),
+        ('Diesel', 'Diesel'),
+    )
+    tipo_combustible = models.CharField(max_length=20, choices=TIPOS_COMBUSTIBLE, default='Gasolina')
+
     def __str__(self):
         return f"{self.placa} - {self.marca} {self.modelo}"
 
@@ -65,6 +71,13 @@ class Bitacora(models.Model):
     
     nro_factura = models.CharField(max_length=50)
 
+    ESTADOS_VALIDACION = (
+        ('pendiente', 'PENDIENTE'),
+        ('validado', 'VALIDADO'),
+        ('rechazado', 'RECHAZADO'),
+    )
+    estado_validacion = models.CharField(max_length=20, choices=ESTADOS_VALIDACION, default='pendiente')
+
     def save(self, *args, **kwargs):
 
         self.vehiculo.kilometraje_actual = self.km_final
@@ -73,3 +86,11 @@ class Bitacora(models.Model):
 
     def __str__(self):
         return f"Bitácora {self.fecha.date()} - {self.vehiculo.placa}"
+    
+class InventarioCombustible(models.Model):
+    tipo = models.CharField(max_length=50) # Diesel o Gasolina
+    cantidad_total = models.DecimalField(max_digits=15, decimal_places=2)
+    ultima_actualizacion = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.tipo}: {self.cantidad_total} Lts"
