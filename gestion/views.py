@@ -2,7 +2,7 @@ from django.shortcuts import render
 from .models import Vehiculo, Asignacion
 from django.contrib.auth import get_user_model
 
-User = get_user_model()
+Usuario = get_user_model()
 
 def dashboard_activos(request):
     total_vehiculos = Vehiculo.objects.count()
@@ -11,8 +11,8 @@ def dashboard_activos(request):
         operacionales = Vehiculo.objects.filter(estado='operacional').count()
         porcentaje = int((operacionales / total_vehiculos) * 100)
     
-    asignaciones = Asignacion.objects.all()
-    conductores = User.objects.filter(rol='chofer')
+    asignaciones = Asignacion.objects.filter(esta_activo=True).select_related('vehiculo', 'chofer')
+    conductores = Usuario.objects.filter(rol='chofer')
 
     return render(request, 'dashboard_activos.html', {
         'total_vehiculos': total_vehiculos,

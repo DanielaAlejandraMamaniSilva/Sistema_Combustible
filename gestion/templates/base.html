@@ -1,13 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="light" lang="es">
+<html class="light" lang="es" class="notranslate" translate="no">
 <head>
     <meta charset="utf-8"/>
+    <meta name="google" content="notranslate" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>{% block title %}Sovereign Archive{% endblock %}</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto:wght@300;400;500;700&family=Public+Sans:wght@400;500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
@@ -39,11 +40,18 @@
       }
     </script>
     <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
-        .text-editorial-lg { font-family: 'Montserrat', sans-serif; letter-spacing: -0.02em; }
-        :root {
-            --potosi-red: #A10508;
-            --potosi-red-dark: #7A0406;
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            /* Esto evita que el navegador intente traducir los nombres de los iconos */
+            font-family: 'Material Symbols Outlined' !important;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -63,3 +71,4 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
+<span class="material-symbols-outlined notranslate">dashboard</span>
