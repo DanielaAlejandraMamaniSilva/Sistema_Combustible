@@ -1,12 +1,23 @@
 <aside class="hidden md:flex w-64 h-screen bg-slate-50 flex-col py-6 px-4 shrink-0 font-['Public_Sans'] text-sm rounded-r-lg border-r border-slate-200 shadow-sm overflow-y-auto">
-    <!-- Header Logo -->
     <div class="flex items-center gap-3 px-2 mb-10">
         <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white">
-            <span class="material-symbols-outlined notranslate">productivity</span>
+            {% if user.rol == 'bienes' %}
+                <span class="material-symbols-outlined notranslate">inventory_2</span>
+            {% else %}
+                <span class="material-symbols-outlined notranslate">productivity</span>
+            {% endif %}
         </div>
         <div>
             <h2 class="text-lg font-black text-primary leading-tight">Potosí</h2>
-            <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Fleet Admin</p>
+            <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                {% if user.rol == 'chofer' %}
+                    Portal de Choferes
+                {% elif user.rol == 'bienes' %}
+                    Bienes y Servicios
+                {% else %}
+                    Activos
+                {% endif %}
+            </p>
         </div>
     </div>
     
@@ -58,27 +69,36 @@
             <div class="pt-4 mt-4 border-t border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-3">Gestión de Insumos</p>
                 <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-                    <span class="material-symbols-outlined notranslate">inventory_2</span>
-                    <span>Inventario de Combustible</span>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
                     <span class="material-symbols-outlined notranslate">monitoring</span>
-                    <span>Supervisión</span>
+                    <span>Supervisión de Combustible</span>
                 </a>
                 <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
                     <span class="material-symbols-outlined notranslate">verified</span>
-                    <span>Validar Consumos</span>
+                    <span>Validacion de Consumo</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                    <span class="material-symbols-outlined notranslate">description</span>
+                    <span>Reportes Administrativos</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                    <span class="material-symbols-outlined notranslate">local_gas_station</span>
+                    <span>Control de Abastecimiento</span>
                 </a>
             </div>
         {% endif %}
     </nav>
 
     <div class="mt-auto pt-6 border-t border-slate-200 space-y-1">
-        <!-- El botón "Nuevo Activo" solo para Activos o Admins -->
+        <!-- Botón de Acción Dinámico -->
         {% if user.rol == 'activos' or user.rol == 'admin' %}
             <button class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
                 <span class="material-symbols-outlined notranslate">add</span>
                 Nuevo Activo
+            </button>
+        {% elif user.rol == 'bienes' %}
+            <button class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
+                <span class="material-symbols-outlined notranslate">add</span>
+                Nuevo Registro
             </button>
         {% endif %}
 
