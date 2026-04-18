@@ -3,8 +3,14 @@
         <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-white">
             {% if user.rol == 'bienes' %}
                 <span class="material-symbols-outlined notranslate">inventory_2</span>
-            {% else %}
+            {% elif user.rol == 'activos' %}
                 <span class="material-symbols-outlined notranslate">productivity</span>
+            {% elif user.rol == 'admin' %}
+                <span class="material-symbols-outlined notranslate">admin_panel_settings</span>
+            {% elif user.rol == 'chofer' %}
+                <span class="material-symbols-outlined notranslate">garage</span>
+            {% elif user.rol == 'superadmin' %}
+                <span class="material-symbols-outlined notranslate">admin_panel_settings</span>
             {% endif %}
         </div>
         <div>
@@ -14,8 +20,12 @@
                     Portal de Choferes
                 {% elif user.rol == 'bienes' %}
                     Bienes y Servicios
-                {% else %}
+                {% elif user.rol == 'activos' %}
                     Activos
+                {% elif user.rol == 'admin' %}
+                    Administrador
+                {% elif user.rol == 'superadmin' %}
+                    Super Administrador
                 {% endif %}
             </p>
         </div>
@@ -24,7 +34,7 @@
     <nav class="flex-1 space-y-1">
         <!-- Dashboard Común -->
         <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" href="{% url 'dashboard' %}">
-            <span class="material-symbols-outlined notranslate">dashboard</span>
+            <span class="material-symbols-outlined notranslate" style="font-variation-settings: 'FILL' 1;">dashboard</span>
             <span>Dashboard (Resumen)</span>
         </a>
 
@@ -44,8 +54,8 @@
             </a>
         {% endif %}
 
-        <!-- MENÚ ACTIVOS / ADMIN -->
-        {% if user.rol == 'activos' or user.rol == 'admin' or user.rol == 'superadmin' %}
+        <!-- MENÚ ACTIVOS -->
+        {% if user.rol == 'activos' %}
             <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
                 <span class="material-symbols-outlined notranslate">assignment_ind</span>
                 <span>Asignación de Vehículos</span>
@@ -86,11 +96,76 @@
                 </a>
             </div>
         {% endif %}
+        
+        {% if user.rol == 'admin'%}
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" href="{% url 'dashboard' %}">
+                <span class="material-symbols-outlined notranslate">ballot</span>
+                <span>Registros Visualizacion </span>
+            </a>
+            <div class="mx-4 my-2 border-t pt-4">
+                <p class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reportes</p>
+                <div class="space-y-1">
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
+                        <span class="material-symbols-outlined mr-3 text-lg">person</span> Por Chofer
+                    </a>
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
+                        <span class="material-symbols-outlined mr-3 text-lg">directions_car</span> Por Vehículo
+                    </a>
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
+                        <span class="material-symbols-outlined mr-3 text-lg">calendar_month</span> Por Fecha
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                        <span class="material-symbols-outlined notranslate">distance</span>
+                        <span>Monitoreo en Tiempo Real</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+                        <span class="material-symbols-outlined notranslate">verified_user</span>
+                        <span>Validacion de Registros</span>
+                    </a>
+                </div>
+            </div>
+            
+        {% endif %}
+        <!-- Superadmin dashboard -->
+        {% if user.rol == 'superadmin' %}
+            <div class="px-2 mb-4">
+                
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                    <span class="material-symbols-outlined notranslate">group</span>
+                    <span>Gestión de Usuarios</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                    <span class="material-symbols-outlined notranslate">lock_person</span>
+                    <span>Roles y Permisos</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                    <span class="material-symbols-outlined notranslate">settings</span>
+                    <span>Config. del Sistema</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                    <span class="material-symbols-outlined notranslate">history_edu</span>
+                    <span>Auditoría (Logs)</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                    <span class="material-symbols-outlined notranslate">inventory_2</span>
+                    <span>Gestion de Catalogos</span>
+                </a>
+                
+            </div>
+
+            <!-- Botón Modo Seguro -->
+            <div class="px-4 mt-6">
+                <button class="w-full bg-primary-container text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-sm notranslate">security</span>
+                    Modo Seguro
+                </button>
+            </div>
+        {% endif %}
     </nav>
 
     <div class="mt-auto pt-6 border-t border-slate-200 space-y-1">
         <!-- Botón de Acción Dinámico -->
-        {% if user.rol == 'activos' or user.rol == 'admin' %}
+        {% if user.rol == 'activos'%}
             <button class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
                 <span class="material-symbols-outlined notranslate">add</span>
                 Nuevo Activo

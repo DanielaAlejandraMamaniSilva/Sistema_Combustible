@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% block title %}Soberanía Potosí - Auditoría Administrativa{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Stats: Bento Grid (Consumo, Km, Anomalías) -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <!-- Consumo Promedio (Tarjeta Roja Grande) -->
+        <div class="md:col-span-2 bg-gradient-to-br from-[#770003] to-[#a10508] p-8 rounded-xl text-white shadow-xl relative overflow-hidden flex flex-col justify-between h-64">
+            <div class="z-10">
+                <h3 class="opacity-80 text-xs font-bold uppercase tracking-widest mb-2 font-headline">Consumo Promedio Mensual</h3>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-6xl font-black font-headline">{{ consumo_avg }}</span>
+                    <span class="text-xl font-medium opacity-80">km/L</span>
+                </div>
+            </div>
+            <div class="z-10 flex items-center gap-4">
+                <div class="bg-white/20 backdrop-blur-md px-4 py-2 rounded-lg flex items-center gap-2 border border-white/10">
+                    <span class="material-symbols-outlined text-sm notranslate">trending_up</span>
+                    <span class="text-sm font-bold">+2.4% vs mes ant.</span>
+                </div>
+            </div>
+            <span class="material-symbols-outlined absolute -right-10 -bottom-10 text-[200px] opacity-10 notranslate" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
+        </div>
+
+        <!-- Km Totales -->
+        <div class="bg-white p-6 rounded-xl flex flex-col justify-between border-b-4 border-primary shadow-sm ring-1 ring-slate-100">
+            <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate" style="font-variation-settings: 'FILL' 1;">distance</span>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">Hoy</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1">Km Recorridos Totales</p>
+                <p class="text-3xl font-black text-slate-900 font-headline">{{ km_totales|floatformat:1 }}</p>
+            </div>
+        </div>
+
+        <!-- Alertas de Anomalía -->
+        <div class="bg-[#FFDAD6] p-6 rounded-xl flex flex-col justify-between border-b-4 border-[#BA1A1A] shadow-sm">
+            <div class="flex justify-between items-start">
+                <div class="w-12 h-12 rounded-xl bg-white/50 flex items-center justify-center text-[#BA1A1A]">
+                    <span class="material-symbols-outlined notranslate" style="font-variation-settings: 'FILL' 1;">warning</span>
+                </div>
+                <span class="flex h-3 w-3 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-[#BA1A1A]"></span>
+                </span>
+            </div>
+            <div>
+                <p class="text-[#BA1A1A] text-xs uppercase font-bold tracking-wider mb-1 font-headline">Alertas de Anomalías</p>
+                <p class="text-3xl font-black text-[#BA1A1A] font-headline">{{ alertas_count|stringformat:"02d" }}</p>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- SECCIÓN IZQUIERDA: MONITOREO -->
+        <section class="lg:col-span-4 space-y-6">
+            <div class="flex justify-between items-end mb-2">
+                <h2 class="text-xl font-bold tracking-tight text-slate-900 font-headline">Monitoreo en Tiempo Real</h2>
+                <a href="#" class="text-primary text-[10px] font-black uppercase hover:underline">Ver Mapa</a>
+            </div>
+
+            <div class="space-y-4">
+                {% for chofer in monitoreo_choferes %}
+                <div class="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border-l-4 
+                    {% if forloop.counter == 2 %}border-slate-300{% else %}border-green-500{% endif %}">
+                    <div class="relative shrink-0">
+                        <img class="w-12 h-12 rounded-full object-cover" src="https://ui-avatars.com/api/?name={{ chofer.username }}&background=E2E8F0&color=770003" alt="perfil">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 {% if forloop.counter == 2 %}bg-slate-300{% else %}bg-green-500{% endif %} border-2 border-white rounded-full"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-slate-900 truncate font-headline">{{ chofer.get_full_name }}</p>
+                        <p class="text-[11px] text-slate-500">{% if forloop.counter == 2 %}Última: Hace 15 min{% else %}Ruta: Potosí - Uyuni{% endif %}</p>
+                    </div>
+                    <div class="shrink-0">
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded uppercase
+                            {% if forloop.counter == 2 %}bg-slate-100 text-slate-500{% else %}bg-green-100 text-green-600{% endif %}">
+                            {% if forloop.counter == 2 %}Disponible{% else %}En Ruta{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Mapa Estilizado -->
+            <div class="h-48 rounded-xl bg-slate-200 relative overflow-hidden shadow-inner group">
+                <img class="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR48nYqbzKZVB2Epo2CGUZByGAX1n7beuH49cVsDlCWOwJlTRnWkfzoL2HomUEhaK6J7CtVfcZDfZ2AQVZCcMeGkGRCeC_heWDBVEvAMAsmLYvEyHmkrOdKXdCc0Sj7pKzGM8iI-7-pWtLySUSZ_-J7L1vWC_FMKrS2WPd4SVyXg6uwEcJBvVx4OsPfrxucREVig6DfFDkvTTdkgbIw0NDxrwYSDtljxobRDUzvDlkmbSgJoBxapjV3l_1vKeVTug-mTIQP6yaFpXK" alt="map">
+                <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-2 shadow-lg border border-slate-200">
+                    <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-black text-slate-800 font-headline uppercase">3 Activos en Mapa</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DERECHA: TABLA REGISTROS -->
+        <section class="lg:col-span-8 space-y-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h2 class="text-2xl font-black tracking-tight text-slate-900 font-headline">Registros de Combustible</h2>
+                
+                <!-- Barra de Filtros Dinámica -->
+                <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg ring-1 ring-slate-200">
+                    <button class="px-4 py-1.5 bg-white text-primary font-bold text-[10px] rounded shadow-sm uppercase">Todos</button>
+                    <button class="px-4 py-1.5 text-slate-500 font-bold text-[10px] hover:bg-white/50 rounded transition-colors uppercase">Esta Semana</button>
+                    <button class="px-4 py-1.5 text-slate-500 font-bold text-[10px] hover:bg-white/50 rounded transition-colors uppercase">Chofer</button>
+                    <div class="w-px h-4 bg-slate-300 mx-1"></div>
+                    <button class="p-1.5 text-primary hover:bg-white rounded transition-colors">
+                        <span class="material-symbols-outlined text-lg">filter_list</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Registros Estilizada -->
+            <div class="bg-white rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50/80 border-b border-slate-100">
+                            <tr class="text-[10px] font-black text-slate-400 uppercase tracking-widest font-headline">
+                                <th class="px-6 py-4">Vehículo</th>
+                                <th class="px-6 py-4">Chofer</th>
+                                <th class="px-6 py-4">Fecha / Hora</th>
+                                <th class="px-6 py-4 text-right">Cantidad</th>
+                                <th class="px-6 py-4 text-right">Costo (Bs)</th>
+                                <th class="px-6 py-4 text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for reg in registros %}
+                            <tr class="transition-colors 
+                                {% if reg.estado_validacion == 'anomalia' %}bg-red-50 text-[#A10508]{% else %}hover:bg-slate-50/50{% endif %}">
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center 
+                                            {% if reg.estado_validacion == 'anomalia' %}bg-red-100 text-red-700{% else %}text-primary{% endif %}">
+                                            <span class="material-symbols-outlined text-lg">{% if reg.vehiculo.tipo == 'Camioneta' %}commute{% else %}local_shipping{% endif %}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold font-headline">{{ reg.vehiculo.placa }}</p>
+                                            <p class="text-[10px] uppercase font-bold opacity-60">{{ reg.vehiculo.marca }} {{ reg.vehiculo.modelo }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5 font-medium text-sm">{{ reg.chofer.get_full_name }}</td>
+                                <td class="px-6 py-5">
+                                    <p class="text-sm font-medium">{{ reg.fecha|date:"d M, Y" }}</p>
+                                    <p class="text-[10px] opacity-60">{{ reg.fecha|date:"H:i A" }}</p>
+                                </td>
+                                <td class="px-6 py-5 text-right font-bold text-sm">{{ reg.cantidad_litros }} L</td>
+                                <td class="px-6 py-5 text-right font-black text-sm">{{ reg.costo_total }}</td>
+                                <td class="px-6 py-5 text-center">
+                                    {% if reg.estado_validacion == 'anomalia' %}
+                                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-red-700 text-white text-[9px] font-black rounded-full uppercase">
+                                            <span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">error</span>
+                                            Anomalía
+                                        </span>
+                                    {% elif reg.estado_validacion == 'validado' %}
+                                        <span class="px-3 py-1 bg-green-100 text-green-700 text-[9px] font-black rounded-full uppercase">Validado</span>
+                                    {% else %}
+                                        <span class="px-3 py-1 bg-slate-100 text-slate-500 text-[9px] font-black rounded-full uppercase">Pendiente</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Mostrando registros recientes</span>
+                    <div class="flex gap-1">
+                        <button class="p-1 hover:bg-slate-200 rounded transition-colors"><span class="material-symbols-outlined text-lg">chevron_left</span></button>
+                        <button class="p-1 hover:bg-slate-200 rounded transition-colors"><span class="material-symbols-outlined text-lg">chevron_right</span></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

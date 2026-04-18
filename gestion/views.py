@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .models import Vehiculo, Asignacion, Bitacora
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.db.models import Sum
+from django.db.models import Avg, Sum, F
 
 @login_required
 def dashboard_view(request):
@@ -13,9 +13,15 @@ def dashboard_view(request):
     elif request.user.rol == 'bienes':
         return dashboard_bienes(request)
     
-    elif request.user.rol in ['activos', 'admin', 'superadmin']:
+    elif request.user.rol in ['activos']:
         return dashboard_activos(request)
 
+    elif request.user.rol in ['admin']:
+        return dashboard_admin(request)
+
+    elif request.user.rol in ['superadmin']:
+        return dashboard_superadmin(request)
+        
     return redirect('login')
 Usuario = get_user_model()
 
@@ -64,3 +70,47 @@ def dashboard_bienes(request):
         'consumo_gasolina': consumo_gasolina,
     }
     return render(request, 'dashboard_bienes.html', context)
+
+@login_required
+def dashboard_admin(request):
+    bitacoras = Bitacora.objects.all()
+    consumo_avg = 14.2
+    km_totales = bitacoras.aggregate(total=Sum(F('km_final') - F('km_inicial')))['total'] or 0
+    alertas_count = Bitacora.objects.filter(estado_validacion='anomalia').count()
+    
+    monitoreo_choferes = Usuario.objects.filter(rol='chofer')[:3]
+    
+    registros = Bitacora.objects.select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
+
+    context = {
+        'consumo_avg': consumo_avg,
+        'km_totales': km_totales,
+        'alertas_count': alertas_count,
+        'monitoreo_choferes': monitoreo_choferes,
+        'registros': registros,
+    }
+    return render(request, 'dashboard_admin.html', context)
+
+@login_required
+def dashboard_superadmin(request):
+    if request.user.rol != 'superadmin':
+        return redirect('dashboard')
+
+    total_usuarios = Usuario.objects.count()
+    total_vehiculos = Vehiculo.objects.count()
+    
+    catalogos = [
+        {'nombre': 'Flota de Vehículos', 'total': f"{total_vehiculos} Vehículos", 'cambio': 'Hoy, 09:12 AM', 'estado': 'Sincronizado'},
+        {'nombre': 'Áreas / Secretarías', 'total': '12 Unidades', 'cambio': 'Ayer', 'estado': 'Sincronizado'},
+        {'nombre': 'Tipos de Combustible', 'total': '2 Activos', 'cambio': '12 Oct 2023', 'estado': 'Editable'},
+    ]
+
+    context = {
+        'total_usuarios': total_usuarios,
+        'total_vehiculos': total_vehiculos,
+        'catalogos': catalogos,
+        'uptime': '42 días 14h',
+        'db_instance': 'SOV-ARC-PROD-01',
+        'version': 'v4.8.2-POTOSI-SA'
+    }
+    return render(request, 'dashboard_superadmin.html', context)

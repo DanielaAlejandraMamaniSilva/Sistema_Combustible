@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Superadmin Console - Sovereign Archive{% endblock %}
+
+{% block content %}
+<div class="space-y-12">
+    <!-- Hero Banner -->
+    <header class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-container p-12 text-white shadow-xl">
+        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10">
+            <svg class="h-full w-full" viewBox="0 0 200 200"><path d="M44.7,-76.4C58.3,-69.2,70.1,-58.5,78.8,-45.5C87.4,-32.5,93,-16.2,91.8,-0.7C90.5,14.8,82.5,29.7,72.4,43.4C62.3,57.1,50.1,69.7,35.6,76.5C21,83.3,4.1,84.3,-12.8,81.5C-29.6,78.6,-46.4,71.9,-59.8,61C-73.1,50.2,-83.1,35.2,-87.3,19C-91.5,2.8,-89.9,-14.6,-83.1,-29.9C-76.3,-45.2,-64.3,-58.4,-50.2,-65.4C-36.1,-72.4,-18,-73.2,-0.4,-72.5C17.2,-71.8,31.1,-83.6,44.7,-76.4Z" fill="#FFFFFF" transform="translate(100 100)"></path></svg>
+        </div>
+        <div class="relative z-10">
+            <p class="text-red-200 uppercase tracking-[0.3em] font-bold text-xs mb-2">Centralized Authority</p>
+            <h1 class="text-5xl font-black mb-4 tracking-tighter font-headline">Superadmin Console</h1>
+            <p class="max-w-2xl text-lg text-white/80 font-light leading-relaxed">Control total sobre la infraestructura digital de hidrocarburos del Gobierno de Potosí. Gestión global de usuarios, protocolos de seguridad y catálogos institucionales.</p>
+        </div>
+    </header>
+
+    <!-- Global Metrics -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-primary">
+            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">group</span>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Usuarios Totales</p>
+            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ total_usuarios }}</h2>
+            <p class="text-[10px] text-green-600 font-bold mt-2">▲ +12% este mes</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">person_play</span>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Sesiones Activas</p>
+            <h2 class="text-3xl font-black text-slate-900 font-headline">84</h2>
+            <div class="flex items-center gap-2 mt-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><p class="text-[10px] text-slate-400">Estado nominal</p></div>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">monitor_heart</span>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Salud Sistema</p>
+            <h2 class="text-3xl font-black text-slate-900 font-headline">99.8%</h2>
+            <p class="text-[10px] text-slate-400 mt-2">Uptime: {{ uptime }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">rule</span>
+            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Nivel de Auditoría</p>
+            <h2 class="text-3xl font-black text-red-700 font-headline">Nominal</h2>
+            <p class="text-[10px] text-slate-400 mt-2">0 alertas críticas</p>
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Core Modules -->
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-2xl p-8 shadow-sm border">
+                <h3 class="text-xl font-bold mb-8 text-red-900 font-headline flex items-center gap-2">
+                    <span class="material-symbols-outlined notranslate">settings_suggest</span> Módulos de Gestión Core
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {% for modulo in "1234" %}
+                    <button class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white">
+                            <span class="material-symbols-outlined notranslate">{% cycle 'manage_accounts' 'tune' 'history_edu' 'inventory_2' %}</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm">{% cycle 'Gestión de Usuarios' 'Configuración Global' 'Logs de Auditoría' 'Gestión de Catálogos' %}</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Vehiculos, Areas y tipos de Combustible</p>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Catálogos Table -->
+            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+                <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
+                    <h3 class="font-bold text-slate-900 flex items-center gap-2 font-headline">
+                        <span class="material-symbols-outlined text-primary notranslate">analytics</span> Distribución de Catálogos
+                    </h3>
+                    <button class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Gestionar</button>
+                </div>
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                        <tr><th class="px-8 py-4">Nombre</th><th class="px-8 py-4">Entradas</th><th class="px-8 py-4 text-right">Ultimo Cambio</th><th class="px-8 py-4 text-right">Estado</th></tr>
+                    </thead>
+                    <tbody class="divide-y text-sm">
+                        {% for cat in catalogos %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-8 py-5 font-bold">{{ cat.nombre }}</td>
+                            <td class="px-8 py-5 text-slate-500">{{ cat.total }}</td>
+                            <td class="px-8 py-5 text-right">
+                                <span class="px-2 py-1 {% if cat.estado == 'Sincronizado' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %} text-[9px] font-black rounded-full uppercase">{{ cat.estado }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sidebar Maintenance -->
+        <div class="space-y-8">
+            <!-- Integrity Card -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
+                        <span class="material-symbols-outlined notranslate">database</span>
+                    </div>
+                    <h3 class="font-bold text-sm font-headline">Integridad de Datos</h3>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed mb-6">Copia de seguridad automática completada con éxito. Redundancia operativa.</p>
+                <button class="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-black transition-all">
+                    <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar DB (SQL/CSV)
+                </button>
+            </div>
+
+            <!-- Recent Logs -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm border">
+                <h3 class="font-bold text-sm font-headline mb-6">Logs Recientes</h3>
+                <div class="space-y-6">
+                    {% for log in "123" %}
+                    <div class="flex gap-4">
+                        <div class="w-1 h-10 bg-primary-container rounded-full shrink-0"></div>
+                        <div class="min-w-0">
+                            <p class="text-[10px] font-black text-primary uppercase">Seguridad</p>
+                            <p class="text-xs font-medium text-slate-800 truncate">Parche V{{ version }} aplicado</p>
+                            <p class="text-[10px] text-slate-400">Hace 15 min</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Technical Core Card -->
+            <div class="bg-slate-900 p-8 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-primary opacity-20 rounded-full blur-3xl"></div>
+                <h4 class="font-black text-xl mb-4 font-headline tracking-tighter">Technical Core</h4>
+                <div class="space-y-3 font-mono text-[10px] opacity-80">
+                    <div class="flex justify-between"><span>Versión</span><span>{{ version }}</span></div>
+                    <div class="flex justify-between"><span>Instancia DB</span><span>{{ db_instance }}</span></div>
+                    <div class="flex justify-between"><span>Auditoría</span><span>{% now "d M Y" %}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

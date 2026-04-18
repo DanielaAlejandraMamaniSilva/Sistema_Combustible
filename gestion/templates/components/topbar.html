@@ -14,7 +14,7 @@
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Inventario</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Supervisión</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Reportes</a>
-            {% else %}
+            {% elif user.rol == 'activos' %}
                 <!-- Menú para Activos / Admin -->
                 <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Asignación</a>
@@ -24,6 +24,24 @@
                 <div class="relative hidden xl:block ml-4"> 
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
                     <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar..." type="text"/>
+                </div>
+            <!-- Menú para Admin -->
+            {% elif user.rol == 'admin' %}
+                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Reportes</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Auditoria</a>
+                <div class="relative hidden xl:block ml-4"> 
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text"/>
+                </div>
+            {% elif user.rol == 'superadmin' %}
+                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Usuarios</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Sistema</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Auditoria</a>
+                <div class="relative hidden xl:block ml-4"> 
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text"/>
                 </div>
             {% endif %}
                 
