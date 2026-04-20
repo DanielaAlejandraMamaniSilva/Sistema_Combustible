@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Crear Usuario - Sovereign Archive{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border p-10">
+    <div class="mb-8 border-b pb-6">
+        <h2 class="text-3xl font-black text-slate-900 font-headline uppercase">Registrar Nuevo Usuario</h2>
+        <p class="text-slate-500 font-medium">Asigne credenciales y roles al personal institucional.</p>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <p class="text-red-600 text-[10px] font-bold">{{ field.errors.0 }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="md:col-span-2 pt-6 flex gap-4">
+            <button type="submit" class="bg-primary-container text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-primary transition-all">
+                Guardar Usuario
+            </button>
+            <a href="{% url 'lista_usuarios' %}" class="bg-slate-100 text-slate-600 px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    const rolSelect = document.querySelector('select[name="rol"]');
+    // Seleccionamos los contenedores de los campos de licencia
+    const licenciaInput = document.querySelector('input[name="licencia_conducir"]').parentElement;
+    const vencimientoInput = document.querySelector('input[name="vencimiento_licencia"]').parentElement;
+
+    function toggleChoferFields() {
+        if (rolSelect.value === 'chofer') {
+            licenciaInput.style.display = 'flex';
+            vencimientoInput.style.display = 'flex';
+        } else {
+            licenciaInput.style.display = 'none';
+            vencimientoInput.style.display = 'none';
+        }
+    }
+
+    rolSelect.addEventListener('change', toggleChoferFields);
+    window.addEventListener('load', toggleChoferFields); // Ejecutar al cargar por si hay errores
+</script>
+{% endblock %}

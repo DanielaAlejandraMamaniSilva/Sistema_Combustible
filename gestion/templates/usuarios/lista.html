@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Usuarios - Sovereign Archive{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header de la sección -->
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b pb-8">
+        <div>
+            <span class="text-primary font-bold uppercase tracking-widest text-xs">Administración de Personal</span>
+            <h2 class="font-headline font-black text-4xl text-on-surface mt-2 tracking-tight">Gestión de Usuarios</h2>
+            <p class="text-on-surface-variant mt-2 max-w-2xl">Administre los accesos, roles y credenciales de todos los funcionarios del sistema.</p>
+        </div>
+        <div>
+            <a href="{% url 'crear_usuario' %}" class="flex items-center gap-2 px-6 py-3 bg-primary-container text-white rounded-xl font-bold shadow-lg hover:bg-primary transition-all">
+                <span class="material-symbols-outlined notranslate">person_add</span>
+                Registrar Nuevo Usuario
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabla de Usuarios -->
+    <section class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b">
+                        <th class="px-8 py-4">Usuario / Nombre</th>
+                        <th class="px-8 py-4">CI / Licencia</th>
+                        <th class="px-8 py-4">Rol en Sistema</th>
+                        <th class="px-8 py-4">Estado</th>
+                        <th class="px-8 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    {% for u in usuarios %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border font-bold">
+                                    {{ u.username|slice:":1"|upper }}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-900">{{ u.get_full_name|default:u.username }}</p>
+                                    <p class="text-xs text-slate-500">{{ u.email }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-medium">{{ u.ci|default:"---" }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ u.licencia_conducir|default:"Sin Licencia" }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 bg-red-50 text-red-800 text-[10px] font-black rounded-full uppercase border border-red-100">
+                                {{ u.get_rol_display }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            {% if u.is_active %}
+                                <span class="flex items-center gap-1 text-green-600 font-bold text-xs">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span> Activo
+                                </span>
+                            {% else %}
+                                <span class="flex items-center gap-1 text-slate-400 font-bold text-xs">
+                                    <span class="w-2 h-2 bg-slate-300 rounded-full"></span> Inactivo
+                                </span>
+                            {% endif %}
+                        </td>
+                        <!-- En la columna de acciones dentro del for loop -->
+                        <td class="px-8 py-5 text-right">
+                            <div class="flex justify-end gap-2">
+                                <!-- Botón Editar -->
+                                <a href="{% url 'editar_usuario' u.pk %}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined notranslate text-lg">edit</span>
+                                </a>
+                                <!-- Botón Eliminar -->
+                                <a href="{% url 'eliminar_usuario' u.pk %}" 
+                                onclick="return confirm('¿Estás seguro de eliminar a este usuario?')"
+                                class="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-error transition-colors">
+                                    <span class="material-symbols-outlined notranslate text-lg">delete</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic">
+                            No hay usuarios registrados en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

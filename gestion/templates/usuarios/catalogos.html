@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Catálogos - Sovereign Archive{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Encabezado de la Sección -->
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900 tracking-tight">Gestión de Catálogos</h2>
+        <p class="text-slate-500 font-medium">Administración de unidades vehiculares, dependencias e insumos del sistema.</p>
+    </div>
+
+    <!-- Navegación de Pestañas Estilizada -->
+    <div class="flex gap-2 border-b border-slate-200">
+        <button onclick="showTab('tab-vehiculos')" id="btn-vehiculos" 
+            class="tab-btn px-6 py-3 font-bold text-xs uppercase tracking-widest border-b-2 border-primary text-primary transition-all">
+            Vehículos
+        </button>
+        <button onclick="showTab('tab-areas')" id="btn-areas" 
+            class="tab-btn px-6 py-3 font-bold text-xs uppercase tracking-widest border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-all">
+            Áreas / Secretarías
+        </button>
+        <button onclick="showTab('tab-combustible')" id="btn-combustible" 
+            class="tab-btn px-6 py-3 font-bold text-xs uppercase tracking-widest border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-all">
+            Tipos de Combustible
+        </button>
+    </div>
+
+    <!-- CONTENIDO DE PESTAÑAS -->
+    
+    <!-- 1. Catálogo de Vehículos -->
+    <div id="tab-vehiculos" class="tab-content block">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-slate-50/50 flex justify-between items-center border-b border-slate-100">
+                <h3 class="font-bold text-slate-700 uppercase text-[10px] tracking-[0.2em]">Unidades Vehiculares Registradas</h3>
+                <a href="{% url 'crear_vehiculo' %}" class="bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:bg-primary transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm notranslate">add_box</span>
+                    Nuevo Vehículo
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead class="bg-white text-[10px] font-black uppercase text-slate-400 border-b">
+                        <tr>
+                            <th class="px-8 py-4">Placa / Marca</th>
+                            <th class="px-8 py-4">Modelo / Tipo</th>
+                            <th class="px-8 py-4">Km Actual</th>
+                            <th class="px-8 py-4 text-center">Estado</th>
+                            <th class="px-8 py-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y text-sm">
+                        {% for v in vehiculos %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="px-8 py-5">
+                                <p class="font-black text-slate-900">{{ v.placa }}</p>
+                                <p class="text-[10px] uppercase font-bold text-slate-400">{{ v.marca }}</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <p class="font-medium text-slate-700">{{ v.modelo }}</p>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold">{{ v.tipo }}</p>
+                            </td>
+                            <td class="px-8 py-5 font-mono font-bold text-slate-600">{{ v.kilometraje_actual }} KM</td>
+                            <td class="px-8 py-5 text-center">
+                                <span class="px-3 py-1 {% if v.estado == 'operacional' %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %} rounded-full text-[9px] font-black uppercase">
+                                    {{ v.get_estado_display }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a href="{% url 'editar_vehiculo' v.pk %}" class="p-2 hover:bg-slate-100 rounded-lg text-primary transition-all">
+                                        <span class="material-symbols-outlined notranslate text-lg">edit</span>
+                                    </a>
+                                    <a href="{% url 'eliminar_vehiculo' v.pk %}" onclick="return confirm('¿Eliminar este vehículo del catálogo?')" class="p-2 hover:bg-red-50 rounded-lg text-red-400 hover:text-red-700 transition-all">
+                                        <span class="material-symbols-outlined notranslate text-lg">delete</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No hay vehículos registrados en el sistema.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Catálogo de Áreas -->
+    <div id="tab-areas" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-slate-50/50 flex justify-between items-center border-b border-slate-100">
+                <h3 class="font-bold text-slate-700 uppercase text-[10px] tracking-[0.2em]">Dependencias e Instituciones</h3>
+                <button class="bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:bg-primary transition-all">
+                    + Nueva Área
+                </button>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-white text-[10px] font-black uppercase text-slate-400 border-b">
+                    <tr>
+                        <th class="px-8 py-4">ID</th>
+                        <th class="px-8 py-4">Nombre de la Dependencia</th>
+                        <th class="px-8 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm">
+                    {% for a in areas %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-8 py-5 text-slate-400 font-mono text-xs">#{{ a.id|stringformat:"03d" }}</td>
+                        <td class="px-8 py-5 font-bold text-slate-900">{{ a.nombre }}</td>
+                        <td class="px-8 py-5 text-right">
+                            <button class="text-primary hover:text-red-800 font-bold text-xs uppercase tracking-tighter">Editar</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="px-8 py-16 text-center text-slate-400 italic font-medium">No hay áreas registradas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 3. Catálogo de Combustibles -->
+    <div id="tab-combustible" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 bg-slate-50/50 flex justify-between items-center border-b border-slate-100">
+                <h3 class="font-bold text-slate-700 uppercase text-[10px] tracking-[0.2em]">Insumos Registrados</h3>
+                <button class="bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:bg-primary transition-all">
+                    + Nuevo Insumo
+                </button>
+            </div>
+            <table class="w-full text-left">
+                <thead class="bg-white text-[10px] font-black uppercase text-slate-400 border-b">
+                    <tr>
+                        <th class="px-8 py-4">Descripción del Combustible</th>
+                        <th class="px-8 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm">
+                    {% for c in combustibles %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-primary notranslate">local_gas_station</span>
+                                <span class="font-bold text-slate-900">{{ c.nombre }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <span class="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-[9px] font-black uppercase mr-4">Editable</span>
+                            <button class="text-slate-400 hover:text-primary font-bold text-xs uppercase">Editar</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="px-8 py-16 text-center text-slate-400 italic font-medium">No hay tipos de combustible registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.add('hidden');
+            el.classList.remove('block');
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('border-primary', 'text-primary');
+            el.classList.add('border-transparent', 'text-slate-400');
+        });
+
+        const activeTab = document.getElementById(tabId);
+        activeTab.classList.remove('hidden');
+        activeTab.classList.add('block');
+
+        const activeBtn = document.getElementById('btn-' + tabId.replace('tab-', ''));
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeBtn.classList.add('border-primary', 'text-primary');
+    }
+</script>
+{% endblock %}

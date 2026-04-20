@@ -97,8 +97,9 @@
             </div>
         {% endif %}
         
+        <!-- MENÚ ADMINISTRADOR -->
         {% if user.rol == 'admin'%}
-            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" href="{% url 'dashboard' %}">
+            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
                 <span class="material-symbols-outlined notranslate">ballot</span>
                 <span>Registros Visualizacion </span>
             </a>
@@ -124,41 +125,35 @@
                     </a>
                 </div>
             </div>
-            
         {% endif %}
-        <!-- Superadmin dashboard -->
+
+        <!-- MENÚ SUPERADMIN -->
         {% if user.rol == 'superadmin' %}
             <div class="px-2 mb-4">
-                
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'lista_usuarios' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-red-50{% endif %} rounded-lg transition-all" href="{% url 'lista_usuarios' %}">
                     <span class="material-symbols-outlined notranslate">group</span>
                     <span>Gestión de Usuarios</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'lista_roles' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-red-50{% endif %} rounded-lg transition-all" href="{% url 'lista_roles' %}">
                     <span class="material-symbols-outlined notranslate">lock_person</span>
                     <span>Roles y Permisos</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
-                    <span class="material-symbols-outlined notranslate">settings</span>
-                    <span>Config. del Sistema</span>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
-                    <span class="material-symbols-outlined notranslate">history_edu</span>
-                    <span>Auditoría (Logs)</span>
-                </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-red-50 hover:text-red-800 rounded-lg" href="#">
-                    <span class="material-symbols-outlined notranslate">inventory_2</span>
-                    <span>Gestion de Catalogos</span>
-                </a>
-                
+
             </div>
 
             <!-- Botón Modo Seguro -->
+            <!-- Botón Modo Seguro Dinámico -->
             <div class="px-4 mt-6">
-                <button class="w-full bg-primary-container text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 active:scale-95 transition-all">
-                    <span class="material-symbols-outlined text-sm notranslate">security</span>
-                    Modo Seguro
-                </button>
+                <form action="{% url 'toggle_seguro' %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" 
+                        class="w-full {% if modo_seguro_activado %}bg-green-600 hover:bg-green-700{% else %}bg-red-900 hover:bg-red-800{% endif %} text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all">
+                        <span class="material-symbols-outlined text-sm notranslate">
+                            {% if modo_seguro_activado %}shield_check{% else %}security{% endif %}
+                        </span>
+                        {% if modo_seguro_activado %}Modo Seguro: ON{% else %}Activar Modo Seguro{% endif %}
+                    </button>
+                </form>
             </div>
         {% endif %}
     </nav>
@@ -177,17 +172,17 @@
             </button>
         {% endif %}
 
-        <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg" href="#">
+        <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg {% if request.resolver_match.url_name == 'soporte' %}bg-slate-200 font-bold{% endif %}" href="{% url 'soporte' %}">
             <span class="material-symbols-outlined notranslate">help</span>
             <span>Soporte</span>
         </a>
 
         <form action="{% url 'logout' %}" method="post" class="w-full">
             {% csrf_token %}
-            <button type="submit" class="w-full flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg">
+            <button type="submit" class=    "w-full flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg">
                 <span class="material-symbols-outlined notranslate">logout</span>
                 <span>Cerrar Sesión</span>
             </button>
         </form>
     </div>
-</aside>
+</aside>    

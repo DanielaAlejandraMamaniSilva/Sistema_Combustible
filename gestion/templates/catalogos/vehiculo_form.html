@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border p-10">
+    <div class="mb-8 border-b pb-6">
+        <h2 class="text-3xl font-black text-slate-900 font-headline uppercase">
+            {% if editando %}Editar Vehículo{% else %}Registrar Nueva Unidad{% endif %}
+        </h2>
+        <p class="text-slate-500 font-medium">Ingrese los datos técnicos del vehículo oficial.</p>
+    </div>
+
+    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
+            {{ field }}
+        </div>
+        {% endfor %}
+
+        <div class="md:col-span-2 pt-6 flex gap-4">
+            <button type="submit" class="bg-primary-container text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-primary transition-all">
+                Guardar Vehículo
+            </button>
+            <a href="{% url 'gestion_catalogos' %}" class="bg-slate-100 text-slate-600 px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

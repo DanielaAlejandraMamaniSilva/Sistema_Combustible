@@ -4,45 +4,48 @@
         <nav class="hidden lg:flex items-center gap-6 text-slate-600 font-brand font-medium overflow-hidden">
             {% if user.rol == 'chofer' %}
                 <!-- Menú para Chofer -->
-                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Bitácora</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Historial</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Vehículo</a>
             {% elif user.rol == 'bienes' %}
                 <!-- Menú para Bienes y Servicios -->
-                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Inventario</a>
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap" href="{% url 'gestion_catalogos' %}">Inventario</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Supervisión</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Reportes</a>
             {% elif user.rol == 'activos' %}
-                <!-- Menú para Activos / Admin -->
-                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <!-- Menú para Activos -->
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Asignación</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Memorándums</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Actas</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Historial</a>
-                <div class="relative hidden xl:block ml-4"> 
+                
+                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar..." type="text"/>
-                </div>
-            <!-- Menú para Admin -->
+                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar..." type="text" value="{{ request.GET.q }}">
+                </form>
+
             {% elif user.rol == 'admin' %}
-                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
+                <!-- Menú para Admin -->
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
                 <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Reportes</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Auditoria</a>
-                <div class="relative hidden xl:block ml-4"> 
+                
+                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text"/>
-                </div>
+                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text" value="{{ request.GET.q }}">
+                </form>
+
             {% elif user.rol == 'superadmin' %}
-                <a class="text-primary border-b-2 border-primary pb-1" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Usuarios</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Sistema</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Auditoria</a>
-                <div class="relative hidden xl:block ml-4"> 
+                <!-- Menú para Superadmin -->
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="{% if request.resolver_match.url_name == 'lista_usuarios' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'lista_usuarios' %}">Usuarios</a>
+                <a class="{% if request.resolver_match.url_name == 'config_sistema' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'config_sistema' %}">Sistema</a>                
+                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-                    <input class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text"/>
-                </div>
+                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text" value="{{ request.GET.q }}">
+                </form>
             {% endif %}
                 
         </nav>
@@ -50,12 +53,15 @@
     
     <div class="flex items-center gap-4 shrink-0"> 
         <div class="flex items-center gap-2 border-r pr-4 border-slate-200">
-            <button class="p-2 text-slate-600 hover:text-primary transition-colors">
+            <!-- Notificaciones vinculadas a Logs -->
+            <a href="{% url 'log_auditoria' %}" class="p-2 text-slate-600 hover:text-primary transition-colors relative">
                 <span class="material-symbols-outlined">notifications</span>
-            </button>
-            <button class="p-2 text-slate-600 hover:text-primary transition-colors">
+                <span class="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full border-2 border-white"></span>
+            </a>
+            <!-- Ajustes vinculado a Configuración para Superadmin -->
+            <a href="{% if user.rol == 'superadmin' %}{% url 'config_sistema' %}{% else %}#{% endif %}" class="p-2 text-slate-600 hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">settings</span>
-            </button>
+            </a>
         </div>
 
         <div class="flex items-center gap-3 pl-2">

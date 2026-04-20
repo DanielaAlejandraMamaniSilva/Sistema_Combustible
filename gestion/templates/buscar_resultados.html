@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <div class="border-b pb-4">
+        <h2 class="text-2xl font-black font-headline uppercase">Resultados para: "{{ query }}"</h2>
+    </div>
+
+    {% if not usuarios and not vehiculos and not bitacoras %}
+        <div class="bg-white p-20 text-center rounded-2xl border">
+            <span class="material-symbols-outlined text-6xl text-slate-200 mb-4">search_off</span>
+            <p class="text-slate-500 font-bold">No se encontraron coincidencias en la base de datos.</p>
+        </div>
+    {% else %}
+        <!-- Resultados en Usuarios -->
+        {% if usuarios %}
+        <section>
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Usuarios Encontrados</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for u in usuarios %}
+                <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="font-bold">{{ u.get_full_name }}</p>
+                        <p class="text-xs text-slate-500">{{ u.username }} - {{ u.get_rol_display }}</p>
+                    </div>
+                    <a href="{% url 'editar_usuario' u.pk %}" class="text-primary font-bold text-xs">VER PERFIL</a>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Resultados en Vehículos -->
+        {% if vehiculos %}
+        <section class="mt-8">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Vehículos Encontrados</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for v in vehiculos %}
+                <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
+                    <div>
+                        <p class="font-bold">{{ v.placa }}</p>
+                        <p class="text-xs text-slate-500">{{ v.marca }} {{ v.modelo }}</p>
+                    </div>
+                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase">{{ v.estado }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

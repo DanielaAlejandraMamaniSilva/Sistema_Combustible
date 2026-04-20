@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-8 py-10">
+    <div class="text-center space-y-4">
+        <div class="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center text-white mx-auto shadow-xl">
+            <span class="material-symbols-outlined text-4xl">contact_support</span>
+        </div>
+        <h2 class="text-3xl font-black font-headline uppercase">Centro de Soporte</h2>
+        <p class="text-slate-500">¿Tienes problemas con el sistema? Estamos para ayudarte.</p>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl shadow-sm border space-y-6">
+        <div class="flex items-start gap-4">
+            <span class="material-symbols-outlined text-primary">mail</span>
+            <div>
+                <h4 class="font-bold text-slate-900">Correo Técnico</h4>
+                <p class="text-sm text-slate-500">soporte.sistemas@potosi.gob.bo</p>
+            </div>
+        </div>
+        <div class="flex items-start gap-4">
+            <span class="material-symbols-outlined text-primary">phone_in_talk</span>
+            <div>
+                <h4 class="font-bold text-slate-900">Interno de Sistemas</h4>
+                <p class="text-sm text-slate-500">Ext. 405 - Administración de Redes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center">
+        <a href="{% url 'dashboard' %}" class="text-primary font-bold text-sm hover:underline">Volver al Dashboard</a>
+    </div>
+</div>
+{% endblock %}

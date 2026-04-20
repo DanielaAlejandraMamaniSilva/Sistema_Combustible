@@ -17,25 +17,28 @@
 
     <!-- Global Metrics -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-primary">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-primary ring-1 ring-slate-100">
             <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">group</span>
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Usuarios Totales</p>
             <h2 class="text-3xl font-black text-slate-900 font-headline">{{ total_usuarios }}</h2>
             <p class="text-[10px] text-green-600 font-bold mt-2">▲ +12% este mes</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
             <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">person_play</span>
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Sesiones Activas</p>
-            <h2 class="text-3xl font-black text-slate-900 font-headline">84</h2>
-            <div class="flex items-center gap-2 mt-2"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><p class="text-[10px] text-slate-400">Estado nominal</p></div>
+            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ sesiones_activas }}</h2>
+            <div class="flex items-center gap-2 mt-2">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <p class="text-[10px] text-slate-400">Estado nominal</p>
+            </div>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
             <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">monitor_heart</span>
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Salud Sistema</p>
-            <h2 class="text-3xl font-black text-slate-900 font-headline">99.8%</h2>
+            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ salud }}</h2>
             <p class="text-[10px] text-slate-400 mt-2">Uptime: {{ uptime }}</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
             <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">rule</span>
             <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Nivel de Auditoría</p>
             <h2 class="text-3xl font-black text-red-700 font-headline">Nominal</h2>
@@ -51,17 +54,46 @@
                     <span class="material-symbols-outlined notranslate">settings_suggest</span> Módulos de Gestión Core
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {% for modulo in "1234" %}
-                    <button class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
-                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white">
-                            <span class="material-symbols-outlined notranslate">{% cycle 'manage_accounts' 'tune' 'history_edu' 'inventory_2' %}</span>
+                    <!-- Gestión de Usuarios -->
+                    <a href="{% url 'lista_usuarios' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span class="material-symbols-outlined notranslate">manage_accounts</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm">{% cycle 'Gestión de Usuarios' 'Configuración Global' 'Logs de Auditoría' 'Gestión de Catálogos' %}</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">Vehiculos, Areas y tipos de Combustible</p>
+                            <h4 class="font-bold text-sm text-slate-900">Gestión de Usuarios (CRUD)</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Crear, editar y dar de baja usuarios</p>
                         </div>
-                    </button>
-                    {% endfor %}
+                    </a>
+                    <!-- Configuración Global -->
+                    <a href="{% url 'config_sistema' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span class="material-symbols-outlined notranslate">tune</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-900">Configuración Global</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Parámetros técnicos y umbrales</p>
+                        </div>
+                    </a>
+                    <!-- Logs de Auditoría (Corregido el error 404) -->
+                    <a href="{% url 'log_auditoria' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span class="material-symbols-outlined notranslate">history_edu</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-900">Logs de Auditoría</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Trazabilidad total de acciones</p>
+                        </div>
+                    </a>
+                    <!-- Gestión de Catálogos -->
+                    <a href="{% url 'gestion_catalogos' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
+                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span class="material-symbols-outlined notranslate">inventory_2</span>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-900">Gestión de Catálogos</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Vehículos, Áreas y Combustible</p>
+                        </div>
+                    </a>
                 </div>
             </div>
 
@@ -71,17 +103,23 @@
                     <h3 class="font-bold text-slate-900 flex items-center gap-2 font-headline">
                         <span class="material-symbols-outlined text-primary notranslate">analytics</span> Distribución de Catálogos
                     </h3>
-                    <button class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Gestionar</button>
+                    <a href="{% url 'gestion_catalogos' %}" class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Gestionar</a>
                 </div>
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                        <tr><th class="px-8 py-4">Nombre</th><th class="px-8 py-4">Entradas</th><th class="px-8 py-4 text-right">Ultimo Cambio</th><th class="px-8 py-4 text-right">Estado</th></tr>
+                        <tr>
+                            <th class="px-8 py-4">Nombre Catálogo</th>
+                            <th class="px-8 py-4">Total Entradas</th>
+                            <th class="px-8 py-4 text-right">Ultimo Cambio</th>
+                            <th class="px-8 py-4 text-right">Estado</th>
+                        </tr>
                     </thead>
                     <tbody class="divide-y text-sm">
                         {% for cat in catalogos %}
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-8 py-5 font-bold">{{ cat.nombre }}</td>
+                            <td class="px-8 py-5 font-bold text-slate-900">{{ cat.nombre }}</td>
                             <td class="px-8 py-5 text-slate-500">{{ cat.total }}</td>
+                            <td class="px-8 py-5 text-right text-slate-400 text-xs">{{ cat.cambio }}</td>
                             <td class="px-8 py-5 text-right">
                                 <span class="px-2 py-1 {% if cat.estado == 'Sincronizado' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %} text-[9px] font-black rounded-full uppercase">{{ cat.estado }}</span>
                             </td>
@@ -100,27 +138,38 @@
                     <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
                         <span class="material-symbols-outlined notranslate">database</span>
                     </div>
-                    <h3 class="font-bold text-sm font-headline">Integridad de Datos</h3>
+                    <h3 class="font-bold text-sm font-headline text-slate-900">Integridad de Datos</h3>
                 </div>
-                <p class="text-xs text-slate-500 leading-relaxed mb-6">Copia de seguridad automática completada con éxito. Redundancia operativa.</p>
-                <button class="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-black transition-all">
-                    <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar DB (SQL/CSV)
-                </button>
+                <p class="text-xs text-slate-500 leading-relaxed mb-6">Copia de seguridad automática completada con éxito. Redundancia operativa activa.</p>
+                
+                <!-- Exportar a EXCEL REAL (.xlsx) -->
+                <a href="{% url 'exportar_excel' %}" class="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg">
+                    <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar DB (.xlsx)
+                </a>
             </div>
 
-            <!-- Recent Logs -->
+            <!-- Recent Logs (REAL DATA) -->
             <div class="bg-white rounded-2xl p-8 shadow-sm border">
-                <h3 class="font-bold text-sm font-headline mb-6">Logs Recientes</h3>
+                <h3 class="font-bold text-sm font-headline mb-6 text-slate-900 flex justify-between items-center">
+                    Logs Recientes
+                    <a href="{% url 'log_auditoria' %}" class="hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-slate-300 text-sm notranslate">open_in_new</span>
+                    </a>
+                </h3>
                 <div class="space-y-6">
-                    {% for log in "123" %}
+                    {% for log in logs %}
                     <div class="flex gap-4">
-                        <div class="w-1 h-10 bg-primary-container rounded-full shrink-0"></div>
+                        <div class="w-1 h-10 {% if log.is_addition %}bg-green-500{% elif log.is_deletion %}bg-red-500{% else %}bg-primary-container{% endif %} rounded-full shrink-0"></div>
                         <div class="min-w-0">
-                            <p class="text-[10px] font-black text-primary uppercase">Seguridad</p>
-                            <p class="text-xs font-medium text-slate-800 truncate">Parche V{{ version }} aplicado</p>
-                            <p class="text-[10px] text-slate-400">Hace 15 min</p>
+                            <p class="text-[9px] font-black text-primary uppercase">{{ log.content_type.model|upper }}</p>
+                            <p class="text-xs font-medium text-slate-800 truncate">
+                                <strong>{{ log.user.username }}</strong>: {{ log.get_change_message|default:"Acción registrada" }}
+                            </p>
+                            <p class="text-[10px] text-slate-400">{{ log.action_time|timesince }} ago</p>
                         </div>
                     </div>
+                    {% empty %}
+                    <p class="text-xs text-slate-400 italic text-center">No hay acciones registradas.</p>
                     {% endfor %}
                 </div>
             </div>
@@ -130,8 +179,8 @@
                 <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-primary opacity-20 rounded-full blur-3xl"></div>
                 <h4 class="font-black text-xl mb-4 font-headline tracking-tighter">Technical Core</h4>
                 <div class="space-y-3 font-mono text-[10px] opacity-80">
-                    <div class="flex justify-between"><span>Versión</span><span>{{ version }}</span></div>
-                    <div class="flex justify-between"><span>Instancia DB</span><span>{{ db_instance }}</span></div>
+                    <div class="flex justify-between border-b border-white/10 pb-1"><span>Versización</span><span>{{ version }}</span></div>
+                    <div class="flex justify-between border-b border-white/10 pb-1"><span>Instancia</span><span>{{ db_instance }}</span></div>
                     <div class="flex justify-between"><span>Auditoría</span><span>{% now "d M Y" %}</span></div>
                 </div>
             </div>

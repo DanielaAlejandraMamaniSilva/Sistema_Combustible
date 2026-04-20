@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema en Mantenimiento - Soberanía Potosí</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,0,0" />
+    <style>
+        body { font-family: 'Public Sans', sans-serif; }
+        h1 { font-family: 'Montserrat', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen flex items-center justify-center p-6">
+    <div class="max-w-md w-full text-center space-y-8">
+        <!-- Icono de Seguridad -->
+        <div class="relative inline-block">
+            <div class="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <span class="material-symbols-outlined text-red-700 text-5xl">security_update_warning</span>
+            </div>
+            <div class="absolute -top-2 -right-2 w-8 h-8 bg-red-700 rounded-full border-4 border-slate-50 flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-xs">lock</span>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <h1 class="text-3xl font-black text-slate-900 uppercase tracking-tight">Modo Seguro Activo</h1>
+            <p class="text-slate-500 font-medium leading-relaxed">
+                El administrador ha restringido el acceso al sistema temporalmente por motivos de auditoría o mantenimiento técnico.
+            </p>
+        </div>
+
+        <!-- Caja de Información -->
+        <div class="bg-white p-6 rounded-2xl border border-red-100 shadow-sm text-left">
+            <div class="flex items-start gap-4">
+                <span class="material-symbols-outlined text-red-700">info</span>
+                <div>
+                    <p class="text-xs font-black uppercase text-slate-400 tracking-widest mb-1">Estado del Servicio</p>
+                    <p class="text-sm font-bold text-slate-700 italic">"Restricción de operaciones de combustible en curso..."</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 space-y-4">
+            <p class="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em]">Por favor, contacte con sistemas o intente más tarde.</p>
+            
+            <!-- Botón de Salida -->
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-2 text-red-700 font-bold hover:underline transition-all">
+                    <span class="material-symbols-outlined text-lg">logout</span>
+                    Cerrar Sesión
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
