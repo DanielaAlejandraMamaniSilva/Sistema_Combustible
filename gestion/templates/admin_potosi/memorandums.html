@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Registro de Memorándums - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Encabezado de la sección -->
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b pb-6">
+        <div>
+            <span class="text-primary font-bold uppercase tracking-widest text-xs">Administración de Activos</span>
+            <h2 class="font-headline font-black text-4xl text-on-surface mt-2 tracking-tight">Registro de Memorándums</h2>
+            <p class="text-on-surface-variant mt-2 max-w-2xl font-body">Historial y control de documentos oficiales de asignación vehicular emitidos por la institución.</p>
+        </div>
+        <div>
+            <a href="{% url 'crear_asignacion' %}" class="flex items-center gap-2 px-6 py-3 bg-primary-container text-white rounded-xl font-bold shadow-lg hover:bg-primary transition-all">
+                <span class="material-symbols-outlined notranslate">assignment_add</span>
+                Nueva Asignación
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabla de Memorándums -->
+    <section class="bg-white rounded-2xl shadow-sm overflow-hidden border">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left font-body">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b">
+                        <th class="px-8 py-4">Nº Memorándum</th>
+                        <th class="px-8 py-4">Vehículo</th>
+                        <th class="px-8 py-4">Conductor Asignado</th>
+                        <th class="px-8 py-4">Fecha de Emisión</th>
+                        <th class="px-8 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm">
+                    {% for asig in asignaciones %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary notranslate">description</span>
+                                <span class="font-black text-slate-900">{{ asig.nro_memorandum }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div>
+                                <p class="font-bold text-slate-900">{{ asig.vehiculo.placa }}</p>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold">{{ asig.vehiculo.marca }} {{ asig.vehiculo.modelo }}</p>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-primary text-xs font-bold border">
+                                    {{ asig.chofer.username|slice:":1"|upper }}
+                                </div>
+                                <span class="font-medium text-slate-700">{{ asig.chofer.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-slate-600 font-medium">
+                            {{ asig.fecha_asignacion|date:"d M Y" }}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <div class="flex justify-end gap-2">
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Imprimir Memorándum">
+                                    <span class="material-symbols-outlined notranslate text-lg">print</span>
+                                </button>
+                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Ver Detalles">
+                                    <span class="material-symbols-outlined notranslate text-lg">visibility</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">
+                            No hay registros de memorándums emitidos en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

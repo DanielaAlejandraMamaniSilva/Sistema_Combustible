@@ -34,4 +34,6 @@ urlpatterns = [
     path('activos/asignar/', views.crear_asignacion, name='crear_asignacion'),
     path('activos/memorandums/', views.lista_memorandums, name='lista_memorandums'),
     path('activos/historial/', views.historial_asignaciones, name='historial_asignaciones'),
+    path('activos/actas/', views.lista_actas, name='lista_actas'),
 ]
+

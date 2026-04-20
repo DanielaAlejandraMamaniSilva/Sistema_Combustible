@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Actas de Entrega y Recepción</h2>
+        <p class="text-slate-500 font-medium">Control de documentos de responsabilidad civil por activo asignado.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                <tr>
+                    <th class="px-8 py-4">Vehículo</th>
+                    <th class="px-8 py-4">Chofer Asignado</th>
+                    <th class="px-8 py-4 text-center">Estado del Documento</th>
+                    <th class="px-8 py-4 text-right">Acción</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y text-sm">
+                {% for a in asignaciones %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5">
+                        <p class="font-black text-slate-900">{{ a.vehiculo.placa }}</p>
+                    </td>
+                    <td class="px-8 py-5 font-medium">{{ a.chofer.get_full_name }}</td>
+                    <td class="px-8 py-5 text-center">
+                        {% if a.documento_acta %}
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold text-[9px] uppercase">DOCUMENTO CARGADO</span>
+                        {% else %}
+                            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full font-bold text-[9px] uppercase">SIN ACTA DIGITAL</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <button class="text-primary font-black uppercase text-xs hover:underline">Subir / Ver</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

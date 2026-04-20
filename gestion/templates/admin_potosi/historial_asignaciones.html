@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Asignaciones - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b pb-6">
+        <div>
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.3em] mb-2 block">Control de Activos Fijos</span>
+            <h2 class="font-headline font-black text-4xl text-on-surface tracking-tight uppercase">Historial de Asignaciones</h2>
+            <p class="text-on-surface-variant mt-2 max-w-2xl font-body">Trazabilidad completa de la flota vehicular: registro histórico de conductores, periodos de uso y documentos de respaldo.</p>
+        </div>
+        <div class="flex gap-3">
+            <button class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 transition-all">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Exportar Historial
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros de búsqueda rápidos -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-center">
+        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Filtrar por:</span>
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input type="text" class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-primary w-64" placeholder="Placa, Conductor o Memo...">
+        </div>
+        <select class="bg-slate-50 border-none rounded-lg text-xs font-bold text-slate-600 px-4 py-2 focus:ring-2 focus:ring-primary">
+            <option>Todos los Estados</option>
+            <option>Activos</option>
+            <option>Finalizados</option>
+        </select>
+    </div>
+
+    <!-- Tabla de Historial -->
+    <section class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left font-body">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b">
+                        <th class="px-8 py-4">Fecha Asignación</th>
+                        <th class="px-8 py-4">Vehículo (Placa)</th>
+                        <th class="px-8 py-4">Conductor</th>
+                        <th class="px-8 py-4">Nº Memorándum</th>
+                        <th class="px-8 py-4 text-center">Estado</th>
+                        <th class="px-8 py-4 text-right">Documento</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm">
+                    {% for asig in asignaciones %}
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-8 py-5 font-medium text-slate-600">
+                            {{ asig.fecha_asignacion|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-primary border border-red-100">
+                                    <span class="material-symbols-outlined text-lg">directions_car</span>
+                                </div>
+                                <div>
+                                    <p class="font-black text-slate-900">{{ asig.vehiculo.placa }}</p>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold">{{ asig.vehiculo.marca }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="font-bold text-slate-700">{{ asig.chofer.get_full_name }}</p>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-tighter">CI: {{ asig.chofer.ci }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded border text-slate-600">
+                                {{ asig.nro_memorandum }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-center">
+                            {% if asig.esta_activo %}
+                                <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-[9px] font-black rounded-full uppercase">
+                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                    Vigente
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 bg-slate-100 text-slate-400 text-[9px] font-black rounded-full uppercase">
+                                    Finalizado
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            {% if asig.documento_acta %}
+                                <a href="{{ asig.documento_acta.url }}" class="text-primary hover:text-red-800 transition-colors" title="Descargar Acta">
+                                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                                </a>
+                            {% else %}
+                                <span class="material-symbols-outlined text-slate-200" title="Sin Documento">file_off</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic font-medium">
+                            No existen registros históricos de asignación.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

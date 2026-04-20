@@ -544,3 +544,8 @@ def historial_asignaciones(request):
 def lista_memorandums(request):
     asignaciones = Asignacion.objects.exclude(nro_memorandum='').order_by('-fecha_asignacion')
     return render(request, 'admin_potosi/memorandums.html', {'asignaciones': asignaciones})
+
+@login_required
+def lista_actas(request):
+    asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')
+    return render(request, 'admin_potosi/actas.html', {'asignaciones': asignaciones})
