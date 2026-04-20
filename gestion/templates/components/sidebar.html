@@ -98,30 +98,30 @@
         {% endif %}
         
         <!-- MENÚ ADMINISTRADOR -->
-        {% if user.rol == 'admin'%}
-            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+        {% if user.rol == 'admin' %}
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'registros_visualizacion' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+            href="{% url 'registros_visualizacion' %}">
                 <span class="material-symbols-outlined notranslate">ballot</span>
-                <span>Registros Visualizacion </span>
+                <span>Registros Visualización</span>
             </a>
             <div class="mx-4 my-2 border-t pt-4">
                 <p class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reportes</p>
                 <div class="space-y-1">
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" 
+                    href="{% url 'reporte_por_chofer' %}">
                         <span class="material-symbols-outlined mr-3 text-lg">person</span> Por Chofer
                     </a>
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium transition-all" 
+                    href="{% url 'reporte_por_vehiculo_select' %}">
                         <span class="material-symbols-outlined mr-3 text-lg">directions_car</span> Por Vehículo
                     </a>
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="#">
-                        <span class="material-symbols-outlined mr-3 text-lg">calendar_month</span> Por Fecha
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" 
+                    href="{% url 'monitoreo_real' %}">
+                        <span class="material-symbols-outlined mr-3 text-lg">distance</span> Monitoreo Tiempo Real
                     </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-                        <span class="material-symbols-outlined notranslate">distance</span>
-                        <span>Monitoreo en Tiempo Real</span>
-                    </a>
-                    <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
-                        <span class="material-symbols-outlined notranslate">verified_user</span>
-                        <span>Validacion de Registros</span>
+                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" 
+                    href="{% url 'validar_registros' %}">
+                        <span class="material-symbols-outlined mr-3 text-lg">verified_user</span> Validación de Registros
                     </a>
                 </div>
             </div>
@@ -142,7 +142,6 @@
             </div>
 
             <!-- Botón Modo Seguro -->
-            <!-- Botón Modo Seguro Dinámico -->
             <div class="px-4 mt-6">
                 <form action="{% url 'toggle_seguro' %}" method="POST">
                     {% csrf_token %}

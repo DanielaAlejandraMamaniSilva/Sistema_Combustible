@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-end border-b pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Estado de la Flota</h2>
+            <p class="text-slate-500 font-medium">Seguimiento operativo del personal de conducción.</p>
+        </div>
+        <div class="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-xs font-bold">
+            <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span> GPS ACTIVO
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for chofer in choferes %}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+            <div class="relative shrink-0">
+                <img class="w-14 h-14 rounded-full border-2 border-slate-100" src="https://ui-avatars.com/api/?name={{ chofer.first_name }}&background=f1f5f9&color=770003">
+                <div class="absolute bottom-0 right-0 w-4 h-4 {% if chofer.en_ruta %}bg-green-500{% else %}bg-slate-300{% endif %} border-2 border-white rounded-full"></div>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-slate-900 truncate">{{ chofer.get_full_name }}</h4>
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-tighter">
+                    {% if chofer.en_ruta %}EN COMISIÓN{% else %}EN BASE / DISPONIBLE{% endif %}
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

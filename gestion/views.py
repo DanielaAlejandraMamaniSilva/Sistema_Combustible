@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect,get_object_or_404
 from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Sum, F
-from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm
+from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField
+from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm
 from django.contrib import messages
+from django.core.management import call_command
 from django.contrib.sessions.models import Session
 from django.utils import timezone
 from django.contrib.admin.models import LogEntry,ADDITION, CHANGE, DELETION
@@ -13,8 +14,7 @@ import openpyxl
 from django.db.models import Q
 from django.http import HttpResponse
 import io
-from django.core.management import call_command
-
+from datetime import datetime, timedelta
 
 @login_required
 def dashboard_view(request):
@@ -57,22 +57,31 @@ def dashboard_chofer(request):
 
 Usuario = get_user_model()
 
+@login_required
 def dashboard_activos(request):
+    if request.user.rol not in ['activos', 'admin', 'superadmin']:
+        return redirect('dashboard')
+
     total_vehiculos = Vehiculo.objects.count()
+    vehiculos_ok = Vehiculo.objects.filter(estado='operacional').count()
+    
     porcentaje = 0
     if total_vehiculos > 0:
-        operacionales = Vehiculo.objects.filter(estado='operacional').count()
-        porcentaje = int((operacionales / total_vehiculos) * 100)
-    
-    asignaciones = Asignacion.objects.filter(esta_activo=True).select_related('vehiculo', 'chofer')
-    conductores = Usuario.objects.filter(rol='chofer')
+        porcentaje = int((vehiculos_ok / total_vehiculos) * 100)
 
-    return render(request, 'dashboard_activos.html', {
+    pendientes_validacion = Bitacora.objects.filter(estado_validacion='pendiente').count()
+    pendientes_acta = Asignacion.objects.filter(esta_activo=True, documento_acta='').count()
+    total_pendientes = pendientes_validacion + pendientes_acta
+    asignaciones = Asignacion.objects.filter(esta_activo=True).select_related('vehiculo', 'chofer')
+
+    context = {
         'total_vehiculos': total_vehiculos,
         'porcentaje': porcentaje,
+        'total_pendientes': total_pendientes,
         'asignaciones': asignaciones,
-        'conductores': conductores,
-    })
+        'fecha_actual': timezone.now(),
+    }
+    return render(request, 'dashboard_activos.html', context)
 
 @login_required
 def dashboard_bienes(request):
@@ -91,21 +100,52 @@ def dashboard_bienes(request):
 
 @login_required
 def dashboard_admin(request):
-    bitacoras = Bitacora.objects.all()
-    consumo_avg = 14.2
-    km_totales = bitacoras.aggregate(total=Sum(F('km_final') - F('km_inicial')))['total'] or 0
-    alertas_count = Bitacora.objects.filter(estado_validacion='anomalia').count()
+    hoy = timezone.now().date()
+    hace_un_mes = hoy - timedelta(days=30)
+    inicio_mes_actual = hoy.replace(day=1)
     
-    monitoreo_choferes = Usuario.objects.filter(rol='chofer')[:3]
+    bitacoras_mes = Bitacora.objects.filter(fecha__date__gte=inicio_mes_actual)
     
-    registros = Bitacora.objects.select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
+    stats = bitacoras_mes.aggregate(
+        total_distancia=Sum(F('km_final') - F('km_inicial')),
+        total_litros=Sum('cantidad_litros')
+    )
+    
+    distancia = stats['total_distancia'] or 0
+    litros = stats['total_litros'] or 1 
+    consumo_avg = round(distancia / float(litros), 1)
 
+    km_hoy = Bitacora.objects.filter(fecha__date=hoy).aggregate(
+        total=Sum(F('km_final') - F('km_inicial'))
+    )['total'] or 0
+
+    alertas_count = Bitacora.objects.filter(estado_validacion='anomalia').count()
+
+    limite_ruta = timezone.now() - timedelta(hours=4)
+    choferes = Usuario.objects.filter(rol='chofer')
+    
+    for chofer in choferes:
+        ultima_bitacora = Bitacora.objects.filter(chofer=chofer).order_by('-fecha').first()
+        if ultima_bitacora and ultima_bitacora.fecha >= limite_ruta:
+            chofer.estado_operativo = "EN RUTA"
+            chofer.ruta_actual = ultima_bitacora.destino
+        else:
+            chofer.estado_operativo = "DISPONIBLE"
+            chofer.ruta_actual = "En Base"
+    
+    filtro = request.GET.get('filtro', 'todos')
+    registros = Bitacora.objects.select_related('vehiculo', 'chofer').order_by('-fecha')
+
+    if filtro == 'semana':
+        hace_una_semana = hoy - timedelta(days=7)
+        registros = registros.filter(fecha__date__gte=hace_una_semana)
+    
     context = {
         'consumo_avg': consumo_avg,
-        'km_totales': km_totales,
+        'km_totales': km_hoy,
         'alertas_count': alertas_count,
-        'monitoreo_choferes': monitoreo_choferes,
-        'registros': registros,
+        'monitoreo_choferes': choferes[:3],
+        'registros': registros[:10],       
     }
     return render(request, 'dashboard_admin.html', context)
 
@@ -250,7 +290,6 @@ def vista_roles(request):
     if request.user.rol != 'superadmin':
         return redirect('dashboard')
     
-    # Contamos cuántos usuarios hay por cada rol
     conteo_roles = []
     for codigo, nombre in Usuario.ROLES:
         cantidad = Usuario.objects.filter(rol=codigo).count()
@@ -360,3 +399,148 @@ def eliminar_vehiculo(request, pk):
     vehiculo.delete()
     messages.success(request, "Vehículo eliminado del catálogo.")
     return redirect('gestion_catalogos')
+
+@login_required
+def reporte_oficial_chofer(request, chofer_id):
+    chofer = get_object_or_404(Usuario, id=chofer_id)
+    mes_actual = datetime.now().month
+    anio_actual = datetime.now().year
+    
+    vehiculo_asig = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first()
+    bitacoras = Bitacora.objects.filter(
+        chofer=chofer, 
+        fecha__month=mes_actual, 
+        fecha__year=anio_actual
+    ).order_by('fecha')
+
+    total_cargado = 0
+    total_recorrido = 0
+    registros_procesados = []
+    saldo_anterior = 133.90 # Este dato vendría del mes anterior en un sistema real
+    saldo_actual = saldo_anterior
+
+    for b in bitacoras:
+        recorrido = b.km_final - b.km_inicial
+        consumo_estimado = recorrido / float(vehiculo_asig.vehiculo.rendimiento_km_litro)
+        saldo_actual = float(saldo_actual) + float(b.cantidad_litros) - consumo_estimado
+        
+        registros_procesados.append({
+            'fecha': b.fecha,
+            'vale': b.nro_vale_combustible,
+            'ingreso': b.cantidad_litros,
+            'utilizado': round(consumo_estimado, 2),
+            'saldo': round(saldo_actual, 2),
+            'objeto': b.objetivo_comision,
+            'salida': b.km_inicial,
+            'llegada': b.km_final,
+            'recorrido': recorrido,
+        })
+        total_cargado += b.cantidad_litros
+        total_recorrido += recorrido
+
+    context = {
+        'chofer': chofer,
+        'vehiculo': vehiculo_asig.vehiculo if vehiculo_asig else None,
+        'registros': registros_procesados,
+        'mes': "ENERO",
+        'anio': anio_actual,
+        'total_recorrido': total_recorrido,
+        'total_cargado': total_cargado,
+        'saldo_anterior': saldo_anterior,
+        'saldo_final': round(saldo_actual, 2),
+    }
+    return render(request, 'reportes/planilla_oficial.html', context)
+
+@login_required
+def lista_registros_all(request):
+    query = request.GET.get('q', '')
+    registros = Bitacora.objects.all().order_by('-fecha')
+    if query:
+        registros = registros.filter(Q(vehiculo__placa__icontains=query) | Q(chofer__last_name__icontains=query))
+    return render(request, 'admin_potosi/registros_list.html', {'registros': registros})
+
+@login_required
+def validar_registros(request):
+    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
+    return render(request, 'admin_potosi/validar.html', {'pendientes': pendientes})
+
+@login_required
+def cambiar_estado_bitacora(request, pk, nuevo_estado):
+    bitacora = get_object_or_404(Bitacora, pk=pk)
+    bitacora.estado_validacion = nuevo_estado
+    bitacora.save()
+    messages.success(request, f"Registro {bitacora.nro_vale_combustible} marcado como {nuevo_estado.upper()}")
+    return redirect('validar_registros')
+
+@login_required
+def monitoreo_tiempo_real(request):
+    choferes = Usuario.objects.filter(rol='chofer')
+    hoy = datetime.now().date()
+    for c in choferes:
+        c.en_ruta = Bitacora.objects.filter(chofer=c, fecha__date=hoy).exists()
+    return render(request, 'admin_potosi/monitoreo.html', {'choferes': choferes})
+
+@login_required
+def seleccionar_chofer_reporte(request):
+    choferes = Usuario.objects.filter(rol='chofer')
+    return render(request, 'admin_potosi/seleccionar_chofer.html', {'choferes': choferes})
+
+@login_required
+def seleccionar_vehiculo_reporte(request):
+    # Solo vehículos que tengan al menos una bitácora o todos
+    vehiculos = Vehiculo.objects.all()
+    return render(request, 'admin_potosi/seleccionar_vehiculo.html', {'vehiculos': vehiculos})
+
+@login_required
+def reporte_por_vehiculo(request, vehiculo_id):
+    vehiculo = get_object_or_404(Vehiculo, id=vehiculo_id)
+    mes_actual = datetime.now().month
+    anio_actual = datetime.now().year
+    
+    bitacoras = Bitacora.objects.filter(
+        vehiculo=vehiculo,
+        fecha__month=mes_actual, 
+        fecha__year=anio_actual
+    ).order_by('fecha')
+
+    total_recorrido = 0
+    total_cargado = 0
+    for b in bitacoras:
+        total_recorrido += (b.km_final - b.km_inicial)
+        total_cargado += b.cantidad_litros
+
+    context = {
+        'vehiculo': vehiculo,
+        'registros': bitacoras,
+        'total_recorrido': total_recorrido,
+        'total_cargado': total_cargado,
+        'mes': "ABRIL", # Podrías hacerlo dinámico
+        'anio': anio_actual,
+    }
+    return render(request, 'reportes/planilla_oficial.html', context)
+
+@login_required
+def crear_asignacion(request):
+    if request.user.rol not in ['activos', 'admin', 'superadmin']:
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        form = AsignacionForm(request.POST, request.FILES)
+        if form.is_valid():
+            asignacion = form.save()
+            messages.success(request, f"Vehículo {asignacion.vehiculo.placa} asignado a {asignacion.chofer.get_full_name()}")
+            return redirect('dashboard')
+    else:
+        form = AsignacionForm()
+    
+    return render(request, 'catalogos/asignar_form.html', {'form': form})
+
+@login_required
+def historial_asignaciones(request):
+    asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')
+    return render(request, 'admin_potosi/historial_asignaciones.html', {'asignaciones': asignaciones})
+
+@login_required
+def lista_memorandums(request):
+    asignaciones = Asignacion.objects.exclude(nro_memorandum='').order_by('-fecha_asignacion')
+    return render(request, 'admin_potosi/memorandums.html', {'asignaciones': asignaciones})

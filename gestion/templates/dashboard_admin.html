@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Soberanía Potosí - Auditoría Administrativa{% endblock %}
+{% block title %}Administración - Soberanía Potosí{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
-    <!-- Hero Stats: Bento Grid (Consumo, Km, Anomalías) -->
+    <!-- Hero Stats: Bento Grid -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <!-- Consumo Promedio (Tarjeta Roja Grande) -->
+        <!-- Consumo Promedio (Tarjeta Roja) -->
         <div class="md:col-span-2 bg-gradient-to-br from-[#770003] to-[#a10508] p-8 rounded-xl text-white shadow-xl relative overflow-hidden flex flex-col justify-between h-64">
             <div class="z-10">
                 <h3 class="opacity-80 text-xs font-bold uppercase tracking-widest mb-2 font-headline">Consumo Promedio Mensual</h3>
@@ -23,7 +23,7 @@
             <span class="material-symbols-outlined absolute -right-10 -bottom-10 text-[200px] opacity-10 notranslate" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
         </div>
 
-        <!-- Km Totales -->
+        <!-- Km Recorridos Totales -->
         <div class="bg-white p-6 rounded-xl flex flex-col justify-between border-b-4 border-primary shadow-sm ring-1 ring-slate-100">
             <div class="flex justify-between items-start">
                 <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-primary">
@@ -37,7 +37,7 @@
             </div>
         </div>
 
-        <!-- Alertas de Anomalía -->
+        <!-- Alertas de Anomalía (Tarjeta Rosa) -->
         <div class="bg-[#FFDAD6] p-6 rounded-xl flex flex-col justify-between border-b-4 border-[#BA1A1A] shadow-sm">
             <div class="flex justify-between items-start">
                 <div class="w-12 h-12 rounded-xl bg-white/50 flex items-center justify-center text-[#BA1A1A]">
@@ -60,32 +60,32 @@
         <section class="lg:col-span-4 space-y-6">
             <div class="flex justify-between items-end mb-2">
                 <h2 class="text-xl font-bold tracking-tight text-slate-900 font-headline">Monitoreo en Tiempo Real</h2>
-                <a href="#" class="text-primary text-[10px] font-black uppercase hover:underline">Ver Mapa</a>
+                <a href="{% url 'monitoreo_real' %}" class="text-primary text-[10px] font-black uppercase hover:underline">Ver Mapa</a>
             </div>
 
             <div class="space-y-4">
                 {% for chofer in monitoreo_choferes %}
                 <div class="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm border-l-4 
-                    {% if forloop.counter == 2 %}border-slate-300{% else %}border-green-500{% endif %}">
+                    {% if chofer.estado_real == 'DISPONIBLE' %}border-slate-300{% else %}border-green-500{% endif %}">
                     <div class="relative shrink-0">
-                        <img class="w-12 h-12 rounded-full object-cover" src="https://ui-avatars.com/api/?name={{ chofer.username }}&background=E2E8F0&color=770003" alt="perfil">
-                        <div class="absolute bottom-0 right-0 w-3 h-3 {% if forloop.counter == 2 %}bg-slate-300{% else %}bg-green-500{% endif %} border-2 border-white rounded-full"></div>
+                        <img class="w-12 h-12 rounded-full object-cover" src="https://ui-avatars.com/api/?name={{ chofer.first_name }}+{{ chofer.last_name }}&background=E2E8F0&color=770003" alt="perfil">
+                        <div class="absolute bottom-0 right-0 w-3 h-3 {% if chofer.estado_real == 'DISPONIBLE' %}bg-slate-300{% else %}bg-green-500{% endif %} border-2 border-white rounded-full"></div>
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-bold text-slate-900 truncate font-headline">{{ chofer.get_full_name }}</p>
-                        <p class="text-[11px] text-slate-500">{% if forloop.counter == 2 %}Última: Hace 15 min{% else %}Ruta: Potosí - Uyuni{% endif %}</p>
+                        <p class="text-[11px] text-slate-500">{{ chofer.ruta }}</p>
                     </div>
                     <div class="shrink-0">
                         <span class="text-[9px] font-black px-2 py-0.5 rounded uppercase
-                            {% if forloop.counter == 2 %}bg-slate-100 text-slate-500{% else %}bg-green-100 text-green-600{% endif %}">
-                            {% if forloop.counter == 2 %}Disponible{% else %}En Ruta{% endif %}
+                            {% if chofer.estado_real == 'DISPONIBLE' %}bg-slate-100 text-slate-500{% else %}bg-green-100 text-green-600{% endif %}">
+                            {{ chofer.estado_real }}
                         </span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <!-- Mapa Estilizado -->
+            <!-- Mapa Decorativo -->
             <div class="h-48 rounded-xl bg-slate-200 relative overflow-hidden shadow-inner group">
                 <img class="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAR48nYqbzKZVB2Epo2CGUZByGAX1n7beuH49cVsDlCWOwJlTRnWkfzoL2HomUEhaK6J7CtVfcZDfZ2AQVZCcMeGkGRCeC_heWDBVEvAMAsmLYvEyHmkrOdKXdCc0Sj7pKzGM8iI-7-pWtLySUSZ_-J7L1vWC_FMKrS2WPd4SVyXg6uwEcJBvVx4OsPfrxucREVig6DfFDkvTTdkgbIw0NDxrwYSDtljxobRDUzvDlkmbSgJoBxapjV3l_1vKeVTug-mTIQP6yaFpXK" alt="map">
                 <div class="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-2 shadow-lg border border-slate-200">
@@ -100,11 +100,10 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 class="text-2xl font-black tracking-tight text-slate-900 font-headline">Registros de Combustible</h2>
                 
-                <!-- Barra de Filtros Dinámica -->
+                <!-- Barra de Filtros Funcional -->
                 <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg ring-1 ring-slate-200">
-                    <button class="px-4 py-1.5 bg-white text-primary font-bold text-[10px] rounded shadow-sm uppercase">Todos</button>
-                    <button class="px-4 py-1.5 text-slate-500 font-bold text-[10px] hover:bg-white/50 rounded transition-colors uppercase">Esta Semana</button>
-                    <button class="px-4 py-1.5 text-slate-500 font-bold text-[10px] hover:bg-white/50 rounded transition-colors uppercase">Chofer</button>
+                    <a href="?filtro=todos" class="px-4 py-1.5 {% if request.GET.filtro != 'semana' %}bg-white text-primary shadow-sm{% else %}text-slate-500{% endif %} font-bold text-[10px] rounded uppercase transition-all">Todos</a>
+                    <a href="?filtro=semana" class="px-4 py-1.5 {% if request.GET.filtro == 'semana' %}bg-white text-primary shadow-sm{% else %}text-slate-500{% endif %} font-bold text-[10px] rounded transition-all uppercase">Esta Semana</a>
                     <div class="w-px h-4 bg-slate-300 mx-1"></div>
                     <button class="p-1.5 text-primary hover:bg-white rounded transition-colors">
                         <span class="material-symbols-outlined text-lg">filter_list</span>
@@ -112,7 +111,7 @@
                 </div>
             </div>
 
-            <!-- Tabla de Registros Estilizada -->
+            <!-- Tabla de Registros -->
             <div class="bg-white rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -126,10 +125,9 @@
                                 <th class="px-6 py-4 text-center">Estado</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-50">
+                        <tbody class="divide-y divide-slate-50 text-sm">
                             {% for reg in registros %}
-                            <tr class="transition-colors 
-                                {% if reg.estado_validacion == 'anomalia' %}bg-red-50 text-[#A10508]{% else %}hover:bg-slate-50/50{% endif %}">
+                            <tr class="transition-colors {% if reg.estado_validacion == 'anomalia' %}bg-red-50 text-[#A10508]{% else %}hover:bg-slate-50/50{% endif %}">
                                 <td class="px-6 py-5">
                                     <div class="flex items-center gap-3">
                                         <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center 
@@ -138,17 +136,17 @@
                                         </div>
                                         <div>
                                             <p class="text-sm font-bold font-headline">{{ reg.vehiculo.placa }}</p>
-                                            <p class="text-[10px] uppercase font-bold opacity-60">{{ reg.vehiculo.marca }} {{ reg.vehiculo.modelo }}</p>
+                                            <p class="text-[10px] uppercase font-bold opacity-60">{{ reg.vehiculo.marca }}</p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-5 font-medium text-sm">{{ reg.chofer.get_full_name }}</td>
+                                <td class="px-6 py-5 font-medium">{{ reg.chofer.get_full_name }}</td>
                                 <td class="px-6 py-5">
-                                    <p class="text-sm font-medium">{{ reg.fecha|date:"d M, Y" }}</p>
+                                    <p class="font-medium">{{ reg.fecha|date:"d M, Y" }}</p>
                                     <p class="text-[10px] opacity-60">{{ reg.fecha|date:"H:i A" }}</p>
                                 </td>
-                                <td class="px-6 py-5 text-right font-bold text-sm">{{ reg.cantidad_litros }} L</td>
-                                <td class="px-6 py-5 text-right font-black text-sm">{{ reg.costo_total }}</td>
+                                <td class="px-6 py-5 text-right font-bold">{{ reg.cantidad_litros }} L</td>
+                                <td class="px-6 py-5 text-right font-black">{{ reg.costo_total }}</td>
                                 <td class="px-6 py-5 text-center">
                                     {% if reg.estado_validacion == 'anomalia' %}
                                         <span class="inline-flex items-center gap-1 px-3 py-1 bg-red-700 text-white text-[9px] font-black rounded-full uppercase">
@@ -162,6 +160,8 @@
                                     {% endif %}
                                 </td>
                             </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="px-6 py-10 text-center text-slate-400 italic">No hay registros para mostrar.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

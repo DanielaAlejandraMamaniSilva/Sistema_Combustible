@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Visualización de Registros - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-end border-b pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Historial de Bitácoras</h2>
+            <p class="text-slate-500 font-medium">Visualización completa de todos los movimientos registrados.</p>
+        </div>
+        <form method="GET" class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input name="q" class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-primary w-64 transition-all" placeholder="Buscar placa o chofer..." type="text">
+        </form>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                <tr>
+                    <th class="px-8 py-4">Fecha / Hora</th>
+                    <th class="px-8 py-4">Vehículo</th>
+                    <th class="px-8 py-4">Chofer</th>
+                    <th class="px-8 py-4 text-right">Cant. Litros</th>
+                    <th class="px-8 py-4 text-center">Estado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y text-sm">
+                {% for r in registros %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-5">
+                        <p class="font-bold text-slate-900">{{ r.fecha|date:"d M Y" }}</p>
+                        <p class="text-[10px] text-slate-400">{{ r.fecha|date:"H:i A" }}</p>
+                    </td>
+                    <td class="px-8 py-5 font-black text-primary">{{ r.vehiculo.placa }}</td>
+                    <td class="px-8 py-5 font-medium">{{ r.chofer.get_full_name }}</td>
+                    <td class="px-8 py-5 text-right font-bold">{{ r.cantidad_litros }} L</td>
+                    <td class="px-8 py-5 text-center">
+                        <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase
+                            {% if r.estado_validacion == 'validado' %}bg-green-100 text-green-700
+                            {% elif r.estado_validacion == 'anomalia' %}bg-red-600 text-white
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {{ r.get_estado_validacion_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No hay registros cargados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

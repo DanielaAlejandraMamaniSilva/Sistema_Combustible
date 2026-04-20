@@ -32,6 +32,8 @@ class Vehiculo(models.Model):
     nro_chasis = models.CharField(max_length=50, unique=True)
     kilometraje_actual = models.PositiveIntegerField(default=0)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='operacional')
+    rendimiento_km_litro = models.DecimalField(max_digits=5, decimal_places=2, default=5.00, help_text="KM por Litro")
+    area = models.ForeignKey('Area', on_delete=models.SET_NULL, null=True)
 
     TIPOS_COMBUSTIBLE = (
         ('Gasolina', 'Gasolina'),

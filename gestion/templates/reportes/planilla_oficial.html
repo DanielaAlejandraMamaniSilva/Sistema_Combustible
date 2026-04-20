@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Estilos de alta precisión para calcar el Excel */
+    .planilla-container { 
+        background-color: white; 
+        padding: 20px; 
+        font-family: 'Arial Narrow', Arial, sans-serif; 
+        color: black;
+    }
+    .table-excel { 
+        width: 100%; 
+        border-collapse: collapse; 
+        border: 2px solid black; 
+        font-size: 9px; 
+    }
+    .table-excel td, .table-excel th { 
+        border: 1px solid black; 
+        padding: 2px 4px; 
+        height: 20px;
+    }
+    
+    /* Colores exactos del Excel */
+    .bg-yellow { background-color: #FFFF00 !important; }
+    .bg-green-excel { background-color: #92D050 !important; }
+    .bg-orange-excel { background-color: #FFCC00 !important; }
+    .bg-gray-excel { background-color: #D9D9D9 !important; }
+    
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .font-bold { font-weight: bold; }
+
+    @media print {
+        .no-print { display: none; }
+        body { background: white; padding: 0; }
+        .planilla-container { padding: 0; }
+        @page { size: landscape; margin: 0.5cm; }
+    }
+</style>
+
+<div class="planilla-container">
+    <div class="no-print flex justify-end mb-4">
+        <button onclick="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined">print</span> Imprimir Reporte Exacto
+        </button>
+    </div>
+
+    <!-- CABECERA PRINCIPAL -->
+    <table class="table-excel">
+        <tr>
+            <th colspan="12" class="text-center text-xs py-2">REPORTE DE USO DE COMBUSTIBLE EN VEHICULOS</th>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold w-20">GESTION</td>
+            <td class="bg-yellow w-24">{{ anio }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">SECRETARIA</td>
+            <td colspan="5" class="bg-yellow">{{ vehiculo.area.nombre|upper }}</td>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold">MES</td>
+            <td class="bg-yellow">{{ mes|upper }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">TIPO DE VEHICULO</td>
+            <td colspan="5" class="bg-yellow">{{ vehiculo.tipo|upper }}</td>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold">CHOFER</td>
+            <td class="bg-yellow">{{ chofer.get_full_name|upper }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">PLACA</td>
+            <td colspan="5" class="bg-yellow">{{ vehiculo.placa|upper }}</td>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold">LUGAR</td>
+            <td class="bg-yellow">POTOSI</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">COLOR</td>
+            <td colspan="5" class="bg-yellow">{{ vehiculo.color|upper }}</td>
+        </tr>
+
+        <!-- ENCABEZADO TABLA DE DATOS -->
+        <tr class="bg-gray-excel text-center font-bold">
+            <td rowspan="2">FECHA</td>
+            <td rowspan="2">Nº VALE</td>
+            <td rowspan="2">CANTIDAD</td>
+            <td rowspan="2" class="w-64">OBJETO DE VIAJE O TRABAJO</td>
+            <td colspan="3">COMBUSTIBLE</td>
+            <td colspan="3">KILOMETRAJE</td>
+            <td rowspan="2">KM POR LITRO</td>
+            <td rowspan="2">RESPONSABLE DE VIAJE</td>
+        </tr>
+        <tr class="bg-gray-excel text-center font-bold">
+            <td>INGRESO</td>
+            <td>UTILIZADO(*)</td>
+            <td>SALDO</td>
+            <td>SALIDA</td>
+            <td>LLEGADA</td>
+            <td>RECORRIDO</td>
+        </tr>
+
+        <!-- FILA SALDO ANTERIOR -->
+        <tr>
+            <td colspan="4" class="text-right font-bold bg-gray-excel">SALDO ANTERIOR</td>
+            <td></td>
+            <td></td>
+            <td class="bg-orange-excel text-center font-bold">{{ saldo_anterior }}</td>
+            <td></td>
+            <td class="text-center font-bold">{{ km_inicial_mes }}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+
+        <!-- CUERPO DE REGISTROS (MÁXIMO 15 FILAS PARA EL FORMATO) -->
+        {% for r in registros %}
+        <tr class="bg-green-excel">
+            <td class="text-center">{{ r.fecha|date:"d/m/Y" }}</td>
+            <td class="text-center">{{ r.vale }}</td>
+            <td class="text-center">{{ r.ingreso }}</td>
+            <td>{{ r.objeto }}</td>
+            <td class="text-center">{{ r.ingreso }}</td>
+            <td class="bg-orange-excel text-center">{{ r.utilizado }}</td>
+            <td class="bg-orange-excel text-center font-bold">{{ r.saldo }}</td>
+            <td class="text-center">{{ r.salida }}</td>
+            <td class="text-center">{{ r.llegada }}</td>
+            <td class="bg-orange-excel text-center font-bold">{{ r.recorrido }}</td>
+            <td class="text-center">{{ vehiculo.rendimiento_km_litro }}</td>
+            <td class="text-center">---</td>
+        </tr>
+        {% endfor %}
+
+        <!-- Relleno de filas vacías para completar la hoja -->
+        {% with ""|center:10 as range %}
+        {% for _ in range %}
+        <tr>
+            {% for i in "123456789012" %}<td></td>{% endfor %}
+        </tr>
+        {% endfor %}
+        {% endwith %}
+    </table>
+
+    <p class="text-[8px] mt-1 font-bold">(*) PROMEDIO DE LITRO DE COMBUSTIBLE UTILIZADO EN RELACION A KILOMETROS RECORRIDOS</p>
+
+    <!-- RESUMEN INFERIOR Y FIRMAS -->
+    <div class="mt-4 flex items-start gap-4">
+        <!-- Cuadro de Cálculos (Naranja/Gris) -->
+        <div class="w-2/5">
+            <table class="table-excel">
+                <tr><td class="bg-gray-excel font-bold">KILOMETRAJE INICIAL</td><td class="bg-orange-excel text-center font-bold">{{ km_inicial_mes }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold">KILOMETRAJE FINAL</td><td class="bg-orange-excel text-center font-bold">{{ vehiculo.kilometraje_actual }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold">KILOMETRAJE RECORRIDO</td><td class="bg-orange-excel text-center font-bold">{{ total_recorrido }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold">COMBUSTIBLE CARGADO EN EL PERIODO</td><td class="bg-orange-excel text-center font-bold">{{ total_cargado }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold">COMBUSTIBLE CONSUMIDO EN EL PERIODO</td><td class="bg-orange-excel text-center font-bold">{{ total_utilizado }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold">KILOMETRAJE POR LITRO DE GASOLINA</td><td class="bg-orange-excel text-center font-bold">{{ vehiculo.rendimiento_km_litro }}</td></tr>
+                <tr><td class="bg-gray-excel font-bold text-red-700">LITROS SOBRANTES PARA EL MES SIGUIENTE</td><td class="bg-orange-excel text-center font-bold">{{ saldo_final }}</td></tr>
+            </table>
+        </div>
+
+        <!-- Cuadro de Firmas -->
+        <div class="w-3/5 grid grid-cols-5 gap-0 border border-black h-32 items-end pb-2">
+            <div class="text-center text-[7px] border-r border-black h-full flex flex-col justify-end">
+                <div class="border-t border-black mx-2 mb-1"></div>
+                FIRMA CONDUCTOR
+            </div>
+            <div class="text-center text-[7px] border-r border-black h-full flex flex-col justify-end">
+                <div class="border-t border-black mx-2 mb-1"></div>
+                CONFORMIDAD<br>INMEDIATO SUPERIOR
+            </div>
+            <div class="text-center text-[7px] border-r border-black h-full flex flex-col justify-end">
+                <div class="border-t border-black mx-2 mb-1"></div>
+                CONFORMIDAD<br>MAESTRANZA
+            </div>
+            <div class="text-center text-[7px] border-r border-black h-full flex flex-col justify-end">
+                <div class="border-t border-black mx-2 mb-1"></div>
+                CONFORMIDAD<br>ACTIVOS FIJOS
+            </div>
+            <div class="text-center text-[7px] h-full flex flex-col justify-end">
+                <div class="border-t border-black mx-2 mb-1"></div>
+                CONFIRMIDAD RESP.<br>DE COMBUSTIBLE
+            </div>
+        </div>
+    </div>
+
+    <!-- OBSERVACIONES -->
+    <div class="mt-4">
+        <table class="table-excel">
+            <tr class="bg-green-excel">
+                <td class="bg-gray-excel font-bold w-32">OBSERVACIONES</td>
+                <td class="h-10"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Usuario, Vehiculo
+from .models import Asignacion, Vehiculo, Usuario
 
 class UsuarioCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -35,3 +35,18 @@ class VehiculoForm(forms.ModelForm):
                 self.fields[field].widget.attrs.update({
                     'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'
                 })
+
+class AsignacionForm(forms.ModelForm):
+    class Meta:
+        model = Asignacion
+        fields = ['vehiculo', 'chofer', 'nro_memorandum', 'documento_acta']
+        widgets = {
+            'vehiculo': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
+            'chofer': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
+            'nro_memorandum': forms.TextInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none', 'placeholder': 'Ej: MEMO/ACT/001/2024'}),
+            'documento_acta': forms.FileInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['chofer'].queryset = Usuario.objects.filter(rol='chofer')

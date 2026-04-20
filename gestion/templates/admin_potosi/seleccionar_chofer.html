@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Generar Reporte - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-10">
+    <div class="relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-8 shadow-sm">
+        <div class="relative z-10">
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.3em] mb-2 block">Módulo de Auditoría</span>
+            <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Generar Reporte Mensual</h2>
+            <p class="text-slate-500 font-medium mt-2 max-w-2xl">Seleccione un conductor de la lista para procesar sus registros y generar la planilla oficial de control de movilidad y combustible.</p>
+        </div>
+        
+        <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-slate-50 text-9xl notranslate select-none">description</span>
+    </div>
+
+    <div class="flex justify-between items-center px-2">
+        <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Personal de Conducción Disponible</h3>
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input type="text" id="searchDriver" class="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-xs focus:ring-2 focus:ring-primary outline-none w-64 transition-all" placeholder="Buscar por nombre o CI...">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for chofer in choferes %}
+        <div class="driver-card group bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div class="flex flex-col items-center">
+                <!-- Avatar Institucional -->
+                <div class="relative mb-4">
+                    <div class="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center text-primary font-black text-2xl border-2 border-red-100 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                        {{ chofer.first_name|slice:":1" }}{{ chofer.last_name|slice:":1" }}
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+                </div>
+
+                <!-- Info Conductor -->
+                <div class="text-center space-y-1 mb-6">
+                    <h4 class="font-black text-slate-900 font-headline leading-tight">{{ chofer.get_full_name }}</h4>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CI: {{ chofer.ci|default:"00000000" }}</p>
+                    <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 rounded text-[9px] font-black text-slate-500 uppercase mt-2">
+                        <span class="material-symbols-outlined text-[12px]">badge</span>
+                        Chofer Oficial
+                    </div>
+                </div>
+
+                <!-- Botón de Acción -->
+                <a href="{% url 'planilla_oficial' chofer.id %}" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-[10px] uppercase tracking-[0.15em] flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-lg shadow-slate-200">
+                    Generar Planilla 
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-20 text-center bg-white rounded-2xl border-2 border-dashed border-slate-100">
+            <span class="material-symbols-outlined text-slate-200 text-6xl mb-4">person_off</span>
+            <p class="text-slate-400 font-bold">No hay conductores registrados en el sistema.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.getElementById('searchDriver').addEventListener('input', function(e) {
+        const text = e.target.value.toLowerCase();
+        document.querySelectorAll('.driver-card').forEach(card => {
+            const name = card.querySelector('h4').innerText.toLowerCase();
+            card.style.display = name.includes(text) ? 'block' : 'none';
+        });
+    });
+</script>
+{% endblock %}

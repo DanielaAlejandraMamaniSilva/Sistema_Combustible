@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Validación de Bitácoras</h2>
+        <p class="text-slate-500 font-medium font-body">Registros pendientes de revisión técnica y aprobación.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-red-50 text-[10px] font-black uppercase text-red-900 border-b border-red-100">
+                <tr>
+                    <th class="px-8 py-4">Vale / Placa</th>
+                    <th class="px-8 py-4">Chofer</th>
+                    <th class="px-8 py-4">Comisión / Destino</th>
+                    <th class="px-8 py-4 text-center">Acciones de Validación</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-sm">
+                {% for p in pendientes %}
+                <tr class="hover:bg-slate-50">
+                    <td class="px-8 py-5">
+                        <p class="font-black text-slate-900">#{{ p.nro_vale_combustible }}</p>
+                        <p class="text-[10px] font-bold text-primary">{{ p.vehiculo.placa }}</p>
+                    </td>
+                    <td class="px-8 py-5 font-medium">{{ p.chofer.get_full_name }}</td>
+                    <td class="px-8 py-5 text-slate-500">{{ p.destino }}</td>
+                    <td class="px-8 py-5 text-center">
+                        <div class="flex justify-center gap-2">
+                            <a href="{% url 'cambiar_estado' p.pk 'validado' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition-all">VALIDAR</a>
+                            <a href="{% url 'cambiar_estado' p.pk 'anomalia' %}" class="bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-900 transition-all">ANOMALÍA</a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-8 py-20 text-center text-slate-400 italic">No hay bitácoras pendientes de validación.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

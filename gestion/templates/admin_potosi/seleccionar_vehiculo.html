@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <div class="border-b pb-4">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Reporte por Vehículo</h2>
+        <p class="text-slate-500 font-medium">Seleccione una unidad para visualizar el historial de consumo y recorridos del mes.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        {% for v in vehiculos %}
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between space-y-4 hover:shadow-md transition-all">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">directions_car</span>
+                </div>
+                <div>
+                    <h3 class="font-black text-lg text-slate-900">{{ v.placa }}</h3>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">{{ v.marca }} {{ v.modelo }}</p>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 p-3 rounded-xl flex justify-between items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Km Actual</span>
+                <span class="text-sm font-black text-slate-700">{{ v.kilometraje_actual }}</span>
+            </div>
+
+            <a href="{% url 'planilla_vehiculo' v.id %}" class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold text-xs uppercase text-center hover:bg-black transition-all">
+                Ver Reporte
+            </a>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-center py-20 text-slate-400 italic">No hay vehículos registrados en el sistema.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
