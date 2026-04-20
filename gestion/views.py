@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth import get_user_model
-from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField
+from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField, Count
 from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm
 from django.contrib import messages
 from django.core.management import call_command
@@ -549,3 +549,45 @@ def lista_memorandums(request):
 def lista_actas(request):
     asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')
     return render(request, 'admin_potosi/actas.html', {'asignaciones': asignaciones})
+
+@login_required
+def dashboard_bienes(request):
+    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
+        return redirect('dashboard')
+
+    mes_actual = timezone.now().month
+    bitacoras_mes = Bitacora.objects.filter(fecha__month=mes_actual)
+    
+    consumo_diesel = bitacoras_mes.filter(vehiculo__tipo_combustible='Diesel').aggregate(total=Sum('cantidad_litros'))['total'] or 0
+    consumo_gasolina = bitacoras_mes.filter(vehiculo__tipo_combustible='Gasolina').aggregate(total=Sum('cantidad_litros'))['total'] or 0
+
+    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
+    total_pendientes = pendientes.count()
+    
+    ultimos_registros = Bitacora.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
+
+    context = {
+        'consumo_diesel': consumo_diesel,
+        'consumo_gasolina': consumo_gasolina,
+        'total_pendientes': total_pendientes,
+        'pendientes': ultimos_registros,
+        'total_registros': Bitacora.objects.count(),
+    }
+    return render(request, 'dashboard_bienes.html', context)
+
+@login_required
+def validar_consumo_accion(request, pk, estado):
+    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
+        return HttpResponse("No permitido", status=403)
+    
+    registro = get_object_or_404(Bitacora, pk=pk)
+    registro.estado_validacion = estado
+    registro.save()
+    
+    messages.success(request, f"Registro {registro.nro_vale_combustible} actualizado a {estado.upper()}")
+    return redirect('dashboard')
+
+@login_required
+def supervision_combustible(request):
+    registros = Bitacora.objects.all().order_by('-fecha')
+    return render(request, 'admin_potosi/supervision.html', {'registros': registros})
