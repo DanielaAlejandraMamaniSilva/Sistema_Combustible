@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Nuevo Registro de Combustible - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Encabezado del Formulario -->
+    <div class="mb-10 border-b pb-6">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white shadow-md">
+                <span class="material-symbols-outlined notranslate">add_shopping_cart</span>
+            </div>
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.3em]">Inventario de Insumos</span>
+        </div>
+        <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Registro de Ingreso</h2>
+        <p class="text-slate-500 font-medium mt-2">Registre la compra o dotación de combustible para el reabastecimiento del stock departamental.</p>
+    </div>
+
+    <!-- Card del Formulario -->
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-10">
+        <form method="POST" class="space-y-8">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Selección de Tipo -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Tipo de Combustible</label>
+                    <select name="tipo" required class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all font-bold text-slate-700">
+                        <option value="" disabled selected>Seleccione un insumo...</option>
+                        {% for c in combustibles %}
+                            <option value="{{ c.nombre }}">{{ c.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Cantidad -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Cantidad a Ingresar (Lts)</label>
+                    <div class="relative">
+                        <input type="number" name="cantidad" step="0.01" required placeholder="0.00" 
+                               class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all font-black text-slate-900">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">LTS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notas Adicionales (Opcional) -->
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">Referencia / Nº de Factura o Vale de Compra</label>
+                <input type="text" name="referencia" placeholder="Ej: Factura Nº 4521 - Estación de Servicio Central"
+                       class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary focus:bg-white transition-all text-sm">
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-6 flex flex-col md:flex-row gap-4">
+                <button type="submit" class="flex-1 bg-primary-container text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 hover:bg-primary hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3">
+                    <span class="material-symbols-outlined notranslate">save</span>
+                    Confirmar Ingreso
+                </button>
+                <a href="{% url 'control_abastecimiento' %}" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center flex items-center justify-center">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Aviso Informativo -->
+    <div class="mt-8 flex items-center gap-3 px-6 py-4 bg-amber-50 rounded-2xl border border-amber-100">
+        <span class="material-symbols-outlined text-amber-600 notranslate">warning</span>
+        <p class="text-[11px] text-amber-800 font-medium">Esta acción incrementará el saldo disponible en el inventario global. Asegúrese de que los datos coincidan con el respaldo físico.</p>
+    </div>
+</div>
+{% endblock %}

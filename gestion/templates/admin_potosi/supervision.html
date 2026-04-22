@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Supervisión de Combustible - Soberanía Potosí{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Encabezado -->
+    <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b pb-6">
+        <div>
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.3em] mb-2 block">Control de Insumos</span>
+            <h2 class="font-headline font-black text-4xl text-slate-900 tracking-tight uppercase">Supervisión de Combustible</h2>
+            <p class="text-slate-500 mt-2 max-w-2xl font-body">Historial consolidado de abastecimiento. Verifique la coherencia entre vales, litros y kilometraje recorrido.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'exportar_excel' %}" class="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase hover:bg-slate-50 transition-all">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Exportar Reporte
+            </a>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros -->
+    <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex flex-wrap gap-4 items-center">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                <input type="text" class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-lg text-xs focus:ring-2 focus:ring-primary w-64" placeholder="Buscar por placa, vale o chofer...">
+            </div>
+            <select class="bg-slate-50 border-none rounded-lg text-xs font-bold text-slate-600 px-4 py-2 focus:ring-2 focus:ring-primary">
+                <option value="">Todos los Estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="validado">Validados</option>
+                <option value="anomalia">Anomalías</option>
+            </select>
+        </div>
+        <span class="text-[10px] font-black text-slate-400 uppercase">Total Registros: {{ registros.count }}</span>
+    </div>
+
+    <!-- Tabla de Supervisión -->
+    <section class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-100">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left font-body">
+                <thead>
+                    <tr class="bg-slate-50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b">
+                        <th class="px-6 py-4 text-center">Estado</th>
+                        <th class="px-6 py-4">Fecha / Hora</th>
+                        <th class="px-6 py-4">Vehículo</th>
+                        <th class="px-6 py-4">Nº Vale</th>
+                        <th class="px-6 py-4 text-right">Cantidad (L)</th>
+                        <th class="px-6 py-4 text-right">Costo (Bs)</th>
+                        <th class="px-6 py-4">Chofer</th>
+                        <th class="px-6 py-4 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y text-sm">
+                    {% for r in registros %}
+                    <tr class="hover:bg-slate-50/50 transition-colors {% if r.estado_validacion == 'anomalia' %}bg-red-50/30{% endif %}">
+                        <td class="px-6 py-5 text-center">
+                            {% if r.estado_validacion == 'validado' %}
+                                <span class="material-symbols-outlined text-green-500 text-xl" title="Validado">check_circle</span>
+                            {% elif r.estado_validacion == 'anomalia' %}
+                                <span class="material-symbols-outlined text-red-600 text-xl" title="Anomalía Detectada">error</span>
+                            {% else %}
+                                <span class="material-symbols-outlined text-amber-500 text-xl" title="Pendiente">schedule</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-5">
+                            <p class="font-bold text-slate-900">{{ r.fecha|date:"d/m/Y" }}</p>
+                            <p class="text-[10px] text-slate-400 uppercase">{{ r.fecha|date:"H:i A" }}</p>
+                        </td>
+                        <td class="px-6 py-5">
+                            <p class="font-black text-primary">{{ r.vehiculo.placa }}</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold">{{ r.vehiculo.marca }}</p>
+                        </td>
+                        <td class="px-6 py-5 font-mono font-bold text-slate-600">
+                            #{{ r.nro_vale_combustible }}
+                        </td>
+                        <td class="px-6 py-5 text-right font-black text-slate-900">
+                            {{ r.cantidad_litros }} L
+                        </td>
+                        <td class="px-6 py-5 text-right font-bold text-slate-700">
+                            {{ r.costo_total }}
+                        </td>
+                        <td class="px-6 py-5">
+                            <p class="font-medium text-slate-700">{{ r.chofer.get_full_name }}</p>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <div class="flex justify-end gap-2">
+                                <a href="{% url 'validar_consumo_accion' r.pk 'validado' %}" class="p-2 hover:bg-green-100 rounded-lg text-green-600 transition-colors" title="Validar">
+                                    <span class="material-symbols-outlined notranslate text-lg">verified</span>
+                                </a>
+                                <a href="{% url 'validar_consumo_accion' r.pk 'anomalia' %}" class="p-2 hover:bg-red-100 rounded-lg text-red-600 transition-colors" title="Marcar Anomalía">
+                                    <span class="material-symbols-outlined notranslate text-lg">report_problem</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-8 py-20 text-center text-slate-400 italic font-medium">
+                            No existen registros de consumo para supervisar.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

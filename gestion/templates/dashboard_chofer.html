@@ -19,7 +19,9 @@
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold text-slate-400">Estado Actual</p>
-                    <p class="text-sm font-black text-emerald-600 uppercase tracking-widest">Disponible</p>
+                    <p class="text-sm font-black text-emerald-600 uppercase tracking-widest">
+                        {% if vehiculo %}EN RUTA{% else %}Disponible{% endif %}
+                    </p>
                 </div>
             </div>
             <!-- Último Consumo -->
@@ -29,7 +31,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold text-slate-400">Último Consumo</p>
-                    <p class="text-sm font-black text-slate-900">12.4 Km/L</p>
+                    <p class="text-sm font-black text-slate-900">{{ ultima_eficiencia }} Km/L</p>
                 </div>
             </div>
         </div>
@@ -37,7 +39,7 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
-        <!-- COLUMNA IZQUIERDA: FORMULARIO Y IMAGEN (4 columnas) -->
+        <!-- COLUMNA IZQUIERDA: FORMULARIO Y IMAGEN -->
         <div class="xl:col-span-4 space-y-8">
             <!-- Card Formulario -->
             <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
@@ -46,34 +48,35 @@
                     <h2 class="text-xl font-bold font-['Montserrat']">Nueva Bitácora</h2>
                 </div>
                 
-                <form class="space-y-5">
+                <form method="POST" class="space-y-5">
+                    {% csrf_token %}
                     <div class="space-y-4">
                         <div class="flex flex-col gap-1">
                             <label class="text-[10px] font-bold uppercase text-slate-500">Fecha de Operación</label>
-                            <input type="date" class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" value="2024-05-20">
+                            <input type="date" name="fecha" class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" value="{% now 'Y-m-d' %}">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold uppercase text-slate-500">Vale Combustible</label>
-                                <input type="text" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="Nº 004512">
+                                <input type="text" name="nro_vale" required class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="Nº 004512">
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold uppercase text-slate-500">Cantidad (Lts)</label>
-                                <input type="number" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="0.00">
+                                <input type="number" step="0.01" name="cantidad" id="id_cantidad" required class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="0.00">
                             </div>
                         </div>
                         <div class="flex flex-col gap-1">
                             <label class="text-[10px] font-bold uppercase text-slate-500">Objeto de Comisión</label>
-                            <textarea class="bg-slate-50 border-none rounded-lg p-3 text-sm h-20 resize-none" placeholder="Motivo del viaje..."></textarea>
+                            <textarea name="motivo" required class="bg-slate-50 border-none rounded-lg p-3 text-sm h-20 resize-none" placeholder="Motivo del viaje..."></textarea>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold uppercase text-slate-500">Km Salida</label>
-                                <input type="number" class="bg-slate-100 border-none rounded-lg p-3 text-sm font-bold" value="{{ km_actual }}" readonly>
+                                <input type="number" id="id_km_salida" class="bg-slate-100 border-none rounded-lg p-3 text-sm font-bold" value="{{ km_actual }}" readonly>
                             </div>
                             <div class="flex flex-col gap-1">
                                 <label class="text-[10px] font-bold uppercase text-slate-500">Km Llegada</label>
-                                <input type="number" class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="45XXX">
+                                <input type="number" name="km_llegada" id="id_km_llegada" required class="bg-slate-50 border-none rounded-lg p-3 text-sm" placeholder="45XXX">
                             </div>
                         </div>
                     </div>
@@ -81,15 +84,15 @@
                     <div class="bg-slate-50 p-4 rounded-xl space-y-2">
                         <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
                             <span>Recorrido Total:</span>
-                            <span class="text-red-700 font-black">0 Km</span>
+                            <span id="recorrido_total_text" class="text-red-700 font-black">0 Km</span>
                         </div>
                         <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
                             <span>Eficiencia Estimada</span>
-                            <span class="text-red-700 font-black">0 Km</span>
+                            <span id="eficiencia_text" class="text-red-700 font-black">0 Km/L</span>
                         </div>
                     </div>
 
-                    <button class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all">
+                    <button type="submit" {% if not vehiculo %}disabled{% endif %} class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50">
                         Registrar Bitácora
                     </button>
                 </form>
@@ -104,11 +107,11 @@
             </div>
         </div>
 
-        <!-- COLUMNA DERECHA: GRÁFICO, AUTO Y TABLA (8 columnas) -->
+        <!-- COLUMNA DERECHA: GRÁFICO, AUTO Y TABLA -->
         <div class="xl:col-span-8 space-y-8">
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Gráfico de Eficiencia Semanal (Simulado con barras) -->
+                <!-- Gráfico (Visual estático mantenido) -->
                 <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex justify-between items-start mb-6">
                         <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Eficiencia Semanal</h3>
@@ -136,18 +139,18 @@
                             <div class="flex items-center gap-4">
                                 <span class="material-symbols-outlined notranslate text-5xl">directions_car</span>
                                 <div>
-                                    <p class="text-2xl font-black">{{ asignacion.vehiculo.marca }} {{ asignacion.vehiculo.modelo }}</p>
-                                    <p class="text-xs font-bold opacity-70 uppercase tracking-widest">Placa: {{ asignacion.vehiculo.placa }}</p>
+                                    <p class="text-2xl font-black uppercase font-headline">{{ vehiculo.marca }} {{ vehiculo.modelo }}</p>
+                                    <p class="text-xs font-bold opacity-70 uppercase tracking-widest">Placa: {{ vehiculo.placa }}</p>
                                 </div>
                             </div>
                             <div class="mt-8 grid grid-cols-2 gap-4">
                                 <div class="bg-white/10 p-3 rounded-xl">
-                                    <p class="text-[9px] uppercase font-bold opacity-60">Próximo Service</p>
-                                    <p class="text-sm font-black">48,000 Km</p>
+                                    <p class="text-[9px] uppercase font-bold opacity-60">Km Actual</p>
+                                    <p class="text-sm font-black">{{ km_actual }}</p>
                                 </div>
                                 <div class="bg-white/10 p-3 rounded-xl">
                                     <p class="text-[9px] uppercase font-bold opacity-60">Combustible</p>
-                                    <p class="text-sm font-black">75%</p>
+                                    <p class="text-sm font-black">Válido</p>
                                 </div>
                             </div>
                         {% else %}
@@ -165,10 +168,9 @@
             <!-- TABLA DE HISTORIAL -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="text-lg font-bold flex items-center gap-2">
-                        <span class="material-symbols-outlined text-red-700">history</span> Historial de Viajes Recientes
+                    <h3 class="text-lg font-bold flex items-center gap-2 font-headline">
+                        <span class="material-symbols-outlined text-red-700">history</span> Mis Viajes Recientes
                     </h3>
-                    <button class="text-xs font-bold text-red-700 uppercase tracking-widest hover:underline">Ver Todo</button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -176,8 +178,8 @@
                             <tr>
                                 <th class="px-8 py-4">Fecha / Vale</th>
                                 <th class="px-8 py-4">Comisión / Destino</th>
-                                <th class="px-8 py-4 text-right">Km Recorrido</th>
-                                <th class="px-8 py-4 text-right">Km Consumo</th>
+                                <th class="px-8 py-4 text-right">Recorrido</th>
+                                <th class="px-8 py-4 text-right">Consumo</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -185,17 +187,20 @@
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-8 py-5">
                                     <p class="text-sm font-bold text-slate-900">{{ b.fecha|date:"d M Y" }}</p>
-                                    <p class="text-[10px] text-slate-400">VALE: {{ b.nro_vale_combustible }}</p>
+                                    <p class="text-[10px] text-slate-400 uppercase font-bold">VALE: {{ b.nro_vale_combustible }}</p>
                                 </td>
                                 <td class="px-8 py-5 text-sm font-medium text-slate-600">{{ b.destino }}</td>
                                 <td class="px-8 py-5 text-right">
-                                    <p class="text-sm font-black text-slate-900">412 Km</p>
-                                    <p class="text-[10px] text-slate-400">11.8 Km/L</p>
+                                    <p class="text-sm font-black text-slate-900">{{ b.km_final|add:b.km_inicial|add:"-0" }} Km</p>
+                                    <p class="text-[10px] text-slate-400">{{ b.km_inicial }} - {{ b.km_final }}</p>
+                                </td>
+                                <td class="px-8 py-5 text-right">
+                                    <p class="text-sm font-black text-slate-900">{{ b.cantidad_litros }} Lts</p>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="px-8 py-12 text-center text-slate-400 italic">No hay registros de viajes recientes.</td>
+                                <td colspan="4" class="px-8 py-12 text-center text-slate-400 italic">No hay registros de viajes recientes.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -205,4 +210,35 @@
         </div>
     </div>
 </div>
+
+<!-- LOGICA DE CALCULOS EN TIEMPO REAL -->
+<script>
+    const kmSalidaInput = document.getElementById('id_km_salida');
+    const kmLlegadaInput = document.getElementById('id_km_llegada');
+    const cantidadInput = document.getElementById('id_cantidad');
+    
+    const recorridoText = document.getElementById('recorrido_total_text');
+    const eficienciaText = document.getElementById('eficiencia_text');
+
+    function actualizarCalculos() {
+        const salida = parseInt(kmSalidaInput.value) || 0;
+        const llegada = parseInt(kmLlegadaInput.value) || 0;
+        const litros = parseFloat(cantidadInput.value) || 0;
+
+        let recorrido = llegada - salida;
+        if (recorrido < 0) recorrido = 0;
+
+        recorridoText.innerText = recorrido + ' Km';
+
+        if (litros > 0 && recorrido > 0) {
+            const eficiencia = (recorrido / litros).toFixed(1);
+            eficienciaText.innerText = eficiencia + ' Km/L';
+        } else {
+            eficienciaText.innerText = '0 Km/L';
+        }
+    }
+
+    kmLlegadaInput.addEventListener('input', actualizarCalculos);
+    cantidadInput.addEventListener('input', actualizarCalculos);
+</script>
 {% endblock %}

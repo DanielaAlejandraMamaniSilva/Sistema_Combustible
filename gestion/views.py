@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect,get_object_or_404
-from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema
+from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema, InventarioCombustible
 from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib.auth import get_user_model
 from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField, Count
@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 import openpyxl
 from django.db.models import Q
 from django.http import HttpResponse
+from decimal import Decimal
 import io
 from datetime import datetime, timedelta
 
@@ -40,18 +41,55 @@ def dashboard_view(request):
     return redirect('login')
 Usuario = get_user_model()
 
+@login_required
 def dashboard_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
-    
+    vehiculo = asignacion.vehiculo if asignacion else None
+
+    if request.method == 'POST' and vehiculo:
+        try:            
+            vale = request.POST.get('nro_vale')
+            cantidad = request.POST.get('cantidad')
+            km_llegada = int(request.POST.get('km_llegada'))
+            motivo = request.POST.get('motivo')
+            
+            km_inicial = vehiculo.kilometraje_actual
+            
+            if km_llegada <= km_inicial:
+                messages.error(request, "El KM de llegada debe ser mayor al KM de salida.")
+            else:
+                Bitacora.objects.create(
+                    vehiculo=vehiculo,
+                    chofer=request.user,
+                    km_inicial=km_inicial,
+                    km_final=km_llegada,
+                    destino=motivo,
+                    objetivo_comision=motivo,
+                    nro_vale_combustible=vale,
+                    cantidad_litros=cantidad,
+                    costo_total=float(cantidad) * 3.74,
+                    nro_factura="S/N"
+                )
+                messages.success(request, "Bitácora registrada con éxito.")
+                return redirect('dashboard')
+        except Exception as e:
+            messages.error(request, f"Error al registrar: {e}")
+
     historial = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')[:5]
-    config, _ = AjusteSistema.objects.get_or_create(id=1)
-    if config.modo_seguro:
-        return render(request, 'mantenimiento.html')
     
+    ultima_eficiencia = "0"
+    if historial.exists():
+        ult = historial[0]
+        distancia = ult.km_final - ult.km_inicial
+        if ult.cantidad_litros > 0:
+            ultima_eficiencia = round(distancia / float(ult.cantidad_litros), 1)
+
     context = {
         'asignacion': asignacion,
+        'vehiculo': vehiculo,
         'historial': historial,
-        'km_actual': asignacion.vehiculo.kilometraje_actual if asignacion else 0,
+        'km_actual': vehiculo.kilometraje_actual if vehiculo else 0,
+        'ultima_eficiencia': ultima_eficiencia,
     }
     return render(request, 'dashboard_chofer.html', context)
 
@@ -85,18 +123,45 @@ def dashboard_activos(request):
 
 @login_required
 def dashboard_bienes(request):
-    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
+    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
+        return redirect('dashboard')
+
+    mes_actual = timezone.now().month
+    bitacoras_mes = Bitacora.objects.filter(fecha__month=mes_actual)
     
-    consumo_diesel = Bitacora.objects.filter(vehiculo__tipo_combustible='Diesel').aggregate(Sum('cantidad_litros'))['cantidad_litros__sum'] or 0
-    consumo_gasolina = Bitacora.objects.filter(vehiculo__tipo_combustible='Gasolina').aggregate(Sum('cantidad_litros'))['cantidad_litros__sum'] or 0
+    consumo_diesel = bitacoras_mes.filter(vehiculo__tipo_combustible='Diesel').aggregate(total=Sum('cantidad_litros'))['total'] or 0
+    consumo_gasolina = bitacoras_mes.filter(vehiculo__tipo_combustible='Gasolina').aggregate(total=Sum('cantidad_litros'))['total'] or 0
+
+    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
+    total_pendientes = pendientes.count()
+    
+    ultimos_registros = Bitacora.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
 
     context = {
-        'pendientes': pendientes,
-        'total_pendientes': pendientes.count(),
         'consumo_diesel': consumo_diesel,
         'consumo_gasolina': consumo_gasolina,
+        'total_pendientes': total_pendientes,
+        'pendientes': ultimos_registros,
+        'total_registros': Bitacora.objects.count(),
     }
     return render(request, 'dashboard_bienes.html', context)
+
+@login_required
+def validar_consumo_accion(request, pk, estado):
+    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
+        return HttpResponse("No permitido", status=403)
+    
+    registro = get_object_or_404(Bitacora, pk=pk)
+    registro.estado_validacion = estado
+    registro.save()
+    
+    messages.success(request, f"Registro {registro.nro_vale_combustible} actualizado a {estado.upper()}")
+    return redirect('dashboard')
+
+@login_required
+def supervision_combustible(request):
+    registros = Bitacora.objects.all().order_by('-fecha')
+    return render(request, 'admin_potosi/supervision.html', {'registros': registros})
 
 @login_required
 def dashboard_admin(request):
@@ -591,3 +656,32 @@ def validar_consumo_accion(request, pk, estado):
 def supervision_combustible(request):
     registros = Bitacora.objects.all().order_by('-fecha')
     return render(request, 'admin_potosi/supervision.html', {'registros': registros})
+
+# 1. Validación de Consumo (Filtramos solo lo pendiente)
+@login_required
+def validacion_consumo(request):
+    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
+    return render(request, 'admin_potosi/validar.html', {'pendientes': pendientes})
+
+@login_required
+def reportes_bienes(request):
+    return redirect('reporte_por_chofer')
+
+@login_required
+def control_abastecimiento(request):
+    ingresos = InventarioCombustible.objects.all().order_by('-ultima_actualizacion')
+    return render(request, 'admin_potosi/abastecimiento.html', {'ingresos': ingresos})
+
+@login_required
+def nuevo_registro_combustible(request):
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo')
+        cantidad = request.POST.get('cantidad')
+        obj, created = InventarioCombustible.objects.get_or_create(tipo=tipo)
+        obj.cantidad_total += Decimal(cantidad)
+        obj.save()
+        messages.success(request, f"Se han cargado {cantidad} Lts de {tipo} al inventario.")
+        return redirect('dashboard')
+    
+    combustibles = TipoCombustible.objects.all()
+    return render(request, 'admin_potosi/form_abastecimiento.html', {'combustibles': combustibles})

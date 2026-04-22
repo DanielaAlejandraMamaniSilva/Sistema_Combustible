@@ -33,7 +33,7 @@
 
         <!-- MENÚ CHOFER -->
         {% if user.rol == 'chofer' %}
-            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+            <a class="flex items-center gap-3 px-3 py-2.5 bg-red-50 text-red-800 font-bold rounded-lg transition-all" href="{% url 'dashboard' %}">
                 <span class="material-symbols-outlined notranslate">edit_note</span>
                 <span>Registro Bitácora</span>
             </a>
@@ -72,22 +72,31 @@
         {% endif %}
 
         <!-- MENÚ BIENES Y SERVICIOS -->
+        <!-- MENÚ BIENES Y SERVICIOS -->
         {% if user.rol == 'bienes' %}
             <div class="pt-4 mt-4 border-t border-slate-200">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-3">Gestión de Insumos</p>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="{% url 'gestion_catalogos' %}">
+                
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'supervision_combustible' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                   href="{% url 'supervision_combustible' %}">
                     <span class="material-symbols-outlined notranslate">monitoring</span>
                     <span>Supervisión de Combustible</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'validar_consumo_bienes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                   href="{% url 'validar_consumo_bienes' %}">
                     <span class="material-symbols-outlined notranslate">verified</span>
-                    <span>Validacion de Consumo</span>
+                    <span>Validación de Consumo</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'reportes_bienes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                   href="{% url 'reportes_bienes' %}">
                     <span class="material-symbols-outlined notranslate">description</span>
                     <span>Reportes Administrativos</span>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'control_abastecimiento' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                   href="{% url 'control_abastecimiento' %}">
                     <span class="material-symbols-outlined notranslate">local_gas_station</span>
                     <span>Control de Abastecimiento</span>
                 </a>
@@ -168,12 +177,13 @@
                 <span class="material-symbols-outlined notranslate">add</span>
                 Nuevo Activo
             </a>
+        <div class="mt-auto pt-6 border-t border-slate-200 space-y-1">
         {% elif user.rol == 'bienes' %}
-            <button class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
+            <a href="{% url 'nuevo_registro_bienes' %}" class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
                 <span class="material-symbols-outlined notranslate">add</span>
                 Nuevo Registro
-            </button>
-        {% endif %}
+            </a>
+        {% endif %}     
 
         <a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-200 transition-all rounded-lg {% if request.resolver_match.url_name == 'soporte' %}bg-slate-200 font-bold{% endif %}" href="{% url 'soporte' %}">
             <span class="material-symbols-outlined notranslate">help</span>
