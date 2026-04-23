@@ -7,10 +7,12 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>{% block title %}Sovereign Archive{% endblock %}</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto:wght@300;400;500;700&family=Public+Sans:wght@400;500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
     
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- 2. TAILWIND OFFLINE -->
+    <script src="{% static 'js/tailwind.js' %}"></script>
+    
+    
     <script>
       tailwind.config = {
         darkMode: "class",
@@ -30,10 +32,10 @@
                 "error-container": "#ffdad6",
             },
             "fontFamily": {
-                "headline": ["Montserrat"],
-                "body": ["Roboto"],
-                "label": ["Inter"],
-                "brand": ["Public Sans"]
+                "headline": ["Montserrat", "system-ui", "sans-serif"],
+                "body": ["Roboto", "system-ui", "sans-serif"],
+                "label":["Inter", "system-ui", "sans-serif"],
+                "brand": ["Public Sans", "system-ui", "sans-serif"]
             }
           },
         },
@@ -58,17 +60,15 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-surface text-on-surface font-body h-screen overflow-hidden flex"> <!-- Añadido h-screen overflow-hidden -->
+<body class="bg-surface text-on-surface font-body h-screen overflow-hidden flex"> 
 
     {% include 'components/sidebar.html' %}
 
-    <!-- Contenedor Derecho -->
     <div class="flex-1 flex flex-col min-w-0 h-full relative">
         {% include 'components/topbar.html' %}
 
-        <!-- Área de contenido con scroll independiente -->
         <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 lg:p-12">
-            <div class="max-w-[1600px] mx-auto"> <!-- Contenedor opcional para que en pantallas gigantes no se estire tanto -->
+            <div class="max-w-[1600px] mx-auto"> 
                 {% block content %}{% endblock %}
             </div>
         </main>
