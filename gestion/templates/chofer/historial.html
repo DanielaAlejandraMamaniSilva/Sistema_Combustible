@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="space-y-8">
+    <h2 class="text-3xl font-black font-headline uppercase">Mi Historial de Viajes</h2>
+    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <table class="w-full text-left">
+            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
+                <tr>
+                    <th class="px-8 py-4">Fecha</th>
+                    <th class="px-8 py-4">Vale</th>
+                    <th class="px-8 py-4">Misión</th>
+                    <th class="px-8 py-4 text-right">Recorrido</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y text-sm">
+                {% for v in viajes %}
+                <tr class="hover:bg-slate-50">
+                    <td class="px-8 py-5 font-bold">{{ v.fecha|date:"d/m/Y H:i" }}</td>
+                    <td class="px-8 py-5">#{{ v.nro_vale_combustible }}</td>
+                    <td class="px-8 py-5">{{ v.destino }}</td>
+                    <td class="px-8 py-5 text-right font-black">{{ v.km_final|add:v.km_inicial|add:"-0" }} Km</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}  

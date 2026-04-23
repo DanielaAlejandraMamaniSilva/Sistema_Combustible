@@ -657,7 +657,6 @@ def supervision_combustible(request):
     registros = Bitacora.objects.all().order_by('-fecha')
     return render(request, 'admin_potosi/supervision.html', {'registros': registros})
 
-# 1. Validación de Consumo (Filtramos solo lo pendiente)
 @login_required
 def validacion_consumo(request):
     pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
@@ -685,3 +684,13 @@ def nuevo_registro_combustible(request):
     
     combustibles = TipoCombustible.objects.all()
     return render(request, 'admin_potosi/form_abastecimiento.html', {'combustibles': combustibles})
+
+@login_required
+def historial_viajes_chofer(request):
+    viajes = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')
+    return render(request, 'chofer/historial.html', {'viajes': viajes})
+
+@login_required
+def detalle_vehiculo_chofer(request):
+    asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
+    return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})

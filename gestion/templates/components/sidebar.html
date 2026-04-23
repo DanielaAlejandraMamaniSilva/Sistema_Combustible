@@ -32,16 +32,16 @@
         </a>
 
         <!-- MENÚ CHOFER -->
-        {% if user.rol == 'chofer' %}
-            <a class="flex items-center gap-3 px-3 py-2.5 bg-red-50 text-red-800 font-bold rounded-lg transition-all" href="{% url 'dashboard' %}">
-                <span class="material-symbols-outlined notranslate">edit_note</span>
-                <span>Registro Bitácora</span>
-            </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+        <!-- MENÚ CHOFER (ACTUALIZADO) -->
+        {% if user.rol == 'chofer' %}            
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'historial_chofer' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+               href="{% url 'historial_chofer' %}">
                 <span class="material-symbols-outlined notranslate">history</span>
                 <span>Historial de Viajes</span>
             </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 hover:bg-slate-200 rounded-lg transition-all" href="#">
+
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'vehiculo_chofer' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+               href="{% url 'vehiculo_chofer' %}">
                 <span class="material-symbols-outlined notranslate">directions_car</span>
                 <span>Estado Vehículo</span>
             </a>

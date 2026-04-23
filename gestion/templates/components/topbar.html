@@ -4,11 +4,9 @@
         
         <nav class="hidden lg:flex items-center gap-6 text-slate-600 font-brand font-medium overflow-hidden">
             {% if user.rol == 'chofer' %}
-                <!-- Menú para Chofer -->
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Bitácora</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Historial</a>
-                <a class="hover:text-primary transition-colors whitespace-nowrap" href="#">Vehículo</a>
+                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="{% if request.resolver_match.url_name == 'historial_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'historial_chofer' %}">Historial</a>
+                <a class="{% if request.resolver_match.url_name == 'vehiculo_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'vehiculo_chofer' %}">Vehículo</a>
 
             {% elif user.rol == 'bienes' %}
                 <!-- Menú para Bienes y Servicios -->
