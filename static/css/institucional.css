@@ -16,7 +16,6 @@
 }
 
 /* Colores de Fondo */
-/* Prueba si esto le devuelve el color al Banner */
 .from-primary { --tw-gradient-from: #770003; }
 .to-primary-container { --tw-gradient-to: #a10508; }
 .bg-primary { background-color: var(--primary) !important; }
