@@ -1,32 +1,18 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html class="light notranslate" lang="es" translate="no">
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruta no encontrada - Soberanía Potosí</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Fuentes de Google -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@48,400,1,0" />
+    <script src="{% static 'js/tailwind.js' %}"></script>
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#770003",
-                        "primary-container": "#a10508",
-                        "surface": "#f7f9fc",
-                    },
-                    fontFamily: {
-                        "headline": ["Montserrat", "sans-serif"],
-                        "body": ["Roboto", "sans-serif"],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
+    
+    <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
+  
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
         /* Fondo con patrón sutil */
@@ -34,9 +20,10 @@
             background-image: radial-gradient(#e2e8f0 1px, transparent 1px); 
             background-size: 24px 24px; 
         }
+        body { font-family: 'Public Sans', sans-serif; }
     </style>
 </head>
-<body class="bg-surface font-body h-screen flex flex-col items-center justify-center bg-pattern relative overflow-hidden">
+<body class="bg-surface h-screen flex flex-col items-center justify-center bg-pattern relative overflow-hidden">
     
     <!-- Luces decorativas de fondo -->
     <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary-container opacity-10 rounded-full blur-3xl pointer-events-none"></div>
@@ -47,29 +34,29 @@
         <!-- Branding Institucional -->
         <div class="mb-10 flex flex-col items-center justify-center">
             <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center text-white shadow-xl shadow-red-900/20 mb-4">
-                <span class="material-symbols-outlined text-4xl">account_balance</span>
+                <span class="material-symbols-outlined notranslate text-4xl">account_balance</span>
             </div>
-            <h2 class="text-lg font-black font-headline text-primary tracking-[0.3em] uppercase">Soberanía Potosí</h2>
+            <h2 class="text-lg font-black text-primary tracking-[0.3em] uppercase">Soberanía Potosí</h2>
         </div>
 
         <!-- Tarjeta de Error -->
         <div class="bg-white p-10 md:p-16 rounded-[2.5rem] shadow-2xl border border-slate-100">
             <div class="inline-block bg-red-50 px-4 py-2 rounded-full mb-6 border border-red-100">
                 <span class="text-primary font-black tracking-widest uppercase text-[10px] flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[14px]">warning</span>
+                    <span class="material-symbols-outlined notranslate text-[14px]">warning</span>
                     Error de Sistema
                 </span>
             </div>
             
-            <h1 class="text-8xl md:text-9xl font-black font-headline text-slate-900 tracking-tighter mb-2">404</h1>
-            <h3 class="text-2xl md:text-3xl font-black font-headline text-slate-800 uppercase tracking-tight mb-4">Ruta no encontrada</h3>
+            <h1 class="text-8xl md:text-9xl font-black text-slate-900 tracking-tighter mb-2">404</h1>
+            <h3 class="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tight mb-4">Ruta no encontrada</h3>
             
             <p class="text-slate-500 font-medium text-sm md:text-base leading-relaxed max-w-md mx-auto mb-10">
                 El documento, registro o sección a la que intenta acceder no existe en el archivo central, fue movido o carece de los permisos institucionales necesarios.
             </p>
 
             <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center gap-3 w-full sm:w-auto bg-primary-container hover:bg-primary text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-xl shadow-red-900/20 active:scale-95">
-                <span class="material-symbols-outlined">home</span>
+                <span class="material-symbols-outlined notranslate">home</span>
                 Volver al Panel Principal
             </a>
         </div>

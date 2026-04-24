@@ -1,74 +1,61 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="light" lang="es" class="notranslate" translate="no">
+<html class="light notranslate" lang="es" translate="no">
 <head>
     <meta charset="utf-8"/>
     <meta name="google" content="notranslate" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>{% block title %}Sovereign Archive{% endblock %}</title>
     
-    <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
-    
-    <!-- 2. TAILWIND OFFLINE -->
     <script src="{% static 'js/tailwind.js' %}"></script>
     
+    <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
     
-    <script>
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                "primary": "#770003",
-                "primary-container": "#a10508",
-                "surface": "#f7f9fc",
-                "on-surface": "#191c1e",
-                "on-surface-variant": "#5b403c",
-                "surface-container-low": "#f2f4f7",
-                "surface-container-high": "#e6e8eb",
-                "surface-container-highest": "#e0e3e6",
-                "surface-container-lowest": "#ffffff",
-                "error": "#ba1a1a",
-                "error-container": "#ffdad6",
-            },
-            "fontFamily": {
-                "headline": ["Montserrat", "system-ui", "sans-serif"],
-                "body": ["Roboto", "system-ui", "sans-serif"],
-                "label":["Inter", "system-ui", "sans-serif"],
-                "brand": ["Public Sans", "system-ui", "sans-serif"]
-            }
-          },
-        },
-      }
-    </script>
     <style>
+        :root {
+            --primary: #770003;
+            --primary-container: #a10508;
+            --surface: #f7f9fc;
+            --on-surface: #191c1e;
+            --on-surface-variant: #5b403c;
+        }
+
         .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined' !important;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             display: inline-block;
             line-height: 1;
-            text-transform: none;
-            letter-spacing: normal;
-            word-wrap: normal;
-            white-space: nowrap;
-            direction: ltr;
-            font-family: 'Material Symbols Outlined' !important;
+            vertical-align: middle;
         }
-        /* Eliminar scrollbars visuales pero mantener funcionalidad */
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+    </style>
+    <style>
+        /* ... tu CSS actual ... */
+        
+        /* Asegurar colores base si Tailwind tarda en cargar */
+        .bg-gradient-to-br { background: linear-gradient(to bottom right, #770003, #a10508); }
+        .text-primary { color: #770003; }
+        .bg-primary-container { background-color: #a10508; }
+        .text-on-primary { color: white; }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-surface text-on-surface font-body h-screen overflow-hidden flex"> 
+
+<body class="bg-surface text-on-surface h-screen overflow-hidden flex"> 
 
     {% include 'components/sidebar.html' %}
 
-    <div class="flex-1 flex flex-col min-w-0 h-full relative">
+    <div class="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
         {% include 'components/topbar.html' %}
 
+        <!-- Área de contenido con scroll independiente -->
         <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 lg:p-12">
-            <div class="max-w-[1600px] mx-auto"> 
+            <div class="max-w-[1600px] mx-auto h-full"> 
                 {% block content %}{% endblock %}
             </div>
         </main>

@@ -1,0 +1,52 @@
+/* static/css/institucional.css */
+
+:root {
+    --primary: #770003;
+    --primary-container: #a10508;
+    --surface: #f7f9fc;
+    --on-surface: #191c1e;
+    --on-surface-variant: #5b403c;
+    --surface-container-low: #f2f4f7;
+    --surface-container-high: #e6e8eb;
+    --surface-container-highest: #e0e3e6;
+    --surface-container-lowest: #ffffff;
+    --error: #ba1a1a;
+    --error-container: #ffdad6;
+    --secondary-container: #fd6859;
+}
+
+/* Colores de Fondo */
+/* Prueba si esto le devuelve el color al Banner */
+.from-primary { --tw-gradient-from: #770003; }
+.to-primary-container { --tw-gradient-to: #a10508; }
+.bg-primary { background-color: var(--primary) !important; }
+.bg-primary-container { background-color: var(--primary-container) !important; }
+.bg-surface { background-color: var(--surface) !important; }
+.bg-surface-container-lowest { background-color: var(--surface-container-lowest) !important; }
+.bg-surface-container-low { background-color: var(--surface-container-low) !important; }
+.bg-surface-container-high { background-color: var(--surface-container-high) !important; }
+.bg-error { background-color: var(--error) !important; }
+.bg-error-container { background-color: var(--error-container) !important; }
+.bg-secondary-container { background-color: var(--secondary-container) !important; }
+
+/* Colores de Texto */
+.text-primary { color: var(--primary) !important; }
+.text-on-surface { color: var(--on-surface) !important; }
+.text-on-surface-variant { color: var(--on-surface-variant) !important; }
+.text-error { color: var(--error) !important; }
+.text-on-primary { color: #ffffff !important; }
+
+/* Bordes y Sombras */
+.rounded-xl { border-radius: 0.75rem !important; }
+.rounded-2xl { border-radius: 1rem !important; }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+
+/* Layout básico para evitar desbordes */
+.h-screen { height: 100vh; }
+.w-full { width: 100%; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }

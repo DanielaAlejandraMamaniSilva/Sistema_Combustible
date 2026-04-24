@@ -1,17 +1,27 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="es">
+<html class="light notranslate" lang="es" translate="no">
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ingreso al Sistema - Soberano Potosí</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+
+    <!-- Motor de Tailwind Local -->
+    <script src="{% static 'js/tailwind.js' %}"></script>
+    
+    <!-- Íconos Locales -->
+    <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
+    
+    <!-- Estilos Institucionales -->
+    <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
+
 </head>
 <body class="bg-slate-100 h-screen flex items-center justify-center font-sans">
     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border-t-8 border-red-800">
         <div class="text-center mb-10">
-            <h1 class="text-3xl font-black text-red-900 uppercase tracking-tighter" style="font-family: 'Montserrat';">Soberano Potosí</h1>
+            <!-- Añadido 'sans-serif' de respaldo por si no hay internet para cargar Montserrat -->
+            <h1 class="text-3xl font-black text-red-900 uppercase tracking-tighter" style="font-family: 'Montserrat', sans-serif;">Soberano Potosí</h1>
             <p class="text-slate-500 text-sm font-bold uppercase tracking-widest mt-2">Control de Flotas</p>
         </div>
 

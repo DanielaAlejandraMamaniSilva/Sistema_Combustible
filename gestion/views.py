@@ -694,3 +694,8 @@ def historial_viajes_chofer(request):
 def detalle_vehiculo_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
+
+from django.shortcuts import render
+
+def mi_error_404(request, exception):
+    return render(request, '404.html', status=404)
