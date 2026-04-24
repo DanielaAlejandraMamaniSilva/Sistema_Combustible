@@ -697,5 +697,5 @@ def detalle_vehiculo_chofer(request):
 
 from django.shortcuts import render
 
-def mi_error_404(request, exception):
+def mi_error_404(request, exception=None):
     return render(request, '404.html', status=404)
