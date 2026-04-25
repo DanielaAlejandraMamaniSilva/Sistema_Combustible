@@ -552,7 +552,6 @@ def seleccionar_chofer_reporte(request):
 
 @login_required
 def seleccionar_vehiculo_reporte(request):
-    # Solo vehículos que tengan al menos una bitácora o todos
     vehiculos = Vehiculo.objects.all()
     return render(request, 'admin_potosi/seleccionar_vehiculo.html', {'vehiculos': vehiculos})
 
@@ -579,7 +578,7 @@ def reporte_por_vehiculo(request, vehiculo_id):
         'registros': bitacoras,
         'total_recorrido': total_recorrido,
         'total_cargado': total_cargado,
-        'mes': "ABRIL", # Podrías hacerlo dinámico
+        'mes': "ABRIL",
         'anio': anio_actual,
     }
     return render(request, 'reportes/planilla_oficial.html', context)
@@ -694,8 +693,3 @@ def historial_viajes_chofer(request):
 def detalle_vehiculo_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
-
-from django.shortcuts import render
-
-def mi_error_404(request, exception=None):
-    return render(request, '404.html', status=404)

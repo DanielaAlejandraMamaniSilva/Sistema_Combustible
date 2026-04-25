@@ -5,10 +5,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-tp*=0(g2mqrp0%s$2%-er=f-uh==ba5t#ey%d-o@ynyqx_ktoq'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
+import django.views.defaults
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -71,7 +71,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# --- CONFIGURACIÓN DE ESTÁTICOS ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'

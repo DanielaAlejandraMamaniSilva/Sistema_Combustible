@@ -48,6 +48,6 @@ urlpatterns = [
     path('bienes/nuevo-registro/', views.nuevo_registro_combustible, name='nuevo_registro_bienes'),
     #chofer
     path('chofer/historial/', views.historial_viajes_chofer, name='historial_chofer'),
-    path('chofer/vehiculo/', views.detalle_vehiculo_chofer, name='vehiculo_chofer'),
+    path('chofer/vehiculo/', views.detalle_vehiculo_chofer, name='vehiculo_chofer'),    
 ]
 
