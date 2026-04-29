@@ -45,6 +45,12 @@
                 <span class="material-symbols-outlined notranslate">directions_car</span>
                 <span>Estado Vehículo</span>
             </a>
+
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'registrar_vale_peaje' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+            href="{% url 'lista_vales_peajes' %}">
+                <span class="material-symbols-outlined notranslate">local_gas_station</span>
+                <span>Registrar Vale / Peaje</span>
+            </a>
         {% endif %}
 
         <!-- MENÚ ACTIVOS -->

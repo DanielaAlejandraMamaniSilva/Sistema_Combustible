@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border">
+    <h2 class="text-xl font-black mb-6 uppercase">Nuevo Registro de Peaje</h2>
+    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <input type="text" name="lugar" placeholder="Ubicación" class="w-full p-3 bg-slate-50 border rounded-lg" required>
+        <input type="number" name="monto" step="0.01" placeholder="Monto Bs." class="w-full p-3 bg-slate-50 border rounded-lg" required>
+        <input type="file" name="comprobante" class="w-full p-3 bg-slate-50 border rounded-lg" required>
+        <button class="w-full bg-red-800 text-white py-3 rounded-lg font-bold uppercase">Registrar Peaje</button>
+    </form>
+</div>
+{% endblock %}

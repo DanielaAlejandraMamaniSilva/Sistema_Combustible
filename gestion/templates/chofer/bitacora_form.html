@@ -1,0 +1,23 @@
+<link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+<script src="{% static 'js/leaflet.js' %}"></script>
+
+<div id="map" style="height: 300px;"></div>
+
+<script>
+    var map = L.map('map').setView([-19.58, -65.75], 7);
+    L.tileLayer('/static/maps/{z}/{x}/{y}.png', { attribution: 'Soberanía Potosí' }).addTo(map);
+
+    function calcular() {
+        let origen = document.getElementById('origen').value;
+        let destino = document.getElementById('destino').value;
+        
+        fetch(`/gestion/ajax/calcular?origen=${origen}&destino=${destino}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('km_display').innerText = data.km + ' KM';
+            document.getElementById('combustible_display').innerText = data.consumo_est + ' Lts';
+            
+            L.polyline(data.path_coords, {color: 'red'}).addTo(map);
+        });
+    }
+</script>

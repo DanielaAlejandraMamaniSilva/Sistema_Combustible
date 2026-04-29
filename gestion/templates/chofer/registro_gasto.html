@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto space-y-8">
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <h2 class="text-2xl font-black font-headline uppercase mb-6">Registro de Peaje</h2>
+        
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="tipo_registro" value="peaje">
+            
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ubicación / Puesto de Control</label>
+                <input type="text" name="lugar" required class="w-full mt-2 p-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-red-800">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Monto (Bs)</label>
+                    <input type="number" name="monto" step="0.01" required class="w-full mt-2 p-4 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-red-800">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">Comprobante (Foto)</label>
+                    <input type="file" name="comprobante" accept="image/*" class="w-full mt-2 p-3 text-xs bg-slate-50 border-none rounded-xl">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-red-800 text-white py-4 rounded-xl font-black uppercase hover:bg-red-900 transition-all">
+                Registrar Peaje
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

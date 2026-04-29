@@ -1,16 +1,20 @@
-from django.shortcuts import render, redirect,get_object_or_404
-from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema, InventarioCombustible
-from django.contrib.auth.decorators import login_required,user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema, InventarioCombustible, Peaje, Viaje, ValeCombustible
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField, Count
-from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm
+from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm, BitacoraForm, ViajeFormSet
 from django.contrib import messages
 from django.core.management import call_command
 from django.contrib.sessions.models import Session
 from django.utils import timezone
-from django.contrib.admin.models import LogEntry,ADDITION, CHANGE, DELETION
+from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 import openpyxl
+from .utils import calcular_distancia, buscar_coordenadas
+from django.forms import modelformset_factory
+from django.db import transaction
+from django.http import JsonResponse
 from django.db.models import Q
 from django.http import HttpResponse
 from decimal import Decimal
@@ -39,13 +43,18 @@ def dashboard_view(request):
         return dashboard_admin(request)
         
     return redirect('login')
+
 Usuario = get_user_model()
 
+# ==========================================
+# SECCIÓN CHOFER (CORREGIDA Y LIMPIA)
+# ==========================================
 @login_required
 def dashboard_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     vehiculo = asignacion.vehiculo if asignacion else None
 
+    # Procesamiento del formulario de la pantalla principal
     if request.method == 'POST' and vehiculo:
         try:            
             vale = request.POST.get('nro_vale')
@@ -93,7 +102,98 @@ def dashboard_chofer(request):
     }
     return render(request, 'dashboard_chofer.html', context)
 
-Usuario = get_user_model()
+@login_required
+def historial_viajes_chofer(request):
+    viajes = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')
+    return render(request, 'chofer/historial.html', {'viajes': viajes})
+
+@login_required
+def detalle_vehiculo_chofer(request):
+    asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
+    return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
+
+@login_required
+def calcular_ruta_ajax(request):
+    origen = request.GET.get('origen')
+    destino = request.GET.get('destino')
+    
+    coords_o = buscar_coordenadas(origen)
+    coords_d = buscar_coordenadas(destino)
+    
+    if coords_o and coords_d:
+        distancia = calcular_distancia(coords_o, coords_d)
+        consumo_est = distancia / 5.0 # Rendimiento base 5 km/l
+        return JsonResponse({'distancia': distancia, 'consumo': round(consumo_est, 2)})
+    return JsonResponse({'error': 'Ubicación no encontrada'}, status=400)
+
+@login_required
+@transaction.atomic
+def registrar_bitacora_completa(request):
+    asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
+    
+    if request.method == 'POST':
+        form = BitacoraForm(request.POST)
+        viaje_formset = ViajeFormSet(request.POST)
+        
+        if form.is_valid() and viaje_formset.is_valid():
+            bitacora = form.save(commit=False)
+            bitacora.vehiculo = asignacion.vehiculo
+            bitacora.chofer = request.user
+            
+            # --- Lógica de Alerta de Consumo ---
+            distancia_total = sum(v.km_fin - v.km_inicio for v in viaje_formset.save(commit=False))
+            rendimiento = distancia_total / bitacora.cantidad_litros if bitacora.cantidad_litros > 0 else 0
+            
+            if rendimiento < asignacion.vehiculo.rendimiento_km_litro * Decimal(0.8): # Margen 20%
+                bitacora.estado_validacion = 'anomalia'
+                messages.warning(request, "Alerta: El consumo reportado excede los parámetros normales.")
+            
+            bitacora.save()
+            
+            # Guardar formset
+            viajes = viaje_formset.save(commit=False)
+            for viaje in viajes:
+                viaje.bitacora = bitacora
+                viaje.save()
+
+            messages.success(request, "Bitácora y viajes registrados con éxito.")
+            return redirect('dashboard')
+            
+    else:
+        form = BitacoraForm(initial={'km_inicial': asignacion.vehiculo.kilometraje_actual if asignacion else 0})
+        viaje_formset = ViajeFormSet()
+        
+    return render(request, 'chofer/bitacora_completa.html', {'form': form, 'formset': viaje_formset})
+
+@login_required
+def lista_vales_peajes_chofer(request):
+    vales = Bitacora.objects.filter(chofer=request.user).exclude(nro_vale_combustible='')
+    peajes = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
+    return render(request, 'chofer/vales_peajes_lista.html', {'vales': vales, 'peajes': peajes})
+
+@login_required
+def registrar_gasto_chofer(request):
+    if request.user.rol != 'chofer':
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        tipo = request.POST.get('tipo_registro', 'peaje')
+        if tipo == 'peaje':
+            Peaje.objects.create(
+                chofer=request.user,
+                lugar=request.POST.get('lugar'),
+                monto=request.POST.get('monto'),
+                comprobante=request.FILES.get('comprobante')
+            )
+            messages.success(request, "Peaje registrado exitosamente.")
+        return redirect('lista_vales_peajes') # Redirige a la lista
+        
+    return render(request, 'chofer/registro_gasto.html')
+
+
+# ==========================================
+# RESTO DEL CÓDIGO (INTACTO)
+# ==========================================
 
 @login_required
 def dashboard_activos(request):
@@ -148,7 +248,7 @@ def dashboard_bienes(request):
 
 @login_required
 def validar_consumo_accion(request, pk, estado):
-    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
+    if request.user.rol not in['bienes', 'admin', 'superadmin']:
         return HttpResponse("No permitido", status=403)
     
     registro = get_object_or_404(Bitacora, pk=pk)
@@ -226,7 +326,7 @@ def dashboard_superadmin(request):
     logs = LogEntry.objects.all().select_related('user', 'content_type')[:5]
     config, _ = AjusteSistema.objects.get_or_create(id=1)
     
-    catalogos = [
+    catalogos =[
         {'nombre': 'Flota de Vehículos', 'total': f"{total_vehiculos} Vehículos", 'cambio': 'Hoy, 09:12 AM', 'estado': 'Sincronizado'},
         {'nombre': 'Áreas / Secretarías', 'total': '12 Unidades', 'cambio': 'Ayer', 'estado': 'Sincronizado'},
         {'nombre': 'Tipos de Combustible', 'total': '2 Activos', 'cambio': '12 Oct 2023', 'estado': 'Editable'},
@@ -317,7 +417,7 @@ def exportar_usuarios_excel(request):
     ws = wb.active
     ws.title = "Usuarios"
 
-    columns = ['Username', 'Nombre', 'Apellido', 'Rol', 'CI', 'Email']
+    columns =['Username', 'Nombre', 'Apellido', 'Rol', 'CI', 'Email']
     ws.append(columns)
 
     usuarios = Usuario.objects.all()
@@ -341,6 +441,7 @@ def configuracion_global(request):
         'modo_seguro': config.modo_seguro,
         'ultima_mod': config.ultima_modificacion
     })
+
 @login_required
 def gestion_catalogos(request):
     context = {
@@ -355,7 +456,7 @@ def vista_roles(request):
     if request.user.rol != 'superadmin':
         return redirect('dashboard')
     
-    conteo_roles = []
+    conteo_roles =[]
     for codigo, nombre in Usuario.ROLES:
         cantidad = Usuario.objects.filter(rol=codigo).count()
         conteo_roles.append({
@@ -384,9 +485,9 @@ def toggle_modo_seguro(request):
 @login_required
 def buscar_registros(request):
     query = request.GET.get('q')
-    resultados_usuarios = []
+    resultados_usuarios =[]
     resultados_vehiculos = []
-    resultados_bitacoras = []
+    resultados_bitacoras =[]
 
     if query:
         resultados_usuarios = Usuario.objects.filter(
@@ -480,7 +581,7 @@ def reporte_oficial_chofer(request, chofer_id):
 
     total_cargado = 0
     total_recorrido = 0
-    registros_procesados = []
+    registros_procesados =[]
     saldo_anterior = 133.90 # Este dato vendría del mes anterior en un sistema real
     saldo_actual = saldo_anterior
 
@@ -530,14 +631,6 @@ def validar_registros(request):
     return render(request, 'admin_potosi/validar.html', {'pendientes': pendientes})
 
 @login_required
-def cambiar_estado_bitacora(request, pk, nuevo_estado):
-    bitacora = get_object_or_404(Bitacora, pk=pk)
-    bitacora.estado_validacion = nuevo_estado
-    bitacora.save()
-    messages.success(request, f"Registro {bitacora.nro_vale_combustible} marcado como {nuevo_estado.upper()}")
-    return redirect('validar_registros')
-
-@login_required
 def monitoreo_tiempo_real(request):
     choferes = Usuario.objects.filter(rol='chofer')
     hoy = datetime.now().date()
@@ -585,7 +678,7 @@ def reporte_por_vehiculo(request, vehiculo_id):
 
 @login_required
 def crear_asignacion(request):
-    if request.user.rol not in ['activos', 'admin', 'superadmin']:
+    if request.user.rol not in['activos', 'admin', 'superadmin']:
         return redirect('dashboard')
         
     if request.method == 'POST':
@@ -615,47 +708,16 @@ def lista_actas(request):
     return render(request, 'admin_potosi/actas.html', {'asignaciones': asignaciones})
 
 @login_required
-def dashboard_bienes(request):
-    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
-        return redirect('dashboard')
-
-    mes_actual = timezone.now().month
-    bitacoras_mes = Bitacora.objects.filter(fecha__month=mes_actual)
+def vista_vales_peajes(request):
+    bitacoras = Bitacora.objects.exclude(nro_vale_combustible='').order_by('-fecha')
+    peajes = Peaje.objects.all().order_by('-fecha')
     
-    consumo_diesel = bitacoras_mes.filter(vehiculo__tipo_combustible='Diesel').aggregate(total=Sum('cantidad_litros'))['total'] or 0
-    consumo_gasolina = bitacoras_mes.filter(vehiculo__tipo_combustible='Gasolina').aggregate(total=Sum('cantidad_litros'))['total'] or 0
+    return render(request, 'admin_potosi/vales_peajes.html', {
+        'bitacoras': bitacoras,
+        'peajes': peajes
+    })
 
-    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
-    total_pendientes = pendientes.count()
-    
-    ultimos_registros = Bitacora.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
-
-    context = {
-        'consumo_diesel': consumo_diesel,
-        'consumo_gasolina': consumo_gasolina,
-        'total_pendientes': total_pendientes,
-        'pendientes': ultimos_registros,
-        'total_registros': Bitacora.objects.count(),
-    }
-    return render(request, 'dashboard_bienes.html', context)
-
-@login_required
-def validar_consumo_accion(request, pk, estado):
-    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
-        return HttpResponse("No permitido", status=403)
-    
-    registro = get_object_or_404(Bitacora, pk=pk)
-    registro.estado_validacion = estado
-    registro.save()
-    
-    messages.success(request, f"Registro {registro.nro_vale_combustible} actualizado a {estado.upper()}")
-    return redirect('dashboard')
-
-@login_required
-def supervision_combustible(request):
-    registros = Bitacora.objects.all().order_by('-fecha')
-    return render(request, 'admin_potosi/supervision.html', {'registros': registros})
-
+# Mantenemos las vistas duplicadas del admin/bienes que venían del archivo original
 @login_required
 def validacion_consumo(request):
     pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
@@ -685,11 +747,42 @@ def nuevo_registro_combustible(request):
     return render(request, 'admin_potosi/form_abastecimiento.html', {'combustibles': combustibles})
 
 @login_required
-def historial_viajes_chofer(request):
-    viajes = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')
-    return render(request, 'chofer/historial.html', {'viajes': viajes})
+def cambiar_estado_bitacora(request, pk, nuevo_estado):
+    if request.user.rol not in['admin', 'superadmin', 'bienes','activos']:
+        return redirect('dashboard')
+        
+    bitacora = get_object_or_404(Bitacora, pk=pk)
+    bitacora.estado_validacion = nuevo_estado
+    bitacora.save()
+    
+    messages.success(request, f"Registro {bitacora.nro_vale_combustible} marcado como {nuevo_estado.upper()}")
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 @login_required
-def detalle_vehiculo_chofer(request):
-    asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
-    return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
+def lista_vales_peajes(request):
+    if request.user.rol != 'chofer':
+        return redirect('dashboard')
+        
+    vales = Bitacora.objects.filter(chofer=request.user).exclude(nro_vale_combustible='')
+    peajes = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
+    
+    return render(request, 'chofer/vales_peajes_lista.html', {'vales': vales, 'peajes': peajes})
+
+@login_required
+def registrar_peaje(request):
+    # Validamos que solo el chofer pueda registrar peajes
+    if request.user.rol != 'chofer':
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        # Guardamos el peaje con la foto del comprobante
+        Peaje.objects.create(
+            chofer=request.user,
+            lugar=request.POST.get('lugar'),
+            monto=request.POST.get('monto'),
+            comprobante=request.FILES.get('comprobante') 
+        )
+        messages.success(request, "Peaje registrado exitosamente.")
+        return redirect('lista_vales_peajes') 
+        
+    return render(request, 'chofer/registro_peaje_form.html')

@@ -1,0 +1,76 @@
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-black font-headline text-slate-900 uppercase">Detalle de Recorridos</h2>
+        <button type="button" id="add-row" class="bg-primary-container text-white px-4 py-2 rounded-lg font-bold text-[10px] uppercase flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add_circle</span> Añadir Viaje
+        </button>
+    </div>
+
+    <!-- Tabla de Segmentos -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-[10px] uppercase font-black text-slate-400">
+            <thead>
+                <tr class="border-b">
+                    <th class="p-3">Origen / Destino</th>
+                    <th class="p-3">Tipo Ruta</th>
+                    <th class="p-3">Horario</th>
+                    <th class="p-3">Distancia (Km)</th>
+                    <th class="p-3">Combustible</th>
+                    <th class="p-3">Voucher</th>
+                    <th class="p-3">Peaje</th>
+                    <th class="p-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="viajes-body" class="text-slate-700 font-bold">
+                <!-- Fila de ejemplo (JS clonará esto) -->
+                <tr class="viaje-row border-b">
+                    <td class="p-3">
+                        <input type="text" class="w-full bg-slate-50 p-2 rounded" placeholder="Origen">
+                        <input type="text" class="w-full bg-slate-50 p-2 rounded mt-1" placeholder="Destino">
+                    </td>
+                    <td class="p-3"><select class="w-full bg-slate-50 p-2 rounded"><option>Pavimentada</option><option>Rural</option></select></td>
+                    <td class="p-3"><input type="time" class="bg-slate-50 p-2 rounded"></td>
+                    <td class="p-3 km-calc">0.0</td>
+                    <td class="p-3"><input type="text" class="w-16 bg-slate-50 p-2 rounded" placeholder="Lts"></td>
+                    <td class="p-3"><input type="text" class="w-20 bg-slate-50 p-2 rounded" placeholder="REP-000"></td>
+                    <td class="p-3"><input type="number" class="w-16 bg-slate-50 p-2 rounded" placeholder="0.00"></td>
+                    <td class="p-3 text-red-700 cursor-pointer"><span class="material-symbols-outlined">delete</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Totales -->
+    <div class="mt-6 flex gap-10 bg-slate-50 p-6 rounded-xl">
+        <div>
+            <p class="text-[10px] text-slate-400 uppercase font-black">Distancia Total</p>
+            <p class="text-2xl font-black text-slate-900" id="total-km">0.0 Km</p>
+        </div>
+        <div>
+            <p class="text-[10px] text-slate-400 uppercase font-black">Consumo Estimado</p>
+            <p class="text-2xl font-black text-slate-900" id="total-gal">0.0 Gal</p>
+        </div>
+        <div class="ml-auto flex gap-4">
+            <button class="px-8 py-3 bg-slate-200 text-slate-600 rounded-xl font-bold uppercase text-xs">Guardar Borrador</button>
+            <button class="px-8 py-3 bg-red-900 text-white rounded-xl font-bold uppercase text-xs shadow-lg">Finalizar Bitácora</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Lógica para añadir filas y sumar totales
+    document.getElementById('add-row').addEventListener('click', function() {
+        const body = document.getElementById('viajes-body');
+        const newRow = body.children[0].cloneNode(true);
+        body.appendChild(newRow);
+    });
+
+    document.getElementById('viajes-body').addEventListener('input', function() {
+        let totalKm = 0;
+        document.querySelectorAll('.km-calc').forEach(td => {
+            totalKm += parseFloat(td.innerText) || 0;
+        });
+        document.getElementById('total-km').innerText = totalKm.toFixed(1) + ' Km';
+        document.getElementById('total-gal').innerText = (totalKm / 10).toFixed(1) + ' Gal'; // Rendimiento base 10
+    });
+</script>

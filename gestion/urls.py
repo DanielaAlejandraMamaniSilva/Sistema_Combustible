@@ -49,5 +49,8 @@ urlpatterns = [
     #chofer
     path('chofer/historial/', views.historial_viajes_chofer, name='historial_chofer'),
     path('chofer/vehiculo/', views.detalle_vehiculo_chofer, name='vehiculo_chofer'),    
+    path('ajax/calcular-ruta/', views.calcular_ruta_ajax, name='calcular_ruta_ajax'),
+    path('chofer/vales-peajes/', views.lista_vales_peajes, name='lista_vales_peajes'),
+    path('chofer/peajes/nuevo/', views.registrar_peaje, name='registrar_peaje'),
 ]
 

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="space-y-8">
-    <h2 class="text-3xl font-black font-headline uppercase">Mi Historial de Viajes</h2>
+    <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Historial de Viajes</h2>
     <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
         <table class="w-full text-left">
             <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
@@ -15,14 +15,16 @@
             <tbody class="divide-y text-sm">
                 {% for v in viajes %}
                 <tr class="hover:bg-slate-50">
-                    <td class="px-8 py-5 font-bold">{{ v.fecha|date:"d/m/Y H:i" }}</td>
+                    <td class="px-8 py-5 font-bold text-slate-900">{{ v.fecha|date:"d/m/Y" }}</td>
                     <td class="px-8 py-5">#{{ v.nro_vale_combustible }}</td>
-                    <td class="px-8 py-5">{{ v.destino }}</td>
+                    <td class="px-8 py-5 text-slate-600">{{ v.destino }}</td>
                     <td class="px-8 py-5 text-right font-black">{{ v.km_final|add:v.km_inicial|add:"-0" }} Km</td>
                 </tr>
+                {% empty %}
+                <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 italic">No tienes viajes registrados.</td></tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
-{% endblock %}  
+{% endblock %}

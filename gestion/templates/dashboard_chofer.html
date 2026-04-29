@@ -241,4 +241,18 @@
     kmLlegadaInput.addEventListener('input', actualizarCalculos);
     cantidadInput.addEventListener('input', actualizarCalculos);
 </script>
+<script>
+    function calcularRuta() {
+        const origen = document.getElementById('origen').value;
+        const destino = document.getElementById('destino').value;
+        
+        // Llamada al backend de Django
+        fetch(`/gestion/ajax/calcular_ruta/?origen=${origen}&destino=${destino}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('id_km_llegada').placeholder = data.distancia;
+            document.getElementById('recorrido_display').innerText = data.distancia + ' Km';
+        });
+    }
+</script>
 {% endblock %}

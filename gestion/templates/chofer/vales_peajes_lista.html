@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Vales y Peajes{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <div class="flex justify-between items-center border-b pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Vales y Peajes</h2>
+            <p class="text-slate-500 font-medium">Control de Insumos y Tránsito</p>
+        </div>
+    </div>
+
+    <!-- Sección Vales -->
+    <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <h3 class="font-bold flex items-center gap-2 text-red-900 mb-6 uppercase text-xs tracking-widest font-headline">
+            <span class="material-symbols-outlined text-primary notranslate">local_gas_station</span> Vales Registrados
+        </h3>
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b border-slate-100">
+                <tr>
+                    <th class="p-4">Voucher #</th>
+                    <th class="p-4">Fecha</th>
+                    <th class="p-4">Litros</th>
+                    <th class="p-4">Monto</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for b in vales %}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="p-4 font-black text-red-800">{{ b.nro_vale_combustible }}</td>
+                    <td class="p-4 text-slate-600 font-medium">{{ b.fecha|date:"d/m/Y" }}</td>
+                    <td class="p-4 font-bold text-slate-900">{{ b.cantidad_litros }} L</td>
+                    <td class="p-4 font-black text-slate-900">Bs. {{ b.costo_total }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-400 italic">No hay vales de combustible registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Sección Peajes -->
+    <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <h3 class="font-bold flex items-center gap-2 text-red-900 mb-6 uppercase text-xs tracking-widest font-headline">
+            <span class="material-symbols-outlined text-primary notranslate">toll</span> Peajes Registrados
+        </h3>
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b border-slate-100">
+                <tr>
+                    <th class="p-4">Ubicación</th>
+                    <th class="p-4">Fecha</th>
+                    <th class="p-4">Hora</th>
+                    <th class="p-4">Monto</th>
+                    <th class="p-4">Comprobante</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for p in peajes %}
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="p-4 font-bold text-slate-900">{{ p.lugar }}</td>
+                    <td class="p-4 text-slate-600 font-medium">{{ p.fecha|date:"d/m/Y" }}</td>
+                    <td class="p-4 text-slate-600 font-medium">{{ p.fecha|date:"h:i A" }}</td>
+                    <td class="p-4 font-black text-slate-900">Bs. {{ p.monto }}</td>
+                    <td class="p-4">
+                        {% if p.comprobante %}
+                            <!-- MINIATURA DE LA FOTO DEL PEAJE -->
+                            <a href="{{ p.comprobante.url }}" target="_blank" class="block w-16 h-8 rounded border border-slate-300 overflow-hidden shadow-sm hover:opacity-80 hover:shadow-md transition-all" title="Ver comprobante completo">
+                                <img src="{{ p.comprobante.url }}" alt="Ticket Peaje" class="w-full h-full object-cover">
+                            </a>
+                        {% else %}
+                            <span class="material-symbols-outlined text-red-300 notranslate" title="Sin comprobante">block</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-slate-400 italic">No hay peajes registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <a href="{% url 'registrar_peaje' %}" class="fixed bottom-8 right-8 bg-red-900 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:bg-red-800 transition-all hover:scale-105 z-50">
+        <span class="material-symbols-outlined text-3xl notranslate">add</span>
+    </a>
+</div>
+{% endblock %}

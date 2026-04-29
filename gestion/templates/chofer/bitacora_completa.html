@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Nueva Bitácora - Chofer{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Registro de Bitácora</h2>
+        <p class="text-slate-500 font-medium">Complete los datos de la jornada y registre sus viajes y peajes.</p>
+    </div>
+
+    <form method="POST" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8">
+        {% csrf_token %}
+        
+        <!-- Datos Principales de Bitácora -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for field in form %}
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Sección de Viajes (Formset) -->
+        <div class="pt-8 border-t">
+            <h3 class="font-black text-lg mb-4 font-headline uppercase text-slate-900">Registrar Viajes</h3>
+            <div id="viajes-container" class="space-y-4">
+                {{ formset.management_form }}
+                {% for viaje_form in formset %}
+                <div class="viaje-form grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border">
+                    {{ viaje_form.as_p }}
+                </div>
+                {% endfor %}
+            </div>
+            <button type="button" id="add-viaje" class="mt-4 bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase hover:bg-black transition-all">
+                + Agregar Viaje
+            </button>
+        </div>
+
+        <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
+            Guardar Bitácora Final
+        </button>
+        <div id="map" class="h-64 w-full rounded-2xl shadow-inner mt-8 border border-slate-200"></div>
+
+        <script>
+            // 1. Inicializar el mapa
+            var map = L.map('map').setView([-19.58, -65.75], 7); 
+
+            // 2. Cargar mapas offline (Asegúrate de tener la carpeta static/maps/ con las imágenes)
+            L.tileLayer('/static/maps/{z}/{x}/{y}.png', {
+                attribution: 'GADP Potosí'
+            }).addTo(map);
+
+            function trazarRuta(coordOrigen, coordDestino) {
+                var latlngs = [coordOrigen, coordDestino];
+                var polyline = L.polyline(latlngs, {color: '#770003', weight: 5}).addTo(map);
+                map.fitBounds(polyline.getBounds());
+            }
+        </script>
+    </form>
+</div>
+
+<script>
+    document.getElementById('add-viaje').addEventListener('click', function() {
+        let container = document.getElementById('viajes-container');
+        let newForm = container.children[0].cloneNode(true);
+        // Limpiar inputs del formulario clonado
+        newForm.querySelectorAll('input, textarea').forEach(input => input.value = '');
+        container.appendChild(newForm);
+    });
+</script>
+{% endblock %}
