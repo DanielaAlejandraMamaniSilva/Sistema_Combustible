@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <h2 class="text-2xl font-black font-headline uppercase text-slate-900">Actividad del día: {{ fecha|date:"d/m/Y" }}</h2>
+        <p class="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{{ chofer.get_full_name }}</p>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+        <div class="space-y-8">
+            {% for b in bitacoras %}
+            <!-- Segmento de Viaje -->
+            <div class="flex gap-6 group">
+                <!-- Timeline dot -->
+                <div class="relative flex flex-col items-center">
+                    <div class="w-4 h-4 bg-primary rounded-full border-4 border-white shadow"></div>
+                    <div class="w-0.5 h-full bg-slate-200 mt-2"></div>
+                </div>
+                
+                <!-- Info -->
+                <div class="pb-8">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        {{ b.hora_salida|time:"H:i" }} - {{ b.hora_llegada|time:"H:i" }}
+                    </p>
+                    <p class="font-bold text-slate-900">{{ b.origen }} → {{ b.destino }}</p>
+                    <div class="flex gap-4 mt-2">
+                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded font-bold uppercase text-slate-600">{{ b.tipo_ruta }}</span>
+                        <span class="text-[10px] bg-red-50 px-2 py-1 rounded font-bold uppercase text-red-700">{{ b.km_final|add:b.km_inicial|add:"-0" }} KM</span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-slate-400 italic">No hay actividad registrada para este día.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

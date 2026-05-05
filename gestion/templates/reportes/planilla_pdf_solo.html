@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: letter landscape; margin: 0.5cm; }
+        body { font-family: Helvetica, sans-serif; font-size: 8px; color: black; }
+        .matriz { width: 100%; border-collapse: collapse; border: 1px solid black; }
+        .matriz td { border: 1px solid black; padding: 3px; text-align: center; }
+        .bg-yellow { background-color: #FFFF00; }
+        .bg-green { background-color: #92D050; }
+        .bg-orange { background-color: #FFC000; }
+        .bg-gray { background-color: #D9D9D9; }
+        .text-left { text-align: left; }
+        .font-bold { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <table class="matriz">
+        <!-- CABECERA -->
+        <tr><th colspan="12" style="font-size: 12px; padding: 10px;">REPORTE DE USO DE COMBUSTIBLE EN VEHICULOS</th></tr>
+        <tr>
+            <td class="bg-yellow font-bold text-left" style="width: 8%;">GESTION</td><td class="bg-yellow" style="width: 7%;">{{ anio }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">SECRETARIA</td>
+            <td colspan="5" class="bg-yellow text-left">ADMINISTRATIVA FINANCIERA</td>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold text-left">MES</td><td class="bg-yellow">{{ mes|upper }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">TIPO VEHÍCULO</td>
+            <td colspan="5" class="bg-yellow text-left">{{ vehiculo.tipo|upper }}</td>
+        </tr>
+        <tr>
+            <td class="bg-yellow font-bold text-left">CHOFER</td><td class="bg-yellow">{{ chofer.get_full_name|upper }}</td>
+            <td colspan="3" class="bg-yellow"></td>
+            <td colspan="2" class="bg-yellow font-bold">PLACA</td>
+            <td colspan="5" class="bg-yellow text-left">{{ vehiculo.placa }}</td>
+        </tr>
+        
+        <!-- CABECERA DE TABLA -->
+        <tr class="bg-gray font-bold">
+            <td rowspan="2">FECHA</td><td rowspan="2">VALE</td><td rowspan="2">CANT.</td><td rowspan="2">OBJETO</td>
+            <td colspan="3">COMBUSTIBLE</td><td colspan="3">KILOMETRAJE</td>
+            <td rowspan="2">KM/L</td><td rowspan="2">RESP.</td>
+        </tr>
+        <tr class="bg-gray font-bold">
+            <td>ING</td><td>UTI</td><td>SALDO</td>
+            <td>SAL</td><td>LLEG</td><td>REC</td>
+        </tr>
+        
+        <!-- CUERPO DE VIAJES -->
+        {% for r in registros %}
+        <tr class="bg-green">
+            <td>{{ r.fecha|date:"d/m/y" }}</td>
+            <td>{{ r.vale }}</td>
+            <td>{{ r.ingreso }}</td>
+            <td class="text-left">{{ r.objeto }}</td>
+            <td>{{ r.ingreso }}</td>
+            <td class="bg-orange">{{ r.utilizado }}</td>
+            <td class="bg-orange font-bold">{{ r.saldo }}</td>
+            <td>{{ r.salida }}</td>
+            <td>{{ r.llegada }}</td>
+            <td class="bg-orange font-bold">{{ r.recorrido }}</td>
+            <td>{{ vehiculo.rendimiento_km_litro }}</td>
+            <td>ADMIN</td>
+        </tr>
+        {% endfor %}
+
+        <!-- RESUMEN FINAL Y FIRMAS (Todo en la misma tabla) -->
+        <tr class="bg-gray font-bold">
+            <td colspan="4" class="text-left">RESUMEN</td>
+            <td colspan="8">FIRMAS</td>
+        </tr>
+        <tr>
+            <td colspan="4" class="text-left" style="vertical-align: top;">
+                KM INICIAL: {{ km_inicial_mes }}<br>
+                KM FINAL: {{ vehiculo.kilometraje_actual }}<br>
+                LITROS SOBRANTES: {{ saldo_final }}
+            </td>
+            <td colspan="8" style="height: 60px; vertical-align: bottom;">
+                CONDUCTOR ____ | SUP. ____ | MAESTRANZA ____ | ACTIVOS ____ | RESP. ____
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

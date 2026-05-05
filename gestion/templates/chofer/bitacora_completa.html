@@ -1,72 +1,92 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Nueva Bitácora - Chofer{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
+<div class="max-w-7xl mx-auto space-y-8">
     <div class="border-b pb-6">
         <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Registro de Bitácora</h2>
-        <p class="text-slate-500 font-medium">Complete los datos de la jornada y registre sus viajes y peajes.</p>
+        <p class="text-slate-500 font-medium">Complete los datos de la jornada y registre sus viajes.</p>
     </div>
 
-    <form method="POST" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8">
+    <!-- Se agregó onsubmit="return confirmarEnvio()" -->
+    <form method="POST" id="bitacora-form" onsubmit="return confirmarEnvio()" enctype="multipart/form-data" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-8">
         {% csrf_token %}
         
-        <!-- Datos Principales de Bitácora -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {% for field in form %}
+        <!-- 1. Campos Principales -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="flex flex-col gap-2">
-                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
-                {{ field }}
+                <label class="text-[10px] font-black uppercase text-slate-400">Nº Vale Combustible</label>
+                {{ form.nro_vale_combustible }}
             </div>
-            {% endfor %}
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400">Cantidad (Litros)</label>
+                {{ form.cantidad_litros }}
+            </div>
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400">Nº Factura</label>
+                {{ form.nro_factura }}
+            </div>
         </div>
 
-        <!-- Sección de Viajes (Formset) -->
+        <div class="flex flex-col gap-2">
+            <label class="text-[10px] font-black uppercase text-slate-400">Objetivo de la Comisión</label>
+            {{ form.objetivo_comision }}
+        </div>
+
+        <!-- 2. Formset de Viajes (Tabla Dinámica) -->
         <div class="pt-8 border-t">
-            <h3 class="font-black text-lg mb-4 font-headline uppercase text-slate-900">Registrar Viajes</h3>
+            <h3 class="font-black text-lg mb-4 font-headline uppercase text-slate-900">Segmentos de Viaje</h3>
+            {{ formset.management_form }}
+            
             <div id="viajes-container" class="space-y-4">
-                {{ formset.management_form }}
                 {% for viaje_form in formset %}
-                <div class="viaje-form grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border">
-                    {{ viaje_form.as_p }}
+                <div class="viaje-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    {{ viaje_form.origen }}
+                    {{ viaje_form.destino }}
+                    {{ viaje_form.km_inicio }}
+                    {{ viaje_form.km_fin }}
+                    <div class="hidden"> {{ viaje_form.DELETE }} </div>
                 </div>
                 {% endfor %}
             </div>
+            
             <button type="button" id="add-viaje" class="mt-4 bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-xs uppercase hover:bg-black transition-all">
-                + Agregar Viaje
+                + Agregar Tramo de Viaje
             </button>
         </div>
 
+        <!-- Botón de Envío -->
         <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
-            Guardar Bitácora Final
+            Finalizar y Guardar Bitácora
         </button>
-        <div id="map" class="h-64 w-full rounded-2xl shadow-inner mt-8 border border-slate-200"></div>
-
-        <script>
-            // 1. Inicializar el mapa
-            var map = L.map('map').setView([-19.58, -65.75], 7); 
-
-            // 2. Cargar mapas offline (Asegúrate de tener la carpeta static/maps/ con las imágenes)
-            L.tileLayer('/static/maps/{z}/{x}/{y}.png', {
-                attribution: 'GADP Potosí'
-            }).addTo(map);
-
-            function trazarRuta(coordOrigen, coordDestino) {
-                var latlngs = [coordOrigen, coordDestino];
-                var polyline = L.polyline(latlngs, {color: '#770003', weight: 5}).addTo(map);
-                map.fitBounds(polyline.getBounds());
-            }
-        </script>
     </form>
 </div>
 
 <script>
-    document.getElementById('add-viaje').addEventListener('click', function() {
-        let container = document.getElementById('viajes-container');
-        let newForm = container.children[0].cloneNode(true);
-        // Limpiar inputs del formulario clonado
-        newForm.querySelectorAll('input, textarea').forEach(input => input.value = '');
-        container.appendChild(newForm);
+    // Confirmación antes de enviar
+    function confirmarEnvio() {
+        return confirm("¿Está seguro de enviar esta bitácora? Los datos serán auditados por la administración.");
+    }
+
+    // Lógica para añadir filas dinámicamente
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('viajes-container');
+        const addButton = document.getElementById('add-viaje');
+        let totalForms = document.querySelector('#id_viajes-TOTAL_FORMS');
+
+        addButton.addEventListener('click', function() {
+            let formCount = parseInt(totalForms.value);
+            let newRow = container.children[0].cloneNode(true);
+            
+            // Actualizar índices
+            newRow.innerHTML = newRow.innerHTML.replace(/-0-/g, '-' + formCount + '-');
+            newRow.querySelectorAll('input, textarea').forEach(input => input.value = '');
+            
+            container.appendChild(newRow);
+            totalForms.value = formCount + 1;
+        });
     });
 </script>
 {% endblock %}

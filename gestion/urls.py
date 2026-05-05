@@ -49,8 +49,14 @@ urlpatterns = [
     #chofer
     path('chofer/historial/', views.historial_viajes_chofer, name='historial_chofer'),
     path('chofer/vehiculo/', views.detalle_vehiculo_chofer, name='vehiculo_chofer'),    
-    path('ajax/calcular-ruta/', views.calcular_ruta_ajax, name='calcular_ruta_ajax'),
+    path('gestion/ajax/calcular_ruta/', views.calcular_ruta_ajax, name='calcular_ruta_ajax'),
     path('chofer/vales-peajes/', views.lista_vales_peajes, name='lista_vales_peajes'),
     path('chofer/peajes/nuevo/', views.registrar_peaje, name='registrar_peaje'),
+
+    path('validacion/detalle/<int:bitacora_id>/', views.detalle_validacion, name='detalle_validacion'),
+    path('validacion/procesar/<int:bitacora_id>/', views.procesar_validacion, name='procesar_validacion'),
+
+    path('reportes/diario/<int:bitacora_id>/', views.reporte_diario_detallado, name='reporte_diario'),
+    path('monitoreo/detalle/<int:chofer_id>/', views.historial_diario_chofer, name='historial_diario_admin'),
 ]
 

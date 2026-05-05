@@ -5,13 +5,19 @@ from django.contrib.auth import get_user_model
 from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField, Count
 from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm, BitacoraForm, ViajeFormSet
 from django.contrib import messages
+from .utils import evaluar_tipo_bitacora
+from .services import procesar_bitacoras_periodo
+from .filters import BitacoraFilter
 from django.core.management import call_command
 from django.contrib.sessions.models import Session
+from xhtml2pdf import pisa
+import django_filters
+from django.template.loader import get_template
 from django.utils import timezone
 from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
 from django.contrib.contenttypes.models import ContentType
 import openpyxl
-from .utils import calcular_distancia, buscar_coordenadas
+from .utils import obtener_ruta_dijkstra, calcular_distancia, buscar_coordenadas
 from django.forms import modelformset_factory
 from django.db import transaction
 from django.http import JsonResponse
@@ -49,56 +55,74 @@ Usuario = get_user_model()
 # ==========================================
 # SECCIÓN CHOFER (CORREGIDA Y LIMPIA)
 # ==========================================
+
 @login_required
 def dashboard_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     vehiculo = asignacion.vehiculo if asignacion else None
 
-    # Procesamiento del formulario de la pantalla principal
+    viaje_activo = Bitacora.objects.filter(chofer=request.user, estado_viaje='en_curso').first()
+
     if request.method == 'POST' and vehiculo:
-        try:            
-            vale = request.POST.get('nro_vale')
-            cantidad = request.POST.get('cantidad')
-            km_llegada = int(request.POST.get('km_llegada'))
+        accion = request.POST.get('accion') 
+        
+        # ---------------------------------------------------------
+        # ACCIÓN 1: INICIAR VIAJE
+        # ---------------------------------------------------------
+        if accion == 'iniciar':
             motivo = request.POST.get('motivo')
+            responsable = request.POST.get('responsable')
             
-            km_inicial = vehiculo.kilometraje_actual
+            km_salida = int(request.POST.get('km_salida', 0))
+            if vehiculo.kilometraje_actual > 0:
+                km_salida = vehiculo.kilometraje_actual
+                
+            Bitacora.objects.create(
+                vehiculo=vehiculo,
+                chofer=request.user,
+                estado_viaje='en_curso',
+                hora_salida=timezone.now().time(), 
+                km_inicial=km_salida,
+                km_final=km_salida, 
+                destino=motivo,
+                objetivo_comision=motivo,
+                responsable_viaje=responsable
+            )
+            messages.success(request, "Viaje iniciado. ¡Conduce con precaución!")
+            return redirect('dashboard')
+
+        # ---------------------------------------------------------
+        # ACCIÓN 2: FINALIZAR VIAJE
+        # ---------------------------------------------------------
+        elif accion == 'finalizar' and viaje_activo:
+            km_llegada = int(request.POST.get('km_llegada', 0))
             
-            if km_llegada <= km_inicial:
-                messages.error(request, "El KM de llegada debe ser mayor al KM de salida.")
+            if km_llegada <= viaje_activo.km_inicial:
+                messages.error(request, "El KM de llegada debe ser mayor al de salida.")
             else:
-                Bitacora.objects.create(
-                    vehiculo=vehiculo,
-                    chofer=request.user,
-                    km_inicial=km_inicial,
-                    km_final=km_llegada,
-                    destino=motivo,
-                    objetivo_comision=motivo,
-                    nro_vale_combustible=vale,
-                    cantidad_litros=cantidad,
-                    costo_total=float(cantidad) * 3.74,
-                    nro_factura="S/N"
-                )
-                messages.success(request, "Bitácora registrada con éxito.")
+                viaje_activo.km_final = km_llegada
+                viaje_activo.hora_llegada = timezone.now().time() 
+                viaje_activo.estado_viaje = 'finalizado'
+                
+                si_recargo = request.POST.get('toggle_combustible')
+                if si_recargo == 'on':
+                    viaje_activo.nro_vale_combustible = request.POST.get('nro_vale')
+                    cantidad = request.POST.get('cantidad') or 0
+                    viaje_activo.cantidad_litros = cantidad
+                    viaje_activo.costo_total = float(cantidad) * 3.74
+                
+                viaje_activo.save()
+                messages.success(request, "Viaje finalizado y bitácora guardada con éxito.")
                 return redirect('dashboard')
-        except Exception as e:
-            messages.error(request, f"Error al registrar: {e}")
 
-    historial = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')[:5]
+    historial = Bitacora.objects.filter(chofer=request.user, estado_viaje='finalizado').order_by('-fecha')[:5]
     
-    ultima_eficiencia = "0"
-    if historial.exists():
-        ult = historial[0]
-        distancia = ult.km_final - ult.km_inicial
-        if ult.cantidad_litros > 0:
-            ultima_eficiencia = round(distancia / float(ult.cantidad_litros), 1)
-
     context = {
         'asignacion': asignacion,
         'vehiculo': vehiculo,
+        'viaje_activo': viaje_activo,
         'historial': historial,
         'km_actual': vehiculo.kilometraje_actual if vehiculo else 0,
-        'ultima_eficiencia': ultima_eficiencia,
     }
     return render(request, 'dashboard_chofer.html', context)
 
@@ -112,19 +136,18 @@ def detalle_vehiculo_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
 
+from django.http import JsonResponse
+from .utils import obtener_ruta_dijkstra
+
 @login_required
 def calcular_ruta_ajax(request):
     origen = request.GET.get('origen')
     destino = request.GET.get('destino')
+    km = obtener_ruta_dijkstra(origen, destino)
     
-    coords_o = buscar_coordenadas(origen)
-    coords_d = buscar_coordenadas(destino)
-    
-    if coords_o and coords_d:
-        distancia = calcular_distancia(coords_o, coords_d)
-        consumo_est = distancia / 5.0 # Rendimiento base 5 km/l
-        return JsonResponse({'distancia': distancia, 'consumo': round(consumo_est, 2)})
-    return JsonResponse({'error': 'Ubicación no encontrada'}, status=400)
+    # Asumimos rendimiento de 5 km/l según tu configuración
+    consumo = round(km / 5.0, 2)
+    return JsonResponse({'distancia': km, 'consumo': consumo})
 
 @login_required
 @transaction.atomic
@@ -569,26 +592,42 @@ def eliminar_vehiculo(request, pk):
 @login_required
 def reporte_oficial_chofer(request, chofer_id):
     chofer = get_object_or_404(Usuario, id=chofer_id)
-    mes_actual = datetime.now().month
-    anio_actual = datetime.now().year
+    anio = int(request.GET.get('anio', datetime.now().year))
+    periodo = request.GET.get('periodo', 'mensual')
+    mes_raw = request.GET.get('mes', '1')
+    mes_map = {'ENERO': 1, 'FEBRERO': 2, 'MARZO': 3, 'ABRIL': 4, 'MAYO': 5, 'JUNIO': 6, 
+               'JULIO': 7, 'AGOSTO': 8, 'SEPTIEMBRE': 9, 'OCTUBRE': 10, 'NOVIEMBRE': 11, 'DICIEMBRE': 12}
+    registros, totales, saldo_final = procesar_bitacoras_periodo(chofer, anio, mes)
     
+    if mes_raw.isdigit():
+        mes = int(mes_raw)
+    else:
+        mes = mes_map.get(mes_raw.upper(), datetime.now().month)
+
+    periodo = request.GET.get('periodo', 'mensual')
     vehiculo_asig = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first()
-    bitacoras = Bitacora.objects.filter(
-        chofer=chofer, 
-        fecha__month=mes_actual, 
-        fecha__year=anio_actual
-    ).order_by('fecha')
+    
+    # Filtros de Bitácora
+    bitacoras = Bitacora.objects.filter(chofer=chofer, fecha__year=anio, fecha__month=mes)
+    if periodo == 'quincena1':
+        bitacoras = bitacoras.filter(fecha__day__lte=15)
+    elif periodo == 'quincena2':
+        bitacoras = bitacoras.filter(fecha__day__gt=15)
+    bitacoras = bitacoras.order_by('fecha')
 
     total_cargado = 0
     total_recorrido = 0
-    registros_procesados =[]
-    saldo_anterior = 133.90 # Este dato vendría del mes anterior en un sistema real
+    total_utilizado = 0
+    registros_procesados = []
+    saldo_anterior = Decimal('133.90')
     saldo_actual = saldo_anterior
 
     for b in bitacoras:
+        motivo_final = evaluar_tipo_bitacora(b)
         recorrido = b.km_final - b.km_inicial
-        consumo_estimado = recorrido / float(vehiculo_asig.vehiculo.rendimiento_km_litro)
-        saldo_actual = float(saldo_actual) + float(b.cantidad_litros) - consumo_estimado
+        rendimiento = vehiculo_asig.vehiculo.rendimiento_km_litro if vehiculo_asig else Decimal('5.0')
+        consumo_estimado = Decimal(recorrido) / rendimiento
+        saldo_actual = saldo_actual + b.cantidad_litros - consumo_estimado
         
         registros_procesados.append({
             'fecha': b.fecha,
@@ -596,34 +635,65 @@ def reporte_oficial_chofer(request, chofer_id):
             'ingreso': b.cantidad_litros,
             'utilizado': round(consumo_estimado, 2),
             'saldo': round(saldo_actual, 2),
-            'objeto': b.objetivo_comision,
+            'objeto': motivo_final,
             'salida': b.km_inicial,
             'llegada': b.km_final,
             'recorrido': recorrido,
         })
         total_cargado += b.cantidad_litros
+        total_utilizado += consumo_estimado
         total_recorrido += recorrido
-
+    
     context = {
+        'registros': registros,
+        'total_recorrido': totales['recorrido'],
+        'total_cargado': totales['cargado'],
+        'total_utilizado': round(totales['utilizado'], 2),
+        'user': request.user,
         'chofer': chofer,
         'vehiculo': vehiculo_asig.vehiculo if vehiculo_asig else None,
         'registros': registros_procesados,
         'mes': "ENERO",
-        'anio': anio_actual,
-        'total_recorrido': total_recorrido,
-        'total_cargado': total_cargado,
+        'anio': anio,
+        'km_inicial_mes': bitacoras.first().km_inicial if bitacoras.exists() else 0,
         'saldo_anterior': saldo_anterior,
         'saldo_final': round(saldo_actual, 2),
     }
+
+    # --- LÓGICA DE EXPORTACIÓN PDF ---
+    tipo = request.GET.get('tipo', 'html')
+    if tipo == 'pdf':
+        # USAMOS EL TEMPLATE LIMPIO
+        template = get_template('reportes/planilla_pdf_solo.html')
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="Reporte_Oficial.pdf"'
+        
+        # Generar PDF
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        if pisa_status.err:
+            return HttpResponse('Error al generar PDF', status=500)
+        return response
+    
+    # Si no es PDF, renderiza el normal con el sidebar
     return render(request, 'reportes/planilla_oficial.html', context)
 
 @login_required
+def cerrar_periodo_chofer(request, chofer_id, anio, mes):
+    # Bloqueamos todas las bitácoras del mes para ese chofer
+    Bitacora.objects.filter(
+        chofer_id=chofer_id, 
+        fecha__year=anio, 
+        fecha__month=mes
+    ).update(reporte_cerrado=True)
+    
+    messages.success(request, f"Periodo {mes}/{anio} cerrado para el chofer. Los registros ya no pueden ser modificados.")
+    return redirect('reporte_por_chofer')
+
+@login_required
 def lista_registros_all(request):
-    query = request.GET.get('q', '')
-    registros = Bitacora.objects.all().order_by('-fecha')
-    if query:
-        registros = registros.filter(Q(vehiculo__placa__icontains=query) | Q(chofer__last_name__icontains=query))
-    return render(request, 'admin_potosi/registros_list.html', {'registros': registros})
+    f = BitacoraFilter(request.GET, queryset=Bitacora.objects.all().order_by('-fecha'))
+    return render(request, 'admin_potosi/registros_list.html', {'filter': f})
 
 @login_required
 def validar_registros(request):
@@ -632,10 +702,27 @@ def validar_registros(request):
 
 @login_required
 def monitoreo_tiempo_real(request):
+    if request.user.rol not in ['admin', 'superadmin', 'activos']:
+        return redirect('dashboard')
+
     choferes = Usuario.objects.filter(rol='chofer')
-    hoy = datetime.now().date()
     for c in choferes:
-        c.en_ruta = Bitacora.objects.filter(chofer=c, fecha__date=hoy).exists()
+        # Buscamos si tiene un viaje en curso
+        viaje_actual = Bitacora.objects.filter(chofer=c, estado_viaje='en_curso').first()
+        
+        if viaje_actual:
+            c.estado_actual = "En Viaje"
+            c.color = "bg-red-500"
+            c.ubicacion = f"{viaje_actual.origen} a {viaje_actual.destino}"
+            c.ultima_hora = viaje_actual.hora_salida
+        else:
+            # Si no hay viaje en curso, buscamos el último finalizado
+            ultimo_viaje = Bitacora.objects.filter(chofer=c, estado_viaje='finalizado').order_by('-fecha').first()
+            c.estado_actual = "Disponible"
+            c.color = "bg-green-500"
+            c.ubicacion = f"Último destino: {ultimo_viaje.destino}" if ultimo_viaje else "En Base"
+            c.ultima_hora = ultimo_viaje.hora_llegada if ultimo_viaje else "--:--"
+
     return render(request, 'admin_potosi/monitoreo.html', {'choferes': choferes})
 
 @login_required
@@ -717,7 +804,6 @@ def vista_vales_peajes(request):
         'peajes': peajes
     })
 
-# Mantenemos las vistas duplicadas del admin/bienes que venían del archivo original
 @login_required
 def validacion_consumo(request):
     pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
@@ -786,3 +872,59 @@ def registrar_peaje(request):
         return redirect('lista_vales_peajes') 
         
     return render(request, 'chofer/registro_peaje_form.html')
+
+@login_required
+def detalle_validacion(request, bitacora_id):
+    if request.user.rol not in ['admin', 'superadmin', 'bienes']:
+        return redirect('dashboard')
+        
+    bitacora = get_object_or_404(Bitacora, id=bitacora_id)
+    viajes = bitacora.viajes.all()
+    peajes = Peaje.objects.filter(chofer=bitacora.chofer, fecha__date=bitacora.fecha.date())
+    
+    context = {
+        'bitacora': bitacora,
+        'viajes': viajes,
+        'peajes': peajes,
+    }
+    return render(request, 'admin_potosi/detalle_validacion.html', context)
+
+@login_required
+def procesar_validacion(request, bitacora_id):
+    bitacora = get_object_or_404(Bitacora, id=bitacora_id)
+    if request.method == 'POST':
+        bitacora.estado_validacion = request.POST.get('estado')
+        bitacora.observacion_admin = request.POST.get('observacion')
+        bitacora.save()
+        messages.success(request, f"Registro {bitacora.nro_vale_combustible} procesado exitosamente.")
+    return redirect('validar_registros')
+
+@login_required
+def reporte_diario_detallado(request, bitacora_id):
+    bitacora = get_object_or_404(Bitacora, id=bitacora_id)
+    viajes = bitacora.viajes.all().order_by('hora_inicio')
+    
+    context = {
+        'bitacora': bitacora,
+        'viajes': viajes,
+        'chofer': bitacora.chofer,
+        'vehiculo': bitacora.vehiculo,
+    }
+    return render(request, 'admin_potosi/reporte_diario.html', context)
+
+@login_required
+def historial_diario_chofer(request, chofer_id):
+    if request.user.rol not in ['admin', 'superadmin', 'activos']:
+        return redirect('dashboard')
+
+    chofer = get_object_or_404(Usuario, id=chofer_id)
+    hoy = timezone.now().date()
+    
+    # Obtenemos las bitácoras del día del chofer
+    bitacoras = Bitacora.objects.filter(chofer=chofer, fecha__date=hoy).order_by('hora_salida')
+    
+    return render(request, 'admin_potosi/historial_diario.html', {
+        'chofer': chofer,
+        'bitacoras': bitacoras,
+        'fecha': hoy
+    })

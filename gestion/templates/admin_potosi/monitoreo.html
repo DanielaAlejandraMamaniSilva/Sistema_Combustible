@@ -1,31 +1,67 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block title %}Monitoreo de Flota{% endblock %}
+
 {% block content %}
 <div class="space-y-8">
+    <!-- Header -->
     <div class="flex justify-between items-end border-b pb-6">
         <div>
             <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Estado de la Flota</h2>
             <p class="text-slate-500 font-medium">Seguimiento operativo del personal de conducción.</p>
         </div>
-        <div class="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-xs font-bold">
+        <div class="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
             <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span> GPS ACTIVO
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Rejilla de Choferes (Clickeable) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for chofer in choferes %}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div class="relative shrink-0">
-                <img class="w-14 h-14 rounded-full border-2 border-slate-100" src="https://ui-avatars.com/api/?name={{ chofer.first_name }}&background=f1f5f9&color=770003">
-                <div class="absolute bottom-0 right-0 w-4 h-4 {% if chofer.en_ruta %}bg-green-500{% else %}bg-slate-300{% endif %} border-2 border-white rounded-full"></div>
+        <!-- Enlace al Reporte Diario Detallado -->
+        <a href="{% url 'historial_diario_admin' chofer.id %}" class="block group">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:border-primary hover:shadow-md transition-all flex items-center gap-4">
+                <div class="relative shrink-0">
+                    <img class="w-14 h-14 rounded-full border-2 border-slate-100 object-cover" 
+                         src="https://ui-avatars.com/api/?name={{ chofer.first_name }}+{{ chofer.last_name }}&background=f1f5f9&color=770003" alt="perfil">
+                    <div class="absolute bottom-0 right-0 w-4 h-4 {% if chofer.en_ruta %}bg-green-500{% else %}bg-slate-300{% endif %} border-2 border-white rounded-full"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{{ chofer.get_full_name }}</h4>
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">
+                        {% if chofer.en_ruta %}EN COMISIÓN{% else %}EN BASE / DISPONIBLE{% endif %}
+                    </p>
+                    <p class="text-[10px] text-slate-500 truncate mt-1 italic">{{ chofer.ruta_actual }}</p>
+                </div>
             </div>
-            <div class="flex-1 min-w-0">
-                <h4 class="font-bold text-slate-900 truncate">{{ chofer.get_full_name }}</h4>
-                <p class="text-xs text-slate-500 uppercase font-bold tracking-tighter">
-                    {% if chofer.en_ruta %}EN COMISIÓN{% else %}EN BASE / DISPONIBLE{% endif %}
-                </p>
-            </div>
+        </a>
+        {% empty %}
+        <div class="col-span-full p-10 text-center border-2 border-dashed rounded-2xl text-slate-400 font-bold">
+            No hay conductores registrados.
         </div>
         {% endfor %}
     </div>
+
+    <!-- Mapa de Referencia (Sin Internet) -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <h3 class="font-bold text-slate-900 mb-4 font-headline uppercase text-sm">Mapa de Rutas Principales</h3>
+        <div id="map" class="h-64 w-full rounded-xl bg-slate-200"></div>
+    </div>
 </div>
+
+<!-- Lógica del Mapa (Offline) -->
+<link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
+<script src="{% static 'js/leaflet.js' %}"></script>
+<script>
+    var map = L.map('map').setView([-19.58, -65.75], 13);
+    
+    // Cargar calles desde tu GeoJSON local
+    fetch("{% static 'data/potosi_calles.json' %}")
+        .then(res => res.json())
+        .then(data => {
+            L.geoJSON(data, { 
+                style: { color: "#770003", weight: 2, opacity: 0.6 } 
+            }).addTo(map);
+        });
+</script>
 {% endblock %}

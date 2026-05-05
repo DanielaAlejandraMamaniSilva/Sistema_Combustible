@@ -75,6 +75,7 @@ class BitacoraForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        nro_vale = cleaned_data.get("nro_vale_combustible")
         km_llegada = cleaned_data.get('km_final')
         km_salida = cleaned_data.get('km_inicial')
         litros = cleaned_data.get('cantidad_litros')
@@ -83,6 +84,8 @@ class BitacoraForm(forms.ModelForm):
         if km_llegada and km_salida and km_llegada <= km_salida:
             raise forms.ValidationError("El kilometraje de llegada debe ser mayor al de salida.")
             
+        if nro_vale and Bitacora.objects.filter(nro_vale_combustible=nro_vale).exists():
+            raise forms.ValidationError(f"El vale N° {nro_vale} ya fue registrado anteriormente.")
         # Validación de consumo excesivo (si supera el 50% de lo esperado, alerta)
         distancia = km_llegada - km_salida
         if litros > 0 and distancia > 0:

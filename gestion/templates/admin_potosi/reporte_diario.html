@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Reporte Diario Detallado{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <!-- Encabezado -->
+    <div class="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+        <h2 class="text-2xl font-black font-headline uppercase text-slate-900">Bitácora de Viajes: {{ bitacora.fecha|date:"d/m/Y" }}</h2>
+        <div class="grid grid-cols-3 mt-6 text-sm">
+            <div><p class="text-[10px] text-slate-400 font-bold uppercase">Chofer</p><p class="font-bold">{{ bitacora.chofer.get_full_name }}</p></div>
+            <div><p class="text-[10px] text-slate-400 font-bold uppercase">Vehículo</p><p class="font-bold">{{ bitacora.vehiculo.placa }}</p></div>
+            <div><p class="text-[10px] font-bold text-red-800 uppercase">Estado</p><p class="font-black">{{ bitacora.get_estado_validacion_display }}</p></div>
+        </div>
+    </div>
+
+    <!-- Línea de Tiempo de Viajes -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <h3 class="text-lg font-bold font-headline mb-6">Detalle de Trayectos</h3>
+        <div class="space-y-6">
+            {% for v in viajes %}
+            <div class="flex gap-4 group">
+                <div class="flex flex-col items-center">
+                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-black">{{ forloop.counter }}</div>
+                    <div class="w-0.5 flex-1 bg-slate-200 mt-2"></div>
+                </div>
+                <div class="pb-6 w-full">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-bold text-slate-900">{{ v.origen }} → {{ v.destino }}</p>
+                            <p class="text-[10px] uppercase font-bold text-slate-500">{{ v.hora_inicio|time:"H:i" }} - {{ v.hora_fin|time:"H:i" }}</p>
+                        </div>
+                        <span class="text-[10px] font-black uppercase px-2 py-1 bg-slate-100 rounded">
+                            {% if v.es_apoyo_local %}APOYO LOCAL{% else %}{{ v.motivo }}{% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Distancia: {{ v.km_fin|add:v.km_inicio|add:"-0" }} KM</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
