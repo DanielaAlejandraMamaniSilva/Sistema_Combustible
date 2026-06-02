@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if combustible %}Editar{% else %}Nuevo{% endif %} Insumo - GADP{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-10">
+    <!-- Tarjeta Sofisticada -->
+    <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl border border-slate-100 relative overflow-hidden">
+        <!-- Decoración sutil de fondo -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+        
+        <div class="relative z-10">
+            <div class="flex items-center gap-4 mb-8 border-b border-slate-50 pb-6">
+                <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">oil_barrel</span>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-black font-headline text-slate-900 uppercase tracking-tight">
+                        {% if combustible %}Editar Insumo{% else %}Nuevo Insumo{% endif %}
+                    </h2>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Gestión de Catálogos Energéticos</p>
+                </div>
+            </div>
+            
+            <form method="POST" class="space-y-8">
+                {% csrf_token %}
+                
+                <div class="flex flex-col gap-3">
+                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] ml-1">
+                        Nombre del Combustible / Insumo
+                    </label>
+                    <!-- El campo del formulario con estilo -->
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                        <p class="text-red-600 text-[10px] font-bold mt-1">{{ form.nombre.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row gap-4">
+                    <button type="submit" class="flex-1 bg-primary-container text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-red-900/20 hover:bg-primary hover:-translate-y-0.5 transition-all active:scale-95">
+                        Guardar Insumo
+                    </button>
+                    <a href="{% url 'gestion_catalogos' %}" class="px-10 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center text-xs flex items-center justify-center">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Nota informativa -->
+    <div class="mt-8 p-6 bg-blue-50 rounded-3xl border border-blue-100 flex gap-4 items-start">
+        <span class="material-symbols-outlined text-blue-600">info</span>
+        <p class="text-[11px] text-blue-700 leading-relaxed">
+            <strong>Nota:</strong> Los cambios realizados en este catálogo afectarán a todas las bitácoras nuevas. Los registros históricos mantendrán el nombre original para fines de auditoría.
+        </p>
+    </div>
+</div>
+{% endblock %}

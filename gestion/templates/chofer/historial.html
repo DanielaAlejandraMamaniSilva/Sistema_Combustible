@@ -14,6 +14,20 @@
             </thead>
             <tbody class="divide-y text-sm">
                 {% for v in viajes %}
+                <tr>
+                    <td>{{ v.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ v.destino }}</td>
+                    <td class="text-right">
+                        {% if not v.solicitud_correccion %}
+                            <a href="{% url 'solicitar_correccion' v.id %}" class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
+                                Solicitar Cambio
+                            </a>
+                        {% else %}
+                            <span class="text-[10px] text-amber-500 italic font-bold">Corrección Pendiente...</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
                 <tr class="hover:bg-slate-50">
                     <td class="px-8 py-5 font-bold text-slate-900">{{ v.fecha|date:"d/m/Y" }}</td>
                     <td class="px-8 py-5">#{{ v.nro_vale_combustible }}</td>

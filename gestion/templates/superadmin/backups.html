@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Gestión de Respaldos (SQL)</h2>
+        <p class="text-slate-500 font-medium">Seleccione los módulos que desea exportar para mantenimiento externo.</p>
+    </div>
+
+    <form method="POST" class="bg-white p-10 rounded-3xl shadow-xl border border-slate-100">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Opción Usuarios -->
+            <label class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-all">
+                <input type="checkbox" name="modulos" value="usuarios" class="w-5 h-5 rounded text-red-800">
+                <div class="min-w-0">
+                    <p class="text-sm font-black text-slate-900 uppercase">Usuarios y Roles</p>
+                    <p class="text-[10px] text-slate-400">Credenciales, CI y estados de cuenta.</p>
+                </div>
+            </label>
+
+            <!-- Opción Vehículos -->
+            <label class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-all">
+                <input type="checkbox" name="modulos" value="vehiculos" class="w-5 h-5 rounded text-red-800">
+                <div class="min-w-0">
+                    <p class="text-sm font-black text-slate-900 uppercase">Flota e Inventario</p>
+                    <p class="text-[10px] text-slate-400">Placas, modelos y rendimientos.</p>
+                </div>
+            </label>
+
+            <!-- Opción Bitácoras -->
+            <label class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-all">
+                <input type="checkbox" name="modulos" value="bitacoras" class="w-5 h-5 rounded text-red-800">
+                <div class="min-w-0">
+                    <p class="text-sm font-black text-slate-900 uppercase">Bitácoras y Viajes</p>
+                    <p class="text-[10px] text-slate-400">Historial completo de rutas y KM.</p>
+                </div>
+            </label>
+
+            <!-- Opción Auditoría -->
+            <label class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-all">
+                <input type="checkbox" name="modulos" value="auditoria" class="w-5 h-5 rounded text-red-800">
+                <div class="min-w-0">
+                    <p class="text-sm font-black text-slate-900 uppercase">Logs de Seguridad</p>
+                    <p class="text-[10px] text-slate-400">Registro de todas las acciones del sistema.</p>
+                </div>
+            </label>
+        </div>
+
+        <div class="mt-10 pt-8 border-t flex flex-col gap-4">
+            <button type="submit" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3">
+                <span class="material-symbols-outlined">database</span>
+                Generar Respaldo .SQL
+            </button>
+            <p class="text-center text-[10px] text-slate-400">El archivo generado es compatible con PostgreSQL y MySQL.</p>
+        </div>
+    </form>
+</div>
+{% endblock %}

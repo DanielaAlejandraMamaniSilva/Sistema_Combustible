@@ -5,15 +5,17 @@
     <meta charset="utf-8"/>
     <meta name="google" content="notranslate" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>{% block title %}Sovereign Archive{% endblock %}</title>
+    <title>{% block title %}GADP | Gobierno Autónomo Departamental de Potosí{% endblock %}</title>
     
+    <!-- Motor de Tailwind Local -->
     <script src="{% static 'js/tailwind.js' %}"></script>
     
+    <!-- Recursos Locales -->
     <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
-
     <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
     <link rel="stylesheet" href="{% static 'css/leaflet.css' %}">
     <script src="{% static 'js/leaflet.js' %}"></script>
+
     <style>
         :root {
             --primary: #770003;
@@ -23,6 +25,7 @@
             --on-surface-variant: #5b403c;
         }
 
+        /* Configuración de Iconos */
         .material-symbols-outlined {
             font-family: 'Material Symbols Outlined' !important;
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -31,36 +34,127 @@
             vertical-align: middle;
         }
 
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        /* Transiciones sofisticadas para el Layout */
+        #main-layout { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-transition { transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s; }
+        
+        /* Scrollbars elegantes */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-track { background: transparent; }
-    </style>
-    <style>
-        /* ... tu CSS actual ... */
-        
-        /* Asegurar colores base si Tailwind tarda en cargar */
-        .bg-gradient-to-br { background: linear-gradient(to bottom right, #770003, #a10508); }
+
+        /* Lógica de ocultar Sidebar */
+        .sidebar-collapsed #sidebar { 
+            width: 0; 
+            transform: translateX(-100%); 
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Estilos de Branding */
+        .bg-gradient-institucional { background: linear-gradient(135deg, #770003 0%, #a10508 100%); }
         .text-primary { color: #770003; }
-        .bg-primary-container { background-color: #a10508; }
-        .text-on-primary { color: white; }
     </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 
-<body class="bg-surface text-on-surface h-screen overflow-hidden flex"> 
+<body class="bg-[#F4F6F9] text-on-surface h-screen overflow-hidden">
+    
+    <!-- CONTENEDOR DE NOTIFICACIONES FLOTANTES (TOASTS) -->
+    <div id="toast-container" class="fixed top-24 right-10 z-[9999] flex flex-col gap-3 w-96 no-print">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast-item flex items-start justify-between p-4 
+                    {% if message.tags == 'error' %}bg-red-600
+                    {% elif 'static' in message.tags %}bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.4)] border-2 border-white/20
+                    {% else %}bg-green-600{% endif %} 
+                    text-white rounded-2xl shadow-2xl animate-in fade-in slide-in-from-right-10 duration-500 
+                    {% if 'static' in message.tags %}is-static{% endif %}" 
+                    data-tags="{{ message.tags }}">
+                    
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined notranslate mt-0.5">
+                            {% if message.tags == 'error' %}report{% else %}verified_user{% endif %}
+                        </span>
+                        <div class="space-y-1">
+                            <p class="text-[11px] font-black uppercase tracking-widest leading-tight">Notificación de Sistema</p>
+                            <!-- El texto del mensaje (donde está la contraseña) -->
+                            <p class="text-sm font-medium leading-snug">{{ message|safe }}</p>
+                        </div>
+                    </div>
 
-    {% include 'components/sidebar.html' %}
-
-    <div class="flex-1 flex flex-col min-w-0 h-full relative overflow-hidden">
-        {% include 'components/topbar.html' %}
-
-        <!-- Área de contenido con scroll independiente -->
-        <main class="flex-1 overflow-y-auto overflow-x-hidden p-8 lg:p-12">
-            <div class="max-w-[1600px] mx-auto h-full"> 
-                {% block content %}{% endblock %}
-            </div>
-        </main>
+                    <!-- Botón X para cerrar manualmente -->
+                    <button onclick="this.parentElement.remove()" class="ml-4 p-1 hover:bg-white/20 rounded-lg transition-colors shrink-0">
+                        <span class="material-symbols-outlined notranslate text-sm">close</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
     </div>
+
+    <!-- ESTRUCTURA PRINCIPAL -->
+    <!-- Añadimos una transición suave al layout completo -->
+    <div id="main-layout" class="flex w-full h-full relative transition-all duration-300">
+        
+        <!-- SCRIPT DE PERSISTENCIA INMEDIATA (Evita el parpadeo del sidebar al cargar) -->
+        <script>
+            if (localStorage.getItem('sidebarStatus') === 'collapsed') {
+                document.getElementById('main-layout').classList.add('sidebar-collapsed');
+            }
+        </script>
+
+        <!-- SIDEBAR -->
+        {% include 'components/sidebar.html' %}
+
+        <!-- CONTENIDO DERECHO -->
+        <div id="main-content" class="flex-1 flex flex-col min-w-0 h-full relative transition-all duration-300 overflow-hidden">
+            
+            <!-- TOPBAR -->
+            {% include 'components/topbar.html' %}
+
+            <!-- ÁREA DE TRABAJO -->
+            <main class="flex-1 overflow-y-auto p-6 lg:p-10">
+                <div class="max-w-[1600px] mx-auto"> 
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SCRIPTS DINÁMICOS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const toasts = document.querySelectorAll('.toast-item');
+        toasts.forEach(function(toast) {
+            // SOLO si el mensaje NO tiene la clase 'is-static', se borra automáticamente
+            if (!toast.classList.contains('is-static')) {
+                setTimeout(function() {
+                    toast.classList.add('animate-out', 'fade-out', 'slide-out-to-right-10');
+                    setTimeout(() => toast.remove(), 500);
+                }, 5000); // 5 segundos para mensajes normales
+            }
+        });
+    });
+
+        // FUNCIÓN TOGGLE MEJORADA CON PERSISTENCIA
+        function toggleSidebar() {
+            const layout = document.getElementById('main-layout');
+            layout.classList.toggle('sidebar-collapsed');
+            
+            // Guardar el estado en el navegador
+            if (layout.classList.contains('sidebar-collapsed')) {
+                localStorage.setItem('sidebarStatus', 'collapsed');
+            } else {
+                localStorage.setItem('sidebarStatus', 'expanded');
+            }
+
+            // Ajustar mapa si existe (Leaflet)
+            if (typeof map !== 'undefined' && map !== null) {
+                setTimeout(() => { map.invalidateSize(); }, 400);
+            }
+        }
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

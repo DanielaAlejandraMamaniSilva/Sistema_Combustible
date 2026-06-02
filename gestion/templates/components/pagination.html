@@ -1,0 +1,38 @@
+<div class="flex items-center justify-between mt-6 no-print">
+    <!-- Texto dinámico: Si no hay páginas, no muestra nada -->
+    {% if page_obj.paginator.num_pages > 0 %}
+    <span class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+        PÁGINA {{ page_obj.number }} DE {{ page_obj.paginator.num_pages }}
+    </span>
+    {% else %}
+    <span class="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">
+        SIN REGISTROS
+    </span>
+    {% endif %}
+
+    <div class="flex gap-2">
+        <!-- BOTÓN ANTERIOR -->
+        {% if page_obj.has_previous %}
+            <a href="?{{ page_param }}={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'page_bajas' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="p-2 hover:bg-white rounded-lg border border-slate-200 transition-all shadow-sm">
+                <span class="material-symbols-outlined text-sm notranslate">chevron_left</span>
+            </a>
+        {% else %}
+            <div class="p-2 opacity-20 cursor-not-allowed border border-transparent">
+                <span class="material-symbols-outlined text-sm notranslate">chevron_left</span>
+            </div>
+        {% endif %}
+
+        <!-- BOTÓN SIGUIENTE -->
+        {% if page_obj.has_next %}
+            <a href="?{{ page_param }}={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' and key != 'page_bajas' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" 
+               class="p-2 hover:bg-white rounded-lg border border-slate-200 transition-all shadow-sm">
+                <span class="material-symbols-outlined text-sm notranslate">chevron_right</span>
+            </a>
+        {% else %}
+            <div class="p-2 opacity-20 cursor-not-allowed border border-transparent">
+                <span class="material-symbols-outlined text-sm notranslate">chevron_right</span>
+            </div>
+        {% endif %}
+    </div>
+</div>

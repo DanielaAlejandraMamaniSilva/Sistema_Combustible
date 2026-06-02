@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-8">
+    <div class="bg-white p-10 rounded-3xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-4 mb-8 border-b pb-4">
+            <span class="material-symbols-outlined text-primary text-4xl notranslate">move_down</span>
+            <div>
+                <h2 class="text-2xl font-black font-headline text-slate-900 uppercase">Traspaso de Dependencia</h2>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Chofer: {{ chofer.get_full_name }}</p>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-2xl mb-8 flex items-start gap-3 border border-blue-100">
+            <span class="material-symbols-outlined text-blue-600 notranslate">info</span>
+            <p class="text-xs text-blue-800 font-medium">Este proceso mantendrá el vehículo <strong>{{ asig.vehiculo.placa }}</strong> asignado al chofer, pero actualizará su secretaría en el Kardex.</p>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="flex flex-col gap-2">
+                <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+
+            <div class="pt-6 border-t border-slate-50 flex gap-4">
+                <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all">
+                    Confirmar Traspaso
+                </button>
+                <a href="{% url 'dashboard' %}" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold uppercase text-xs flex items-center">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

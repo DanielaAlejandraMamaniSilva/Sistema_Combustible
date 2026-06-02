@@ -44,11 +44,12 @@
                         <th class="px-8 py-4">Nº Memorándum</th>
                         <th class="px-8 py-4 text-center">Estado</th>
                         <th class="px-8 py-4 text-right">Documento</th>
+                        <th class="px-6 py-4 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y text-sm">
                     {% for asig in asignaciones %}
-                    <tr class="hover:bg-slate-50/50 transition-colors">
+                    <tr class="hover:bg-slate-50/50 transition-colors">                    
                         <td class="px-8 py-5 font-medium text-slate-600">
                             {{ asig.fecha_asignacion|date:"d/m/Y" }}
                         </td>
@@ -91,6 +92,14 @@
                                 </a>
                             {% else %}
                                 <span class="material-symbols-outlined text-slate-200" title="Sin Documento">file_off</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            {% if asig.esta_activo %}
+                                <a href="{% url 'dar_baja_asignacion' asig.id %}" 
+                                class="inline-block bg-red-700 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase hover:bg-red-900 transition-all shadow-md">
+                                    Dar de Baja
+                                </a>
                             {% endif %}
                         </td>
                     </tr>

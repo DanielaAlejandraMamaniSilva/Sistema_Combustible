@@ -1,80 +1,140 @@
-<header class="h-[90px] w-full bg-white flex justify-between items-center px-8 shadow-sm z-10 shrink-0 border-b border-slate-100">
-    <div class="flex items-center gap-8 min-w-0">
-        
-        <nav class="hidden lg:flex items-center gap-6 text-slate-600 font-brand font-medium overflow-hidden">
-            {% if user.rol == 'chofer' %}
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="{% if request.resolver_match.url_name == 'historial_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'historial_chofer' %}">Historial</a>
-                <a class="{% if request.resolver_match.url_name == 'vehiculo_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all whitespace-nowrap" href="{% url 'vehiculo_chofer' %}">Vehículo</a>
-
-            {% elif user.rol == 'bienes' %}
-                <!-- Menú para Bienes y Servicios -->
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="{% if request.resolver_match.url_name == 'gestion_catalogos' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'gestion_catalogos' %}">Inventario</a>
-                <a class="{% if request.resolver_match.url_name == 'supervision_combustible' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all" href="{% url 'supervision_combustible' %}">Supervisión</a>
-                <a class="{% if request.resolver_match.url_name == 'reporte_por_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %} transition-all" href="{% url 'reporte_por_chofer' %}">Reportes</a>
-
-            {% elif user.rol == 'activos' %}
-                <!-- Menú para Activos -->
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="{% if request.resolver_match.url_name == 'crear_asignacion' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'crear_asignacion' %}">Asignación</a>
-                <a class="{% if request.resolver_match.url_name == 'lista_memorandums' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'lista_memorandums' %}">Memorándums</a>
-                <a class="{% if request.resolver_match.url_name == 'lista_actas' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'lista_actas' %}">Actas</a>
-                <a class="{% if request.resolver_match.url_name == 'historial_asignaciones' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'historial_asignaciones' %}">Historial</a>
-                
-                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 notranslate">search</span>
-                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar..." type="text" value="{{ request.GET.q }}">
-                </form>
-
-            {% elif user.rol == 'admin' %}
-                <!-- Menú para Admin -->
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="{% if request.resolver_match.url_name == 'reporte_por_chofer' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'reporte_por_chofer' %}">Reportes</a>
-                <a class="{% if request.resolver_match.url_name == 'log_auditoria' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'log_auditoria' %}">Auditoria</a>
-                
-                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 notranslate">search</span>
-                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text" value="{{ request.GET.q }}">
-                </form>
-
-            {% elif user.rol == 'superadmin' %}
-                <!-- Menú para Superadmin -->
-                <a class="{% if request.resolver_match.url_name == 'dashboard' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="{% if request.resolver_match.url_name == 'lista_usuarios' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'lista_usuarios' %}">Usuarios</a>
-                <a class="{% if request.resolver_match.url_name == 'config_sistema' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'config_sistema' %}">Sistema</a>
-                <a class="{% if request.resolver_match.url_name == 'log_auditoria' %}text-primary border-b-2 border-primary pb-1{% else %}hover:text-primary{% endif %}" href="{% url 'log_auditoria' %}">Auditoria</a>
-                
-                <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 notranslate">search</span>
-                    <input name="q" class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary w-48 transition-all" placeholder="Buscar Registros..." type="text" value="{{ request.GET.q }}">
-                </form>
-            {% endif %}
-                
-        </nav>
-    </div>
+{% load static %}
+<header class="h-[90px] w-full bg-white flex justify-between items-center px-8 shadow-sm sticky top-0 z-[100] border-b border-slate-100">
     
-    <div class="flex items-center gap-4 shrink-0"> 
-        <div class="flex items-center gap-2 border-r pr-4 border-slate-200">
-            <!-- Notificaciones vinculadas a Logs -->
-            <a href="{% url 'log_auditoria' %}" class="p-2 text-slate-600 hover:text-primary transition-colors relative" title="Logs del Sistema">
-                <span class="material-symbols-outlined notranslate">notifications</span>
-                <span class="absolute top-2 right-2 w-2 h-2 bg-red-600 rounded-full border-2 border-white"></span>
-            </a>
-            <!-- Ajustes vinculado a Configuración para Superadmin -->
-            <a href="{% if user.rol == 'superadmin' %}{% url 'config_sistema' %}{% else %}#{% endif %}" class="p-2 text-slate-600 hover:text-primary transition-colors" title="Ajustes">
-                <span class="material-symbols-outlined notranslate">settings</span>
-            </a>
+    <!-- LADO IZQUIERDO: Identificación de Sección y Control de Sidebar -->
+    <div class="flex items-center gap-6 min-w-0">
+        <!-- Botón Hamburguesa -->
+        <button onclick="toggleSidebar()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-600 transition-all group">
+            <span class="material-symbols-outlined notranslate group-hover:scale-110 transition-transform">menu_open</span>
+        </button>
+
+        <div class="h-8 w-px bg-slate-200 mx-2 hidden md:block"></div>
+
+        <!-- Título Dinámico (Breadcrumb) -->
+        <div class="flex flex-col overflow-hidden">
+            <span class="text-[9px] font-black text-primary uppercase tracking-[0.3em] leading-none mb-1">GADP Potosí</span>
+            <h1 class="text-base font-black text-slate-800 font-headline uppercase tracking-tight leading-none truncate">
+                {% if 'usuarios' in request.path %}Gestión de Personal
+                {% elif 'auditoria' in request.path %}Seguridad y Auditoría
+                {% elif 'catalogos' in request.path %}Control de Activos
+                {% elif 'configuracion' in request.path %}Configuración Global
+                {% elif 'reportes' in request.path %}Centro de Reportes
+                {% elif 'bienes' in request.path %}Gestión de Insumos
+                {% elif 'activos' in request.path %}Administración de Flota
+                {% else %}Consola de Mando{% endif %}
+            </h1>
+        </div>
+    </div>
+
+    <!-- CENTRO: Buscador Inteligente (Oculto para Chofer) -->
+    {% if user.rol != 'chofer' %}
+    <div class="flex-1 max-w-md mx-10 hidden xl:block">
+        <form action="{% url 'buscar_registros' %}" method="GET" class="relative hidden xl:block ml-4"> 
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate pointer-events-none">search</span>
+            <input name="q" class="pl-12 pr-4 py-2.5 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-primary w-64 transition-all outline-none" 
+                placeholder="Buscar folios, placas o usuarios..." type="text" value="{{ request.GET.q }}">
+        </form>
+    </div>
+    {% endif %}
+    
+    <!-- LADO DERECHO: Estado del Sistema y Perfil -->
+    <div class="flex items-center gap-6 shrink-0"> 
+        
+        <!-- Indicador de Estado (Sofisticado) -->
+        <div class="hidden lg:flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+            <div class="flex flex-col text-right">
+                <span class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Servidor</span>
+                <span class="text-[10px] font-bold text-green-600 uppercase">En Línea</span>
+            </div>
+            <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
         </div>
 
-        <div class="flex items-center gap-3 pl-2">
-            <div class="text-right hidden md:block">
-                <p class="text-xs font-bold text-on-surface truncate max-w-[150px]">{{ user.get_full_name|default:user.username }}</p>
-                <p class="text-[10px] text-slate-500 uppercase font-bold">{{ user.get_rol_display }}</p>
+        <!-- Acciones Rápidas -->
+        <div class="flex items-center gap-2 pr-4 border-r border-slate-200">
+            
+            <!-- CONTENEDOR DEL DESPLEGABLE DE NOTIFICACIONES -->
+            <div class="relative" id="notification-container">
+                <button onclick="toggleNotifications(event)" class="p-2 text-slate-400 hover:text-primary transition-colors relative group">
+                    <span class="material-symbols-outlined notranslate group-hover:rotate-[15deg] transition-transform">notifications</span>
+                    <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full border-2 border-white"></span>
+                </button>
+
+                <!-- PANEL DESPLEGABLE (Corregido: bg-white sólido y z-index reforzado) -->
+                <div id="notification-panel" class="hidden absolute right-0 mt-3 w-80 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[2rem] border border-slate-200 z-[999] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    
+                    <!-- Flecha indicadora (bg-white sólido) -->
+                    <div class="absolute -top-2 right-4 w-4 h-4 bg-white rotate-45 border-l border-t border-slate-200"></div>
+
+                    <div class="relative z-10 bg-white"> <!-- Forzamos fondo blanco aquí también -->
+                        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                            <h3 class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Eventos Recientes</h3>
+                            <span class="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">SISTEMA</span>
+                        </div>
+
+                        <div class="max-h-[350px] overflow-y-auto bg-white">
+                            {% for n in notificaciones_recientes %}
+                            <div class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-default">
+                                <div class="flex gap-3">
+                                    <div class="w-2 h-2 mt-1.5 rounded-full shrink-0 
+                                        {% if n.accion == 'login_fallido' or n.accion == 'anomalia' %}bg-red-500
+                                        {% elif 'login' in n.accion %}bg-green-500
+                                        {% else %}bg-blue-500{% endif %}">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[11px] font-bold text-slate-800 leading-tight">{{ n.get_accion_display }}</p>
+                                        <p class="text-[10px] text-slate-500 mt-1 truncate">{{ n.descripcion }}</p>
+                                        <p class="text-[9px] text-slate-400 mt-1 font-medium uppercase">{{ n.fecha_hora|timesince }} ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="p-10 text-center bg-white">
+                                <span class="material-symbols-outlined text-slate-200 text-4xl mb-2">notifications_off</span>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">Sin novedades</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <a href="{% url 'log_auditoria' %}" class="block p-4 text-center text-[10px] font-black text-primary uppercase tracking-widest hover:bg-primary hover:text-white transition-all bg-white border-t border-slate-100">
+                            Ver todos los registros
+                        </a>
+                    </div>
+                </div>
             </div>
-            <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden border-2 border-primary/20 shrink-0">
-                <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=a10508&color=fff" alt="Perfil" class="w-full h-full object-cover">
+
+            {% if user.rol == 'superadmin' %}
+            <a href="{% url 'config_sistema' %}" class="p-2 text-slate-400 hover:text-primary transition-colors" title="Configuración del Sistema">
+                <span class="material-symbols-outlined notranslate">settings</span>
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Perfil de Usuario con Iniciales -->
+        <div class="flex items-center gap-3 pl-2">
+            <div class="text-right hidden sm:block">
+                <p class="text-xs font-black text-slate-900 leading-none">{{ user.get_full_name|default:user.username }}</p>
+                <p class="text-[9px] text-slate-400 uppercase font-bold mt-1">{{ user.get_rol_display }}</p>
+            </div>
+            <div class="w-11 h-11 rounded-2xl bg-primary-container flex items-center justify-center text-white font-black text-sm shadow-lg shadow-red-900/20 border-2 border-white">
+                {{ user.first_name|slice:":1" }}{{ user.last_name|slice:":1" }}
             </div>
         </div>
     </div>
 </header>
+
+<script>
+    function toggleNotifications(event) {
+        event.stopPropagation();
+        const panel = document.getElementById('notification-panel');
+        panel.classList.toggle('hidden');
+    }
+
+    // Cerrar el panel si se hace clic fuera de él
+    window.onclick = function(event) {
+        const panel = document.getElementById('notification-panel');
+        const container = document.getElementById('notification-container');
+        if (panel && !container.contains(event.target)) {
+            panel.classList.add('hidden');
+        }
+    }
+</script>

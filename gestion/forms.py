@@ -1,25 +1,38 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Asignacion, Vehiculo, Usuario, Bitacora, Viaje
+from .models import Asignacion, Vehiculo, Usuario, Bitacora, Viaje,Area, JustificacionEdicion, TipoCombustible
 from django.forms import inlineformset_factory
 from django.utils import timezone
 
-class UsuarioCreationForm(UserCreationForm):
+
+class UsuarioCreationForm(UserCreationForm): 
     class Meta(UserCreationForm.Meta):
         model = Usuario
-        fields = ('username', 'first_name', 'last_name', 'email', 'rol', 'ci', 'licencia_conducir', 'vencimiento_licencia')
+        fields = ('username', 'first_name', 'last_name', 'email', 'rol', 'ci', 
+                  'licencia_conducir', 'categoria_licencia', 'vencimiento_licencia', 'foto')
         widgets = {
-            'rol': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'}),
-            'vencimiento_licencia': forms.DateInput(attrs={'type': 'date', 'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
+            'vencimiento_licencia': forms.DateInput(attrs={'type': 'date'}),
         }
+
+    def clean_licencia_conducir(self):
+        licencia = self.cleaned_data.get('licencia_conducir')
+        rol = self.cleaned_data.get('rol')
+
+        if rol == 'chofer':
+            if not licencia:
+                raise forms.ValidationError("La licencia es obligatoria para el rol de Chofer.")
+            
+            licencia_upper = licencia.upper()
+            if not ('B' in licencia_upper or 'C' in licencia_upper):
+                raise forms.ValidationError("ERROR: El chofer debe contar con licencia Categoría B o C.")
+        return licencia
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields:
-            if field not in ['rol', 'vencimiento_licencia']:
-                self.fields[field].widget.attrs.update({
-                    'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'
-                })
+            self.fields[field].widget.attrs.update({
+                'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'
+            })
 
 class VehiculoForm(forms.ModelForm):
     class Meta:
@@ -39,6 +52,11 @@ class VehiculoForm(forms.ModelForm):
                 })
 
 class AsignacionForm(forms.ModelForm):
+    area = forms.ModelChoiceField(
+        queryset=Area.objects.all(), 
+        label="Secretaría / Área",
+        widget=forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary'})
+    )
     class Meta:
         model = Asignacion
         fields = ['vehiculo', 'chofer', 'nro_memorandum', 'documento_acta']
@@ -48,7 +66,21 @@ class AsignacionForm(forms.ModelForm):
             'nro_memorandum': forms.TextInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none', 'placeholder': 'Ej: MEMO/ACT/001/2024'}),
             'documento_acta': forms.FileInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
         }
+    def clean(self):
+        cleaned_data = super().clean()
+        chofer = cleaned_data.get('chofer')
+        vehiculo = cleaned_data.get('vehiculo')
 
+        # 1. Validar si el Chofer ya tiene vehículo asignado
+        if chofer and Asignacion.objects.filter(chofer=chofer, esta_activo=True).exists():
+            self.add_error('chofer', f"ALERTA: El conductor {chofer.get_full_name().upper()} ya tiene un vehículo bajo su responsabilidad.")
+
+        # 2. Validar si el Vehículo ya está ocupado
+        if vehiculo and Asignacion.objects.filter(vehiculo=vehiculo, esta_activo=True).exists():
+            self.add_error('vehiculo', f"ALERTA: El vehículo {vehiculo.placa} ya se encuentra asignado a otro chofer.")
+
+        return cleaned_data
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['chofer'].queryset = Usuario.objects.filter(rol='chofer')
@@ -122,3 +154,107 @@ class RegistroGastoForm(forms.Form):
     lugar = forms.CharField(required=False)
     monto = forms.DecimalField()
     comprobante = forms.ImageField(required=False)
+
+class RegistroChoferCompletoForm(forms.ModelForm):
+    # Campos del Chofer
+    first_name = forms.CharField(label="Nombre")
+    last_name = forms.CharField(label="Apellido")
+    area = forms.ModelChoiceField(queryset=Area.objects.all(), label="Secretaría/Área")
+    
+    # Campos de Asignación
+    nro_memorandum = forms.CharField(label="Nº Memorándum")
+    vehiculo = forms.ModelChoiceField(queryset=Vehiculo.objects.filter(estado='operacional'), label="Vehículo")
+    documento_acta = forms.FileField(label="Acta de Entrega (PDF)")
+
+    class Meta:
+        model = Usuario
+        fields = ['username', 'first_name', 'last_name', 'ci', 'area']
+
+class AreaForm(forms.ModelForm):
+    class Meta:
+        model = Area
+        fields = ['nombre', 'area_especifica', 'estado']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary', 
+                'placeholder': 'Ej: Secretaría de Salud'
+            }),
+            'area_especifica': forms.TextInput(attrs={
+                'class': 'w-full p-3 bg-slate-50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary', 
+                'placeholder': 'Ej: Administrativa Financiera'
+            }),
+            'estado': forms.CheckboxInput(attrs={
+                'class': 'w-6 h-6 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer'
+            }),
+        }
+
+class UsuarioChangeForm(forms.ModelForm):
+    password = None 
+    class Meta:
+        model = Usuario
+        fields = ('username', 'first_name', 'last_name', 'email', 'rol', 'ci', 
+                  'licencia_conducir', 'vencimiento_licencia', 'foto')
+        widgets = {
+            'vencimiento_licencia': forms.DateInput(attrs={'type': 'date'}),
+            'foto': forms.FileInput(attrs={'id': 'id_foto', 'accept': 'image/*'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in self.fields:
+            if field_name != 'foto':
+                self.fields[field_name].widget.attrs.update({
+                    'class': 'w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-700 text-sm'
+                })
+        
+class TraspasoAreaForm(forms.Form):
+    nueva_area = forms.ModelChoiceField(
+        queryset=Area.objects.filter(estado=True),
+        label="Nueva Secretaría / Área",
+        widget=forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary'})
+    )
+    nro_memorandum = forms.CharField(
+        max_length=50, 
+        label="Nº de Memorándum de Traspaso",
+        widget=forms.TextInput(attrs={'class': 'w-full p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary'})
+    )
+    documento_traspaso = forms.FileField(
+        label="Memorándum de Designación (PDF)",
+        widget=forms.FileInput(attrs={'class': 'w-full p-3 bg-slate-50 border-none rounded-xl'})
+    )
+
+class EnmiendaBitacoraForm(forms.ModelForm):
+    # Campos de la Bitácora que se pueden corregir
+    km_inicial = forms.IntegerField(label="Kilometraje Inicial")
+    km_final = forms.IntegerField(label="Kilometraje Final")
+    cantidad_litros = forms.DecimalField(label="Cantidad de Litros")
+    
+    # Campos obligatorios de la Justificación
+    motivo_enmienda = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'w-full p-3 bg-white border rounded-xl h-24', 'placeholder': 'Describa por qué se corrige este registro...'}),
+        label="Motivo de la Enmienda"
+    )
+    documento_respaldo = forms.FileField(
+        widget=forms.FileInput(attrs={'class': 'hidden', 'id': 'file-upload'}),
+        label="Nota de Respaldo (PDF/Imagen)"
+    )
+
+    class Meta:
+        model = Bitacora
+        fields = ['origen', 'destino', 'km_inicial', 'km_final', 'cantidad_litros', 'nro_vale_combustible']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields:
+            if field not in ['motivo_enmienda', 'documento_respaldo']:
+                self.fields[field].widget.attrs.update({'class': 'w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold'})
+
+class TipoCombustibleForm(forms.ModelForm):
+    class Meta:
+        model = TipoCombustible
+        fields = ['nombre']
+        widgets = {
+            'nombre': forms.TextInput(attrs={
+                'class': 'w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary font-bold text-slate-900'
+            }),
+        }

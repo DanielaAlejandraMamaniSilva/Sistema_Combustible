@@ -1,51 +1,100 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="space-y-8">
-    <div class="border-b pb-4">
-        <h2 class="text-2xl font-black font-headline uppercase">Resultados para: "{{ query }}"</h2>
+<div class="space-y-10">
+    <!-- Encabezado de Búsqueda -->
+    <div class="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 p-10 shadow-sm">
+        <div class="relative z-10">
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-3 block">Explorador de Archivos</span>
+            <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Resultados para: "{{ query }}"</h2>
+            <p class="text-slate-500 font-medium mt-2">Se han encontrado coincidencias en la base de datos institucional.</p>
+        </div>
+        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-slate-50 text-[12rem] notranslate select-none">manage_search</span>
     </div>
 
     {% if not usuarios and not vehiculos and not bitacoras %}
-        <div class="bg-white p-20 text-center rounded-2xl border">
-            <span class="material-symbols-outlined text-6xl text-slate-200 mb-4">search_off</span>
-            <p class="text-slate-500 font-bold">No se encontraron coincidencias en la base de datos.</p>
+        <div class="bg-white p-20 text-center rounded-[2.5rem] border border-dashed border-slate-200">
+            <span class="material-symbols-outlined text-slate-200 text-7xl mb-4">search_off</span>
+            <p class="text-slate-400 font-bold uppercase tracking-widest">No se encontraron registros coincidentes</p>
         </div>
     {% else %}
-        <!-- Resultados en Usuarios -->
+
+        <!-- SECCIÓN USUARIOS -->
         {% if usuarios %}
-        <section>
-            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Usuarios Encontrados</h3>
+        <section class="space-y-4">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-4">Personal Identificado</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {% for u in usuarios %}
-                <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
-                    <div>
-                        <p class="font-bold">{{ u.get_full_name }}</p>
-                        <p class="text-xs text-slate-500">{{ u.username }} - {{ u.get_rol_display }}</p>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm hover:shadow-md transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-primary font-black">
+                            {{ u.first_name|slice:":1" }}{{ u.last_name|slice:":1" }}
+                        </div>
+                        <div>
+                            <p class="font-black text-slate-900 uppercase text-sm">{{ u.get_full_name }}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[9px] bg-red-50 text-red-700 px-2 py-0.5 rounded-full font-bold uppercase">{{ u.get_rol_display }}</span>
+                                <span class="text-[10px] text-slate-400 font-medium">CI: {{ u.ci|default:"S/N" }}</span>
+                            </div>
+                        </div>
                     </div>
-                    <a href="{% url 'editar_usuario' u.pk %}" class="text-primary font-bold text-xs">VER PERFIL</a>
+                    <!-- Lógica de redirección inteligente -->
+                    <div class="flex gap-2">
+                        {% if user.rol == 'superadmin' %}
+                            {% if u.rol == 'chofer' %}
+                                <!-- Si es chofer, vemos su historial de vehículos -->
+                                <a href="{% url 'kardex_chofer' u.id %}" class="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all">Ver Kardex</a>
+                            {% else %}
+                                <!-- Si es administrativo, vemos su historial de acciones (LOGS) -->
+                                <a href="{% url 'kardex_logs_usuario' u.id %}" class="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all">Kardex de Logs</a>
+                            {% endif %}
+                            
+                            <!-- Botón secundario para editar perfil -->
+                            <a href="{% url 'editar_usuario' u.id %}" class="p-2 bg-slate-100 text-slate-400 rounded-xl hover:text-primary transition-all" title="Editar Perfil">
+                                <span class="material-symbols-outlined notranslate">edit</span>
+                            </a>
+                        {% else %}
+                            <!-- Si no es superadmin, solo ve el perfil básico -->
+                            <a href="{% url 'editar_usuario' u.id %}" class="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest">Gestionar</a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
         </section>
         {% endif %}
 
-        <!-- Resultados en Vehículos -->
+        <!-- SECCIÓN VEHÍCULOS -->
         {% if vehiculos %}
-        <section class="mt-8">
-            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Vehículos Encontrados</h3>
+        <section class="space-y-4 mt-10">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-4">Unidades Vehiculares</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {% for v in vehiculos %}
-                <div class="bg-white p-4 rounded-xl border flex justify-between items-center shadow-sm">
-                    <div>
-                        <p class="font-bold">{{ v.placa }}</p>
-                        <p class="text-xs text-slate-500">{{ v.marca }} {{ v.modelo }}</p>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm hover:shadow-md transition-all">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center text-primary">
+                            <span class="material-symbols-outlined notranslate">directions_car</span>
+                        </div>
+                        <div>
+                            <p class="font-black text-slate-900 uppercase text-sm">{{ v.placa }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ v.marca }} {{ v.modelo }}</p>
+                        </div>
                     </div>
-                    <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase">{{ v.estado }}</span>
+                    <div class="flex items-center gap-4">
+                        <span class="px-3 py-1 {% if v.estado == 'operacional' %}bg-green-50 text-green-700{% else %}bg-amber-50 text-amber-700{% endif %} rounded-full text-[9px] font-black uppercase tracking-widest border">
+                            {{ v.get_estado_display }}
+                        </span>
+                        <a href="{% url 'editar_vehiculo' v.id %}" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined notranslate">settings</span>
+                        </a>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
         </section>
         {% endif %}
+
     {% endif %}
 </div>
-{% endblock %}
+{% endblock %}  

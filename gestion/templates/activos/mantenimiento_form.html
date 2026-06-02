@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-8">
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-4 mb-8 border-b pb-4">
+            <span class="material-symbols-outlined text-primary text-4xl notranslate">build</span>
+            <div>
+                <h2 class="text-2xl font-black font-headline text-slate-900 uppercase">Orden de Mantenimiento</h2>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">Vehículo: {{ vehiculo.placa }}</p>
+            </div>
+        </div>
+        
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 gap-6">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-black uppercase text-slate-400">Fecha de Ingreso</label>
+                    <input type="date" name="fecha_ingreso" required class="p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-black uppercase text-slate-400">Motivo del Ingreso</label>
+                    <input type="text" name="motivo" placeholder="Ej: Cambio de aceite, falla frenos..." required class="p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-black uppercase text-slate-400">Nombre del Taller / Encargado</label>
+                    <input type="text" name="taller" class="p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-black uppercase text-slate-400">Observaciones Técnicas Iniciales</label>
+                    <textarea name="observaciones" rows="3" class="p-3 bg-slate-50 border-none rounded-xl focus:ring-2 focus:ring-primary resize-none"></textarea>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-50 flex gap-4">
+                <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all">
+                    Registrar y Bloquear Activo
+                </button>
+                <a href="{% url 'gestion_catalogos' %}" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold uppercase text-xs flex items-center">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

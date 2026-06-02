@@ -1,62 +1,132 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configuración del Sistema - Sovereign Archive{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
-    <div class="border-b pb-6">
-        <h2 class="text-3xl font-black font-headline uppercase">Configuración del Sistema</h2>
-        <p class="text-slate-500">Ajustes técnicos y parámetros globales del servidor.</p>
+<div class="max-w-5xl mx-auto space-y-10">
+    <!-- Encabezado Principal -->
+    <div class="border-b border-slate-200 pb-6">
+        <h2 class="text-3xl font-black font-headline uppercase text-slate-900 tracking-tight">Configuración del Sistema</h2>
+        <p class="text-slate-500 font-medium mt-1">Ajustes técnicos, seguridad y gestión de base de datos del servidor.</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- Tarjeta Seguridad / Mantenimiento -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border space-y-6">
-            <h3 class="font-bold text-red-900 flex items-center gap-2 font-headline">
-                <span class="material-symbols-outlined notranslate">security</span> Seguridad
-            </h3>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- BLOQUE 1: SEGURIDAD Y ACCESO -->
+        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-primary shadow-inner">
+                    <span class="material-symbols-outlined notranslate">security</span>
+                </div>
+                <h3 class="font-black text-slate-800 uppercase text-sm tracking-widest font-headline">Seguridad de Infraestructura</h3>
+            </div>
             
-            <!-- Interruptor de Modo Mantenimiento -->
-            <div class="flex items-center justify-between">
+            <!-- Interruptor de Modo Mantenimiento (Modo Seguro) -->
+            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div class="space-y-1">
-                    <span class="text-sm font-bold text-slate-700">Modo Mantenimiento</span>
-                    <p class="text-[10px] text-slate-400">Bloquea el acceso a choferes y bienes.</p>
+                    <span class="text-sm font-black text-slate-700 uppercase tracking-tight">Modo Mantenimiento</span>
+                    <p class="text-[10px] text-slate-400 font-medium">Bloquea el acceso a choferes, activos y bienes.</p>
                 </div>
                 
-                <form action="{% url 'toggle_seguro' %}" method="POST">
+                <form action="{% url 'toggle_seguro' %}" method="POST" id="form-mantenimiento">
                     {% csrf_token %}
-                    <button type="submit" class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none 
-                        {% if modo_seguro %}bg-green-600{% else %}bg-slate-200{% endif %}">
-                        <!-- Círculo del switch -->
-                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform 
-                            {% if modo_seguro %}translate-x-6{% else %}translate-x-1{% endif %}"></span>
+                    <button type="submit" class="relative inline-flex h-7 w-12 items-center rounded-full transition-all focus:outline-none 
+                        {% if modo_seguro %}bg-green-600 shadow-lg shadow-green-200{% else %}bg-slate-300{% endif %}">
+                        <!-- Círculo del switch con animación -->
+                        <span class="inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 
+                            {% if modo_seguro %}translate-x-6{% else %}translate-x-1{% endif %} shadow-md"></span>
                     </button>
                 </form>
             </div>
 
-            <div class="flex items-center justify-between pt-4 border-t border-slate-50">
-                <span class="text-sm font-medium text-slate-600">Estado de Logs</span>
-                <span class="text-[10px] font-black text-green-600 uppercase bg-green-50 px-2 py-1 rounded">Activo</span>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Auditoría en Tiempo Real</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-black text-green-600 uppercase bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span> Activo
+                    </span>
+                </div>
+                <div class="flex items-center justify-between px-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Encriptación de Vales</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase bg-slate-100 px-3 py-1 rounded-full border border-slate-200">AES-256</span>
+                </div>
             </div>
         </div>
 
-        <!-- Tarjeta Respaldo -->
-        <div class="bg-white p-8 rounded-2xl shadow-sm border space-y-6">
-            <h3 class="font-bold text-red-900 flex items-center gap-2 font-headline">
-                <span class="material-symbols-outlined notranslate">database</span> Base de Datos
-            </h3>
-            <div class="space-y-1">
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Último Respaldo</p>
-                <p class="text-sm font-bold text-slate-700">{{ ultima_mod|date:"d M Y, H:i" }}</p>
+        <!-- BLOQUE 2: GESTIÓN DE BASE DE DATOS -->
+        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 space-y-8">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-700 shadow-inner">
+                    <span class="material-symbols-outlined notranslate">database</span>
+                </div>
+                <h3 class="font-black text-slate-800 uppercase text-sm tracking-widest font-headline">Respaldo y Recuperación</h3>
+            </div>
+
+            <div class="space-y-1 px-2">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Última Modificación de Sistema</p>
+                <p class="text-lg font-black text-slate-700 font-headline">
+                    {% if ultima_mod %}{{ ultima_mod|date:"d M Y, H:i" }}{% else %}Sin registros recientes{% endif %}
+                </p>
             </div>
             
-            <!-- Botón de Respaldo Real -->
-            <a href="{% url 'forzar_respaldo' %}" class="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2 shadow-lg">
-                <span class="material-symbols-outlined text-sm">download_for_offline</span>
-                Forzar Respaldo Ahora
-            </a>
+            <div class="grid grid-cols-1 gap-4">
+
+                <!-- BOTÓN 2: RESPALDO SQL TOTAL (ESTRUCTURA + DATOS) -->
+                <a href="{% url 'backup_total_sql' %}" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center justify-center gap-3 active:scale-95">
+                    <span class="material-symbols-outlined text-lg">storage</span>
+                    Forzar Backup Total (.SQL)
+                </a>
+            </div>
             
-            <p class="text-[9px] text-slate-400 italic text-center">
-                El archivo generado (.json) contiene todos los usuarios, vehículos y bitácoras.
-            </p>
+            <div class="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <p class="text-[9px] text-blue-700 leading-relaxed font-medium">
+                    <strong>Aviso Técnico:</strong> El archivo .SQL incluye sentencias DDL para reconstruir las relaciones de llaves foráneas y la integridad referencial de todas las tablas de la Gobernación.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN INFERIOR: INFO DEL NÚCLEO -->
+    <div class="bg-slate-900 p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
+        <!-- Luces decorativas -->
+        <div class="absolute top-[-20%] right-[-10%] w-64 h-64 bg-primary opacity-20 rounded-full blur-3xl"></div>
+        
+        <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div class="space-y-2 text-center md:text-left">
+                <h4 class="font-black text-2xl font-headline tracking-tighter uppercase">Technical Core v6.0</h4>
+                <p class="text-slate-400 text-xs font-medium">SOVEREIGN ARCHIVE FUEL SYSTEM - GOBIERNO AUTÓNOMO DE POTOSÍ</p>
+            </div>
+            <div class="flex gap-10 font-mono text-[10px] uppercase tracking-widest text-slate-300">
+                <div class="text-center">
+                    <p class="text-slate-500 mb-1">Status</p>
+                    <p class="text-green-400 font-bold">Stable</p>
+                </div>
+                <div class="text-center border-l border-white/10 pl-10">
+                    <p class="text-slate-500 mb-1">Instancia</p>
+                    <p class="font-bold">SOV-ARC-PROD-01</p>
+                </div>
+                <div class="text-center border-l border-white/10 pl-10">
+                    <p class="text-slate-500 mb-1">Engine</p>
+                    <p class="font-bold">Django 6.0.4</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Confirmación para el Modo Mantenimiento -->
+<script>
+    document.getElementById('form-mantenimiento').addEventListener('submit', function(e) {
+        const estaActivo = {% if modo_seguro %}true{% else %}false{% endif %};
+        const mensaje = estaActivo 
+            ? "¿Desea DESACTIVAR el modo mantenimiento? Los usuarios podrán volver a registrar datos." 
+            : "ADVERTENCIA: ¿Desea ACTIVAR el modo mantenimiento? Se bloqueará el acceso a todos los módulos operativos.";
+        
+        if(!confirm(mensaje)) {
+            e.preventDefault();
+        }
+    });
+</script>
 {% endblock %}

@@ -1,32 +1,214 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-8">
-    <h2 class="text-3xl font-black font-headline">AUDITORÍA DEL SISTEMA</h2>
-    <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400">
-                <tr>
-                    <th class="px-6 py-4">Fecha</th>
-                    <th class="px-6 py-4">Usuario</th>
-                    <th class="px-6 py-4">Acción</th>
-                    <th class="px-6 py-4">Objeto</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y text-sm">
-                {% for log in logs %}
-                <tr>
-                    <td class="px-6 py-4">{{ log.action_time }}</td>
-                    <td class="px-6 py-4 font-bold">{{ log.user.username }}</td>
-                    <td class="px-6 py-4">
-                        {% if log.is_addition %}<span class="text-green-600">Creado</span>
-                        {% elif log.is_change %}<span class="text-blue-600">Editado</span>
-                        {% else %}<span class="text-red-600">Eliminado</span>{% endif %}
-                    </td>
-                    <td class="px-6 py-4">{{ log.object_repr }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="space-y-8 relative">
+    <div class="border-b pb-6">
+        <h2 class="text-3xl font-black font-headline text-slate-900 uppercase">Consola de Seguridad y Auditoría</h2>
+    </div>
+
+    <!-- BARRA DE FILTROS -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 no-print">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase">Usuario</label>
+                <input type="text" name="usuario" value="{{ request.GET.usuario }}" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:ring-2 focus:ring-primary/20">
+            </div>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase">Acción</label>
+                <select name="accion" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none">
+                    <option value="">Todas</option>
+                    {% for val, text in acciones %}
+                        <option value="{{ val }}" {% if request.GET.accion == val %}selected{% endif %}>{{ text }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase">Desde</label>
+                <input type="date" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none">
+            </div>
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase">Hasta</label>
+                <input type="date" name="fecha_fin" value="{{ request.GET.fecha_fin }}" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none">
+            </div>
+            <button type="submit" class="bg-primary text-white py-2 rounded-xl font-bold text-xs uppercase shadow-md hover:bg-red-900 transition-all active:scale-95">Filtrar Logs</button>
+        </form>
+    </div>
+
+    <!-- TABLA DE RESULTADOS -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-900 text-white font-black uppercase tracking-widest">
+                    <tr>
+                        <th class="p-4">Timestamp</th>
+                        <th class="p-4">Evento / Rol</th>
+                        <th class="p-4">Detalle / IP</th>
+                        <th class="p-4 text-center">Datos</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for log in page_obj %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-4">
+                            <p class="font-bold text-slate-900">{{ log.fecha_hora|date:"d/m/Y" }}</p>
+                            <p class="text-slate-400">{{ log.fecha_hora|date:"H:i:s" }}</p>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase 
+                                {% if log.accion == 'login_fallido' or log.accion == 'error' or log.accion == 'eliminacion' %}bg-red-100 text-red-700
+                                {% elif 'login' in log.accion or log.accion == 'creacion' %}bg-green-100 text-green-700
+                                {% else %}bg-blue-100 text-blue-700{% endif %}">
+                                {{ log.get_accion_display }}
+                            </span>
+                            <p class="text-[9px] text-slate-400 mt-1 uppercase font-bold">{{ log.rol }}</p>
+                        </td>
+                        <td class="p-4">
+                            <p class="font-medium text-slate-700">{{ log.descripcion|default:log.tabla }}</p>
+                            <p class="font-mono text-[9px] text-primary mt-1">IP: {{ log.ip }}</p>
+                        </td>
+                        <td class="p-4 text-center">
+                            {% if log.valor_nuevo or log.valor_anterior %}
+                                <!-- BOTÓN -->
+                                <button type="button" 
+                                        onclick="abrirInspector('{{ log.id }}', '{{ log.usuario_nombre }}', '{{ log.get_accion_display }}')" 
+                                        class="w-10 h-10 rounded-xl bg-slate-50 text-primary hover:bg-primary hover:text-white transition-all flex items-center justify-center mx-auto shadow-sm border border-slate-100">
+                                    <span class="material-symbols-outlined notranslate">analytics</span>
+                                </button>
+                                
+                                <!-- DATA OCULTA (Aseguramos que siempre sea un JSON válido) -->
+                                <script id="raw-ant-{{ log.id }}" type="application/json">
+                                    {{ log.valor_anterior|default_if_none:"{}"|safe }}</script>
+                                </script>
+                                <script id="raw-nue-{{ log.id }}" type="application/json">
+                                    {{ log.valor_nuevo|default_if_none:"{}"|safe }}</script>
+                                </script>
+                            {% else %}
+                                <span class="material-symbols-outlined text-slate-200 notranslate">block</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="p-20 text-center text-slate-400 italic font-medium">
+                            No se encontraron registros de auditoría con los filtros seleccionados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- COMPONENTE DE PAGINACIÓN INTEGRADO -->
+        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+    
+    <!-- Resumen de Auditoría -->
+    <div class="flex justify-between items-center px-4">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            Total de eventos registrados: {{ page_obj.paginator.count }}
+        </p>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            Mostrando página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </p>
     </div>
 </div>
+
+<!-- ==========================================
+     MODAL DE INSPECCIÓN (AGREGADO)
+     ========================================== -->
+<div id="modalInspector" class="hidden fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10">
+    <!-- Fondo oscuro con desenfoque -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="cerrarInspector()"></div>
+    
+    <!-- Caja del Modal -->
+    <div class="relative bg-white w-full max-w-5xl max-h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- Cabecera del Modal -->
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg">
+                    <span class="material-symbols-outlined notranslate">terminal</span>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-slate-900 uppercase tracking-tight">Detalle Técnico de Cambios</h3>
+                    <p id="modalSubtitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest"></p>
+                </div>
+            </div>
+            <button onclick="cerrarInspector()" class="w-10 h-10 rounded-full hover:bg-slate-200 flex items-center justify-center transition-colors">
+                <span class="material-symbols-outlined notranslate text-slate-400">close</span>
+            </button>
+        </div>
+
+        <!-- Contenido: Comparativa Lado a Lado -->
+        <div class="flex-1 overflow-y-auto p-8 bg-white">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
+                <!-- Estado Anterior -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Valores Anteriores</h4>
+                    <div class="bg-slate-900 rounded-3xl p-6 overflow-x-auto border border-slate-800">
+                        <pre id="jsonAnterior" class="text-blue-300 font-mono text-xs leading-relaxed"></pre>
+                    </div>
+                </div>
+
+                <!-- Estado Nuevo -->
+                <div class="space-y-3">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Valores Nuevos</h4>
+                    <div class="bg-slate-900 rounded-3xl p-6 overflow-x-auto border border-slate-800">
+                        <pre id="jsonNuevo" class="text-green-400 font-mono text-xs leading-relaxed"></pre>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Pie del Modal -->
+        <div class="p-4 bg-slate-50 border-t border-slate-100 text-center">
+            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em]">Consola de Auditoría Forense — GADP Potosí</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirInspector(id, usuario, accion) {
+        console.log("Intentando abrir log:", id);
+        
+        try {
+            const modal = document.getElementById('modalInspector');
+            const sub = document.getElementById('modalSubtitle');
+            const preAnt = document.getElementById('jsonAnterior');
+            const preNue = document.getElementById('jsonNuevo');
+
+            // 1. Obtener el texto y limpiar posibles errores de Python "None"
+            let txtAnt = document.getElementById('raw-ant-' + id).textContent.trim();
+            let txtNue = document.getElementById('raw-nue-' + id).textContent.trim();
+
+            // 2. Corrección de emergencia: si el texto es "None", lo volvemos un JSON válido
+            if (txtAnt === "None" || txtAnt === "") txtAnt = "{}";
+            if (txtNue === "None" || txtNue === "") txtNue = "{}";
+
+            // 3. Parsear
+            const dataAnt = JSON.parse(txtAnt);
+            const dataNue = JSON.parse(txtNue);
+
+            // 4. Formatear para el usuario
+            preAnt.textContent = Object.keys(dataAnt).length > 0 ? JSON.stringify(dataAnt, null, 4) : "// Sin datos previos registrados";
+            preNue.textContent = Object.keys(dataNue).length > 0 ? JSON.stringify(dataNue, null, 4) : "// Registro inicial (Sin cambios)";
+
+            sub.innerText = `Autor: ${usuario} | Evento: ${accion}`;
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error("Error detallado:", error);
+            alert("Error al procesar los datos técnicos de este log.");
+        }
+    }
+
+    function cerrarInspector() {
+        document.getElementById('modalInspector').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+</script>
 {% endblock %}

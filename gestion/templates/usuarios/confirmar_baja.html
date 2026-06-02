@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-xl border border-red-100">
+    <h2 class="text-xl font-black text-red-900 uppercase mb-4">Proceso de Baja</h2>
+    <p class="text-sm text-slate-500 mb-6">Está a punto de desactivar al usuario <strong>{{ usuario.get_full_name }}</strong>. Este proceso quedará registrado en los logs del sistema.</p>
+    
+    <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <label class="text-[10px] font-black uppercase text-slate-400">Indique el motivo de la baja:</label>
+        <textarea name="motivo" required class="w-full p-4 bg-slate-50 border rounded-xl focus:ring-2 focus:ring-red-600 outline-none" placeholder="Ej: Renuncia, Cambio de funciones, etc."></textarea>
+        
+        <div class="flex gap-3">
+            <button type="submit" class="flex-1 bg-red-700 text-white py-3 rounded-xl font-bold uppercase text-xs">Confirmar Desactivación</button>
+            <a href="{% url 'lista_usuarios' %}" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold uppercase text-xs text-center">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

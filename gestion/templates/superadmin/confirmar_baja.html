@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-10 rounded-3xl shadow-2xl border border-red-100">
+    <div class="text-center mb-8">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-red-600 text-4xl">person_remove</span>
+        </div>
+        <h2 class="text-2xl font-black text-slate-900 uppercase">Confirmar Baja Lógica</h2>
+        <p class="text-slate-500 text-sm">Estás a punto de desactivar a: <br> 
+           <strong class="text-slate-900">{{ u.get_full_name }} ({{ u.username }})</strong>
+        </p>
+    </div>
+
+    <!-- FORMULARIO DE REGISTRO -->
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
+        <div>
+            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">
+                Motivo del retiro (Obligatorio para Auditoría)
+            </label>
+            <textarea name="motivo" required 
+                      class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-red-600 outline-none transition-all h-32"
+                      placeholder="Ej: Finalización de contrato, cambio de rol, falta administrativa..."></textarea>
+        </div>
+
+        <div class="flex gap-4">
+            <button type="submit" class="flex-1 bg-red-700 text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-red-800 transition-all">
+                Confirmar Baja
+            </button>
+            <a href="{% url 'lista_usuarios' %}" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-xl font-bold uppercase tracking-widest text-center">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

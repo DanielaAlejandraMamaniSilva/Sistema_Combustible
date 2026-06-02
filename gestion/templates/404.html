@@ -5,66 +5,101 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruta no encontrada - Soberanía Potosí</title>
+    <title>404 - Registro No Encontrado</title>
     
+    <!-- Archivos Locales para funcionamiento Offline -->
     <script src="{% static 'js/tailwind.js' %}"></script>
-    
     <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
-    
     <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
   
     <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
-        /* Fondo con patrón sutil */
-        .bg-pattern { 
-            background-image: radial-gradient(#e2e8f0 1px, transparent 1px); 
-            background-size: 24px 24px; 
+        body { background-color: #F4F6F9; overflow: hidden; height: 100vh; margin: 0; }
+        .font-headline { font-family: 'Montserrat', sans-serif; }
+
+        /* Animación de fondo: Cuadrados Flotantes Geométricos */
+        .bg-animation {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
-        body { font-family: 'Public Sans', sans-serif; }
+
+        .square {
+            position: absolute;
+            background: #A10508;
+            opacity: 0.03;
+            animation: float-square 20s infinite linear;
+            border-radius: 4px;
+        }
+
+        @keyframes float-square {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.05; }
+            90% { opacity: 0.05; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Texto 404 Estilizado */
+        .text-404 {
+            font-size: 8rem;
+            font-weight: 900;
+            line-height: 1;
+            color: #212529;
+            letter-spacing: -0.05em;
+            background: linear-gradient(to bottom, #212529 40%, #A10508 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
-<body class="bg-surface h-screen flex flex-col items-center justify-center bg-pattern relative overflow-hidden">
-    
-    <!-- Luces decorativas de fondo -->
-    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary-container opacity-10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-primary opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+<body class="flex items-center justify-center p-6 relative">
 
-    <div class="max-w-2xl w-full px-6 relative z-10 text-center">
+    <div class="bg-animation">
+        <div class="square w-20 h-20" style="left: 10%; bottom: -10%; animation-delay: 0s; width: 80px; height: 80px;"></div>
+        <div class="square w-32 h-32" style="left: 25%; bottom: -15%; animation-delay: 5s; width: 120px; height: 120px;"></div>
+        <div class="square w-16 h-16" style="left: 45%; bottom: -10%; animation-delay: 2s; width: 60px; height: 60px;"></div>
+        <div class="square w-40 h-40" style="left: 70%; bottom: -20%; animation-delay: 8s; width: 150px; height: 150px;"></div>
+        <div class="square w-24 h-24" style="left: 85%; bottom: -10%; animation-delay: 1s; width: 100px; height: 100px;"></div>
+    </div>
+
+    <div class="max-w-5xl w-full bg-white/80 backdrop-blur-md rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.12)] border border-white overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[500px]">
         
-        <!-- Branding Institucional -->
-        <div class="mb-10 flex flex-col items-center justify-center">
-            <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center text-white shadow-xl shadow-red-900/20 mb-4">
-                <span class="material-symbols-outlined notranslate text-4xl">account_balance</span>
+        <div class="w-full md:w-1/2 bg-slate-50/50 flex flex-col items-center justify-center p-12 border-r border-slate-100">
+            <div class="relative">
+                <div class="absolute inset-0 bg-red-600/10 blur-3xl rounded-full scale-150"></div>
+                <img src="{% static 'img/logo_potosi.png' %}" alt="Escudo de Potosí" 
+                     class="h-64 w-auto relative z-10 drop-shadow-2xl transition-transform duration-700 hover:scale-105">
             </div>
-            <h2 class="text-lg font-black text-primary tracking-[0.3em] uppercase">Soberanía Potosí</h2>
+            <div class="mt-8 text-center">
+                <h2 class="text-[10px] font-black font-headline text-slate-400 uppercase tracking-[0.4em] leading-tight">
+                    Gobierno Autónomo Departamental
+                </h2>
+                <p class="text-xs font-black font-headline text-[#A10508] uppercase tracking-[0.2em] mt-1">de Potosí</p>
+            </div>
         </div>
 
-        <!-- Tarjeta de Error -->
-        <div class="bg-white p-10 md:p-16 rounded-[2.5rem] shadow-2xl border border-slate-100">
-            <div class="inline-block bg-red-50 px-4 py-2 rounded-full mb-6 border border-red-100">
-                <span class="text-primary font-black tracking-widest uppercase text-[10px] flex items-center gap-2">
-                    <span class="material-symbols-outlined notranslate text-[14px]">warning</span>
-                    Error de Sistema
-                </span>
+        <div class="w-full md:w-1/2 flex flex-col justify-center p-12 md:p-16 text-left">
+            <div class="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-1.5 rounded-full mb-6 w-fit border border-red-100">
+                <span class="material-symbols-outlined text-sm notranslate">security</span>
+                <span class="text-[10px] font-black uppercase tracking-widest">Aviso de Excepción</span>
             </div>
+
+            <h1 class="text-404 font-headline mb-4">404</h1>
+            <h3 class="text-2xl font-black font-headline text-slate-800 uppercase tracking-tighter mb-4">
+                Pagina no Encontrada
+            </h3>
             
-            <h1 class="text-8xl md:text-9xl font-black text-slate-900 tracking-tighter mb-2">404</h1>
-            <h3 class="text-2xl md:text-3xl font-black text-slate-800 uppercase tracking-tight mb-4">Ruta no encontrada</h3>
-            
-            <p class="text-slate-500 font-medium text-sm md:text-base leading-relaxed max-w-md mx-auto mb-10">
-                El documento, registro o sección a la que intenta acceder no existe en el archivo central, fue movido o carece de los permisos institucionales necesarios.
+            <p class="text-slate-500 font-medium text-sm leading-relaxed mb-10 border-l-4 border-red-100 pl-6">
+                El registro digital no figura en el índice del sistema actual. Por favor, verifique la dirección.
             </p>
 
-            <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center gap-3 w-full sm:w-auto bg-primary-container hover:bg-primary text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest transition-all shadow-xl shadow-red-900/20 active:scale-95">
-                <span class="material-symbols-outlined notranslate">home</span>
-                Volver al Panel Principal
+            <a href="{% url 'dashboard' %}" class="group inline-flex items-center justify-center gap-3 w-full bg-[#A10508] hover:bg-[#7A0406] text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] transition-all duration-300 shadow-xl shadow-red-900/20 active:scale-95">
+                <span class="material-symbols-outlined text-sm transition-transform group-hover:-translate-x-1">arrow_back</span>
+                Regresar al Inicio
             </a>
         </div>
-
-        <!-- Footer simple -->
-        <p class="mt-12 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-            © {% now "Y" %} Gobierno Autónomo Departamental de Potosí
-        </p>
     </div>
+
 </body>
 </html>

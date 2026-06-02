@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+    
+    <!-- BANNER DE PROTOCOLO DE SEGURIDAD -->
+    <div class="bg-white border-l-[12px] border-red-700 rounded-[2rem] shadow-2xl overflow-hidden">
+        <div class="p-8 flex items-center gap-6 bg-gradient-to-r from-red-50 to-transparent">
+            <div class="w-16 h-16 bg-red-700 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-red-900/30 shrink-0">
+                <span class="material-symbols-outlined text-4xl notranslate">gavel</span>
+            </div>
+            <div>
+                <h2 class="text-3xl font-black font-headline text-red-900 uppercase tracking-tighter">Protocolo de Enmienda Crítica</h2>
+                <p class="text-red-700/80 font-bold text-xs uppercase tracking-[0.2em] mt-1">Advertencia: Esta acción alterará registros históricos y será auditada permanentemente.</p>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {% csrf_token %}
+        
+        <!-- COLUMNA IZQUIERDA: DATOS TÉCNICOS (8 Columnas) -->
+        <div class="lg:col-span-7 space-y-6">
+            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
+                    <span class="material-symbols-outlined text-[15rem] notranslate">edit_document</span>
+                </div>
+
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-slate-900 rounded-full"></span>
+                    Valores a Rectificar
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- NUEVO: LUGAR DE SALIDA (ORIGEN) -->
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Lugar de Salida (Origen)</label>
+                        {{ form.origen }}
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Destino Registrado</label>
+                        {{ form.destino }}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Kilometraje Inicial</label>
+                        {{ form.km_inicial }}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Kilometraje Final</label>
+                        {{ form.km_final }}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Cantidad de Litros</label>
+                        {{ form.cantidad_litros }}
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nro. de Vale</label>
+                        {{ form.nro_vale_combustible }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: JUSTIFICACIÓN LEGAL (5 Columnas) -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl text-white relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-red-600"></div>
+                
+                <h3 class="text-sm font-black text-red-500 uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm">verified_user</span>
+                    Respaldo de Auditoría
+                </h3>
+
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Motivo de Modificación *</label>
+                        {{ form.motivo_enmienda }}
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Documento de Respaldo *</label>
+                        <div class="relative group">
+                            <div class="flex items-center gap-4 p-4 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl group-hover:border-red-500 transition-all">
+                                <span class="material-symbols-outlined text-red-500">upload_file</span>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[10px] font-bold text-white uppercase truncate">Subir Nota Escaneada</p>
+                                    <p class="text-[9px] text-slate-500 uppercase">PDF, JPG o PNG</p>
+                                </div>
+                                {{ form.documento_respaldo }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10 pt-8 border-t border-white/10 space-y-4">
+                    <button type="submit" class="w-full bg-red-700 hover:bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-red-900/40 transition-all active:scale-95 flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined">security</span>
+                        Aplicar Enmienda Legal
+                    </button>
+                    <a href="{% url 'registros_visualizacion' %}" class="block w-full text-center py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest hover:text-white transition-colors">
+                        Cancelar Operación
+                    </a>
+                </div>
+            </div>
+
+            <!-- INFO ADICIONAL -->
+            <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex gap-4">
+                <span class="material-symbols-outlined text-blue-600">info</span>
+                <p class="text-[10px] text-blue-800 font-medium leading-relaxed">
+                    Esta enmienda será registrada con su dirección IP y marca de tiempo. El documento de respaldo será almacenado en el servidor de archivos central.
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Estilos para los inputs dentro de este formulario específico */
+    input, textarea, select {
+        width: 100%;
+        padding: 1rem !important;
+        background-color: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 1rem !important;
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        outline: none !important;
+        transition: all 0.2s !important;
+    }
+    input:focus, textarea:focus {
+        border-color: #a10508 !important;
+        box-shadow: 0 0 0 4px rgba(161, 5, 8, 0.1) !important;
+        background-color: white !important;
+    }
+    /* Estilo especial para el textarea de la derecha */
+    #id_motivo_enmienda {
+        background-color: rgba(255,255,255,0.05) !important;
+        border-color: rgba(255,255,255,0.1) !important;
+        color: white !important;
+        height: 120px;
+    }
+    #id_motivo_enmienda:focus {
+        background-color: rgba(255,255,255,0.1) !important;
+        border-color: #ef4444 !important;
+    }
+</style>
+{% endblock %}

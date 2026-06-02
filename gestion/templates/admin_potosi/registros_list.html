@@ -1,72 +1,205 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Registros de Combustible{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
-    <div class="border-b pb-6">
-        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Visualización de Registros</h2>
-        <p class="text-slate-500 font-medium">Historial completo y detallado de todas las bitácoras registradas en el sistema.</p>
+<div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    
+    <!-- CABECERA SOFISTICADA -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-slate-200 pb-8">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-3">
+                <span class="w-2 h-2 bg-primary rounded-full"></span>
+                <span class="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Archivo Central GADP</span>
+            </div>
+            <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tighter">Historial Maestro</h2>
+            <p class="text-slate-500 font-medium text-sm">Consola de supervisión técnica, control de combustible y enmiendas legales.</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'reporte_por_chofer' %}" class="group flex items-center gap-3 bg-white border-2 border-slate-100 px-6 py-3 rounded-2xl font-black text-[10px] text-slate-600 uppercase tracking-widest hover:border-primary hover:text-primary transition-all shadow-sm hover:shadow-md">
+                <span class="material-symbols-outlined text-lg group-hover:rotate-12 transition-transform">description</span>
+                Generar Reporte Matriz
+            </a>
+        </div>
     </div>
 
-    <!-- Panel de Filtros -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
-            {% for field in filter.form %}
-            <div class="flex flex-col gap-1">
-                <label class="text-[9px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
-                {{ field }}
+    <!-- PANEL DE FILTROS REDISEÑADO -->
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.04)] border border-slate-100 no-print filter-container">
+        <form method="GET" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+                <!-- Rango de Fechas unificado visualmente -->
+                <div class="lg:col-span-2 grid grid-cols-2 gap-2">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Desde</label>
+                        {{ filter.form.fecha_inicio }}
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Hasta</label>
+                        {{ filter.form.fecha_fin }}
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Conductor</label>
+                    {{ filter.form.chofer }}
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Vehículo</label>
+                    {{ filter.form.vehiculo }}
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Estado</label>
+                    {{ filter.form.estado_validacion }}
+                </div>
             </div>
-            {% endfor %}
-            <button type="submit" class="bg-primary hover:bg-red-900 text-white py-2 px-4 rounded-lg font-bold text-xs uppercase transition-all">Filtrar</button>
-            <a href="{% url 'registros_visualizacion' %}" class="bg-slate-200 text-slate-600 py-2 px-4 rounded-lg font-bold text-xs uppercase text-center hover:bg-slate-300 transition-all">Limpiar</a>
+
+            <div class="flex justify-between items-center pt-4 border-t border-slate-50">
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Use los filtros para localizar registros específicos</p>
+                <div class="flex gap-3">
+                    <a href="{% url 'registros_visualizacion' %}" class="px-6 py-3 rounded-xl font-bold text-[10px] text-slate-400 uppercase hover:bg-slate-50 transition-all">Limpiar</a>
+                    <button type="submit" class="bg-slate-900 text-white px-10 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-primary transition-all active:scale-95">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </div>
         </form>
     </div>
 
-    <!-- Tabla -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <!-- TABLA DE DATOS ESTILO DOSSIER -->
+    <div class="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
+            <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100">
-                        <th class="px-6 py-4">Fecha</th>
-                        <th class="px-6 py-4">Vehículo</th>
-                        <th class="px-8 py-4">Chofer</th>
-                        <th class="px-6 py-4 text-right">Cantidad</th>
-                        <th class="px-6 py-4 text-center">Estado</th>
-                        <th class="px-6 py-4 text-right">Detalle</th>
+                    <tr class="bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.2em]">
+                        <th class="px-8 py-6">Fecha / Registro</th>
+                        <th class="px-8 py-6">Unidad Vehicular</th>
+                        <th class="px-8 py-6">Conductor Responsable</th>
+                        <th class="px-8 py-6 text-right">Combustible</th>
+                        <th class="px-8 py-6 text-center">Estado / Alerta</th>
+                        <th class="px-8 py-6 text-right">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
-                    {% for r in filter.qs %}
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-sm font-medium">{{ r.fecha|date:"d/m/Y" }}</td>
-                        <td class="px-6 py-4 font-bold text-slate-900">{{ r.vehiculo.placa }}</td>
-                        <td class="px-8 py-4 text-sm">{{ r.chofer.get_full_name }}</td>
-                        <td class="px-6 py-4 text-right font-black">{{ r.cantidad_litros }} L</td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="px-3 py-1 rounded-full text-[9px] font-black uppercase
-                                {% if r.estado_validacion == 'validado' %}bg-green-100 text-green-700
-                                {% elif r.estado_validacion == 'anomalia' %}bg-red-100 text-red-700
-                                {% else %}bg-slate-100 text-slate-500{% endif %}">
-                                {{ r.get_estado_validacion_display }}
-                            </span>
+                <tbody class="divide-y divide-slate-50 text-sm">
+                    {% for r in page_obj %}
+                    <tr class="group transition-all {% if r.solicitud_cambio %}bg-amber-50/40{% else %}hover:bg-slate-50/50{% endif %}">
+                        <td class="px-8 py-6">
+                            <p class="font-black text-slate-900">{{ r.fecha|date:"d M Y" }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ r.fecha|date:"H:i A" }}</p>
                         </td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{% url 'detalle_validacion' r.id %}" class="text-primary font-bold text-xs hover:underline uppercase">Revisar</a>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-primary border border-slate-200 group-hover:bg-white transition-colors">
+                                    <span class="material-symbols-outlined notranslate">{% if r.vehiculo.tipo == 'Camioneta' %}commute{% else %}local_shipping{% endif %}</span>
+                                </div>
+                                <div>
+                                    <p class="font-black text-slate-900 text-sm uppercase tracking-tight">{{ r.vehiculo.placa }}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase">{{ r.vehiculo.marca }} {{ r.vehiculo.modelo }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-slate-700">{{ r.chofer.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <p class="font-black text-slate-900 text-base">{{ r.cantidad_litros }} <span class="text-[10px] font-bold text-slate-400">LTS</span></p>
+                            <p class="text-[10px] text-primary font-black uppercase">Vale: {{ r.nro_vale_combustible|default:"S/N" }}</p>
+                        </td>
+                        
+                        <td class="px-8 py-6 text-center">
+                            {% if r.solicitud_cambio %}
+                                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-100 text-amber-700 rounded-full border border-amber-200 animate-pulse">
+                                    <span class="material-symbols-outlined text-xs notranslate">chat_bubble</span>
+                                    <span class="text-[9px] font-black uppercase tracking-widest">Cambio Solicitado</span>
+                                </div>
+                            {% else %}
+                                <span class="px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-[9px] font-black uppercase border border-green-100 tracking-widest">
+                                    {{ r.get_estado_validacion_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-8 py-6 text-right">
+                            <div class="flex justify-end gap-3">
+                                <!-- Ver Expediente -->
+                                <a href="{% url 'detalle_validacion' r.id %}" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-sm" title="Ver Expediente">
+                                    <span class="material-symbols-outlined notranslate text-lg">visibility</span>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic font-medium">No hay registros que coincidan con los filtros.</td>
+                        <td colspan="6" class="px-8 py-32 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="material-symbols-outlined text-slate-200 text-7xl mb-4">folder_open</span>
+                                <p class="text-slate-400 font-bold uppercase text-xs tracking-[0.3em]">No se encontraron registros en el archivo maestro</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        <div class="px-6 py-4 bg-slate-50 flex justify-between items-center text-xs text-slate-400 font-bold uppercase tracking-widest">
-            <span>Total registros: {{ filter.qs.count }}</span>
+
+        <!-- PAGINACIÓN SOFISTICADA -->
+        <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100">
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+
+    <!-- Resumen de Auditoría Inferior -->
+    <div class="flex justify-between items-center px-6">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            Total de registros en archivo: {{ page_obj.paginator.count }}
+        </p>
+        <div class="flex items-center gap-4">
+            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Integridad de datos verificada</p>
         </div>
     </div>
 </div>
+
+<style>
+    /* 1. Estilos base para los inputs del filtro */
+    .filter-container input[type="text"], 
+    .filter-container input[type="date"], 
+    .filter-container select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #1e293b;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    /* 2. OCULTAR EL ICONO POR DEFECTO DEL NAVEGADOR (Soluciona el sobreescrito) */
+    .filter-container input[type="date"]::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    /* 3. AGREGAR NUESTRO ICONO PERSONALIZADO (Rojo Potosí) */
+    .filter-container input[type="date"] {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23770003' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.1rem;
+        cursor: pointer;
+    }
+
+    /* 4. Efecto Focus */
+    .filter-container input:focus, 
+    .filter-container select:focus {
+        border-color: #770003;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(119, 0, 3, 0.05);
+    }
+</style>
 {% endblock %}

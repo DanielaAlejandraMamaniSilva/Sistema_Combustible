@@ -1,97 +1,148 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Gestión de Usuarios - Sovereign Archive{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+<div class="space-y-12">
     <!-- Header de la sección -->
     <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b pb-8">
         <div>
-            <span class="text-primary font-bold uppercase tracking-widest text-xs">Administración de Personal</span>
-            <h2 class="font-headline font-black text-4xl text-on-surface mt-2 tracking-tight">Gestión de Usuarios</h2>
-            <p class="text-on-surface-variant mt-2 max-w-2xl">Administre los accesos, roles y credenciales de todos los funcionarios del sistema.</p>
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-2 block">Administración de Personal</span>
+            <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Control Maestro de Usuarios</h2>
+            <p class="text-on-surface-variant mt-2 max-w-2xl font-medium">Gestión de accesos activos y trazabilidad de bajas institucionales.</p>
         </div>
         <div>
-            <a href="{% url 'crear_usuario' %}" class="flex items-center gap-2 px-6 py-3 bg-primary-container text-white rounded-xl font-bold shadow-lg hover:bg-primary transition-all">
+            <a href="{% url 'crear_usuario' %}" class="flex items-center gap-2 px-6 py-3 bg-primary-container text-white rounded-xl font-bold shadow-lg hover:bg-primary transition-all active:scale-95">
                 <span class="material-symbols-outlined notranslate">person_add</span>
                 Registrar Nuevo Usuario
             </a>
         </div>
     </div>
 
-    <!-- Tabla de Usuarios -->
-    <section class="bg-white rounded-2xl shadow-sm overflow-hidden border">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b">
-                        <th class="px-8 py-4">Usuario / Nombre</th>
-                        <th class="px-8 py-4">CI / Licencia</th>
-                        <th class="px-8 py-4">Rol en Sistema</th>
-                        <th class="px-8 py-4">Estado</th>
-                        <th class="px-8 py-4 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    {% for u in usuarios %}
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border font-bold">
-                                    {{ u.username|slice:":1"|upper }}
-                                </div>
-                                <div>
-                                    <p class="font-bold text-slate-900">{{ u.get_full_name|default:u.username }}</p>
-                                    <p class="text-xs text-slate-500">{{ u.email }}</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-8 py-5">
-                            <p class="text-sm font-medium">{{ u.ci|default:"---" }}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">{{ u.licencia_conducir|default:"Sin Licencia" }}</p>
-                        </td>
-                        <td class="px-8 py-5">
-                            <span class="px-3 py-1 bg-red-50 text-red-800 text-[10px] font-black rounded-full uppercase border border-red-100">
-                                {{ u.get_rol_display }}
-                            </span>
-                        </td>
-                        <td class="px-8 py-5">
-                            {% if u.is_active %}
-                                <span class="flex items-center gap-1 text-green-600 font-bold text-xs">
-                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span> Activo
-                                </span>
-                            {% else %}
-                                <span class="flex items-center gap-1 text-slate-400 font-bold text-xs">
-                                    <span class="w-2 h-2 bg-slate-300 rounded-full"></span> Inactivo
-                                </span>
-                            {% endif %}
-                        </td>
-                        <!-- En la columna de acciones dentro del for loop -->
-                        <td class="px-8 py-5 text-right">
-                            <div class="flex justify-end gap-2">
-                                <!-- Botón Editar -->
-                                <a href="{% url 'editar_usuario' u.pk %}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors">
-                                    <span class="material-symbols-outlined notranslate text-lg">edit</span>
-                                </a>
-                                <!-- Botón Eliminar -->
-                                <a href="{% url 'eliminar_usuario' u.pk %}" 
-                                onclick="return confirm('¿Estás seguro de eliminar a este usuario?')"
-                                class="p-2 hover:bg-red-50 rounded-lg text-slate-400 hover:text-error transition-colors">
-                                    <span class="material-symbols-outlined notranslate text-lg">delete</span>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic">
-                            No hay usuarios registrados en el sistema.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- TABLA 1: PERSONAL ACTIVO -->
+    <section class="space-y-4">
+        <div class="flex items-center gap-2 px-2">
+            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+            <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest">Personal en Servicio Activo</h3>
         </div>
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-body">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-widest border-b">
+                            <th class="px-8 py-4">Usuario / Nombre</th>
+                            <th class="px-8 py-4">Identificación</th>
+                            <th class="px-8 py-4">Rol en Sistema</th>
+                            <th class="px-8 py-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for u in usuarios %} <!-- Itera sobre activos paginados -->
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-primary border border-slate-200 font-black">
+                                        {{ u.username|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-900 mb-0.5">{{ u.get_full_name|default:u.username }}</p>
+                                        <p class="text-xs text-slate-400 italic">{{ u.email|default:"Sin correo" }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5">
+                                <p class="text-sm font-bold text-slate-700">CI: {{ u.ci|default:"---" }}</p>
+                                <p class="text-[9px] text-slate-400 font-black uppercase">LIC: {{ u.licencia_conducir|default:"No requerida" }}</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <span class="px-3 py-1 bg-red-50 text-red-800 text-[10px] font-black rounded-full uppercase border border-red-100">
+                                    {{ u.get_rol_display }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a href="{% url 'editar_usuario' u.id %}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-primary transition-all" title="Editar">
+                                        <span class="material-symbols-outlined notranslate text-lg">edit</span>
+                                    </a>
+                                    <a href="{% url 'reset_password_admin' u.id %}" onclick="return confirm('¿Resetear contraseña?')" class="p-2 hover:bg-blue-50 rounded-lg text-blue-400 hover:text-blue-600 transition-all" title="Reset Password">
+                                        <span class="material-symbols-outlined notranslate text-lg">lock_reset</span>
+                                    </a>
+                                    <a href="{% url 'dar_baja_usuario' u.id %}" class="p-2 hover:bg-red-50 rounded-lg text-red-300 hover:text-red-700 transition-all" title="Dar de Baja">
+                                        <span class="material-symbols-outlined notranslate text-lg">person_remove</span>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 italic">No hay personal activo registrado.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Paginación para la tabla de activos -->
+        {% include 'components/pagination.html' with page_obj=usuarios page_param='page' %}
+    </section>
+
+    <!-- TABLA 2: ARCHIVO DE BAJAS -->
+    <section class="space-y-4 pt-4">
+        <div class="flex items-center gap-2 px-2">
+            <span class="material-symbols-outlined text-slate-400 text-sm">archive</span>
+            <h3 class="font-black text-slate-400 uppercase text-xs tracking-widest">Archivo Histórico de Usuarios (Bajas)</h3>
+        </div>
+
+        <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden opacity-80 hover:opacity-100 transition-opacity">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-body">
+                    <thead>
+                        <tr class="bg-slate-100/50 text-slate-500 uppercase text-[9px] font-black tracking-widest border-b">
+                            <th class="px-8 py-3">Funcionario Retirado</th>
+                            <th class="px-8 py-3">Rol Anterior</th>
+                            <th class="px-8 py-3">Información de la Baja</th>
+                            <th class="px-8 py-3 text-right">Reactivación</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        {% for u in usuarios_inactivos %} <!-- Itera sobre inactivos -->
+                        <tr>
+                            <td class="px-8 py-4">
+                                <p class="text-sm font-bold text-slate-600">{{ u.get_full_name }}</p>
+                                <p class="text-[10px] text-slate-400 font-mono">CI: {{ u.ci }}</p>
+                            </td>
+                            <td class="px-8 py-4">
+                                <span class="text-[9px] font-bold text-slate-400 border border-slate-200 px-2 py-0.5 rounded-full uppercase">
+                                    {{ u.get_rol_display }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-4">
+                                <div class="bg-white/50 p-3 rounded-lg border border-slate-200">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[9px] font-black text-red-700 uppercase">Fecha: {{ u.fecha_baja|date:"d/m/Y H:i" }}</span>
+                                        <span class="text-[9px] text-slate-300">|</span>
+                                        <span class="text-[9px] font-black text-slate-500 uppercase">Por: {{ u.baja_por.username }}</span>
+                                    </div>
+                                    <p class="text-[10px] text-slate-600 leading-tight"><strong>Motivo:</strong> {{ u.motivo_baja|default:"Sin motivo registrado" }}</p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-4 text-right">
+                                <a href="{% url 'reactivar_usuario' u.id %}" 
+                                   onclick="return confirm('¿Desea reactivar a este funcionario?')"
+                                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-green-200 text-green-600 hover:bg-green-600 hover:text-white rounded-xl text-[10px] font-black uppercase transition-all shadow-sm">
+                                    <span class="material-symbols-outlined text-sm">person_check</span>
+                                    Reactivar
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 italic">No hay registros en el archivo de bajas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+{% include 'components/pagination.html' with page_obj=usuarios_inactivos page_param='page_bajas' %}
     </section>
 </div>
 {% endblock %}

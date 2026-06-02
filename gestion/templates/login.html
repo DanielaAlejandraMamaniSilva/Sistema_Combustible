@@ -1,49 +1,121 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="light notranslate" lang="es" translate="no">
+<html lang="es" class="notranslate" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ingreso al Sistema - Soberano Potosí</title>
+    <title>Ingreso Institucional - GADP Potosí</title>
 
-    <!-- Motor de Tailwind Local -->
     <script src="{% static 'js/tailwind.js' %}"></script>
-    
-    <!-- Íconos Locales -->
     <link rel="stylesheet" href="{% static 'css/iconos.css' %}">
-    
-    <!-- Estilos Institucionales -->
     <link rel="stylesheet" href="{% static 'css/institucional.css' %}">
 
-</head>
-<body class="bg-slate-100 h-screen flex items-center justify-center font-sans">
-    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border-t-8 border-red-800">
-        <div class="text-center mb-10">
-            <!-- Añadido 'sans-serif' de respaldo por si no hay internet para cargar Montserrat -->
-            <h1 class="text-3xl font-black text-red-900 uppercase tracking-tighter" style="font-family: 'Montserrat', sans-serif;">Soberano Potosí</h1>
-            <p class="text-slate-500 text-sm font-bold uppercase tracking-widest mt-2">Control de Flotas</p>
-        </div>
+    <style>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up { animation: fadeInUp 0.6s ease-out forwards; }
+        
+        .login-bg {
+            background: linear-gradient(135deg, #A10508 0%, #7A0406 100%);
+            overflow: hidden;
+        }
 
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            <div>
-                <label class="block text-xs font-black uppercase text-slate-500 mb-2">Usuario</label>
-                <input type="text" name="username" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-red-800 outline-none transition-all" placeholder="Ej: jperrez" required>
+        /* Ajuste para que el scroll no aparezca en pantallas pequeñas */
+        body { height: 100vh; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="login-bg p-4 font-sans">
+
+    <!-- Top Bar Institucional Compacta -->
+    <div class="absolute top-0 left-0 w-full p-4 flex items-center z-10">
+        <div class="flex items-center gap-2 opacity-80">
+            <div class="flex flex-col w-5 h-3">
+                <div class="bg-red-600 flex-1"></div>
+                <div class="bg-yellow-400 flex-1"></div>
+                <div class="bg-green-600 flex-1"></div>
             </div>
-            <div>
-                <label class="block text-xs font-black uppercase text-slate-500 mb-2">Contraseña</label>
-                <input type="password" name="password" class="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-red-800 outline-none transition-all" placeholder="••••••••" required>
+            <span class="text-white text-[9px] font-black uppercase tracking-[0.2em]">G. A. D. P.</span>
+        </div>
+    </div>
+    <div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-up relative z-10">
+        
+        <div class="hidden md:flex flex-col justify-center items-center p-8 bg-slate-50 border-r border-slate-100">
+            <img src="{% static 'img/logo_potosi.png' %}" alt="Escudo de Potosí" 
+                 class="w-48 h-auto mb-8 animate-float object-contain">
+            
+            <div class="text-center">
+                <h2 class="text-lg font-black text-slate-800 uppercase tracking-tighter" style="font-family: 'Montserrat';">Gobierno Autónomo</h2>
+                <h3 class="text-sm font-bold text-red-800 uppercase tracking-[0.3em]" style="font-family: 'Montserrat';">Departamental de Potosí</h3>
+                <div class="h-1 w-12 bg-red-800 mx-auto mt-3 rounded-full"></div>
             </div>
             
-            {% if form.errors %}
-            <p class="text-red-600 text-xs font-bold bg-red-50 p-3 rounded-lg text-center">Usuario o contraseña incorrectos</p>
-            {% endif %}
+            <div class="mt-8 text-slate-400 text-[8px] uppercase font-bold tracking-widest text-center leading-relaxed">
+                Secretaría Departamental Administrativa Financiera <br>
+                Unidad de Activos Fijos y Servicios Generales
+            </div>
+        </div>
 
-            <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-lg shadow-red-900/20">
-                Entrar al Sistema
-            </button>
-        </form>
+        <!-- LADO DERECHO: FORMULARIO -->
+        <div class="p-8 md:p-12 flex flex-col justify-center bg-white">
+            <div class="mb-8">
+                <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tight">Soberanía Potosí</h1>
+                <p class="text-slate-500 font-medium text-xs mt-1">Gestión institucional de flotas y bitácoras.</p>
+            </div>
+
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <!-- Usuario -->
+                <div class="space-y-1.5">
+                    <label class="block text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Usuario</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">person</span>
+                        <input type="text" name="username" 
+                               class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl focus:border-red-800 focus:bg-white outline-none transition-all text-sm font-bold text-slate-700" 
+                               placeholder="Nombre de usuario" required>
+                    </div>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="space-y-1.5">
+                    <label class="block text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1">Contraseña</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">lock</span>
+                        <input type="password" name="password" 
+                               class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-50 rounded-xl focus:border-red-800 focus:bg-white outline-none transition-all text-sm font-bold text-slate-700" 
+                               placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                {% if form.errors %}
+                <div class="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-xl border border-red-100">
+                    <span class="material-symbols-outlined text-sm">error</span>
+                    <p class="text-[10px] font-bold uppercase">Credenciales incorrectas.</p>
+                </div>
+                {% endif %}
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-red-800 hover:bg-red-900 text-white font-black py-4 rounded-xl uppercase tracking-widest transition-all shadow-lg shadow-red-900/20 active:scale-[0.98] flex items-center justify-center gap-2 group">
+                        <span class="text-xs">Entrar al Sistema</span>
+                        <span class="material-symbols-outlined text-lg transition-transform group-hover:translate-x-1">arrow_forward</span>
+                    </button>
+                </div>
+            </form>
+
+            <footer class="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
+                <span class="text-[8px] font-black text-slate-300 uppercase tracking-widest">v4.0.2</span>
+                <a href="#" class="text-[8px] font-black text-red-800 uppercase tracking-widest hover:underline">Soporte Técnico</a>
+            </footer>
+        </div>
     </div>
+
+    <!-- Texto decorativo de fondo (Ajustado) -->
+    <div class="absolute bottom-6 right-6 opacity-5 pointer-events-none hidden lg:block">
+        <h1 class="text-white text-8xl font-black uppercase tracking-tighter">Potosí</h1>
+    </div>
+
 </body>
 </html>

@@ -1,24 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Dashboard de Activos - Potosí Fleet Admin{% endblock %}
+{% block title %}Dashboard de Activos - Soberanía Potosí{% endblock %}
 
 {% block content %}
-<!-- Header Section -->
+<!-- Sección de Encabezado -->
 <div class="mb-12">
     <span class="text-primary font-bold tracking-[0.2em] uppercase text-[10px] mb-2 block">Administración Central</span>
-    <h2 class="text-editorial-lg text-4xl lg:text-5xl font-black text-on-surface leading-none mb-4 uppercase tracking-tight">Gestión Integral de Activos y Flota</h2>
+    <h2 class="text-4xl lg:text-5xl font-black text-on-surface leading-none mb-4 uppercase tracking-tight font-headline">Gestión Integral de Activos y Flota</h2>
     <div class="flex flex-wrap gap-4 items-center">
-        <div class="flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-bold text-on-surface-variant shadow-sm border">
+        <div class="flex items-center gap-2 px-3 py-1 bg-white rounded-full text-xs font-bold text-on-surface-variant shadow-sm border border-slate-100">
             <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Sistema Activo
         </div>
-        <div class="text-on-surface-variant text-sm font-medium">Actualizado: Hoy, {% now "H:i A" %}</div>
+        <div class="text-on-surface-variant text-sm font-medium italic">Actualizado: Hoy, {% now "H:i A" %}</div>
     </div>
 </div>
 
-<!-- Metrics Grid -->
+<!-- Bento Grid de Métricas Principales -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-    <!-- Card Total Vehículos -->
-    <div class="lg:col-span-2 bg-white rounded-xl p-8 flex flex-col justify-between relative overflow-hidden group shadow-sm border border-slate-100">
+    <!-- Tarjeta: Total Vehículos -->
+    <div class="lg:col-span-2 bg-white rounded-2xl p-8 flex flex-col justify-between relative overflow-hidden group shadow-sm border border-slate-100">
         <div class="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-500">
             <span class="material-symbols-outlined text-[150px] notranslate">directions_car</span>
         </div>
@@ -28,83 +29,86 @@
         </div>
         <div class="mt-8 flex items-end justify-between">
             <div>
-                <div class="text-3xl font-bold text-on-surface font-headline">{{ porcentaje }}%</div>
-                <div class="text-[10px] font-bold text-on-surface-variant uppercase">Capacidad Operativa</div>
+                <div class="text-3xl font-black text-slate-900 font-headline">{{ porcentaje }}%</div>
+                <div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Capacidad Operativa</div>
             </div>
             <div class="w-48 h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div class="h-full bg-primary-container rounded-full" style="width: {{ porcentaje }}%"></div>
+                <div class="h-full bg-primary-container rounded-full shadow-[0_0_10px_rgba(161,5,8,0.3)]" style="width: {{ porcentaje }}%"></div>
             </div>
         </div>
     </div>
 
-    <!-- Column Alertas y Botón -->
+    <!-- Columna: Firmas y Acceso Rápido -->
     <div class="flex flex-col gap-8">
-        <div class="flex-1 bg-white rounded-xl p-6 border-l-4 border-error shadow-sm border border-slate-100">
+        <div class="flex-1 bg-white rounded-2xl p-6 border-l-4 border-red-600 shadow-sm border border-slate-100">
             <div class="flex items-center justify-between mb-4">
-                <span class="material-symbols-outlined text-error notranslate">signature</span>
-                <span class="text-xs font-bold text-error bg-error-container px-2 py-0.5 rounded-full">URGENTE</span>
+                <span class="material-symbols-outlined text-primary notranslate">signature</span>
+                <span class="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-full uppercase">Urgente</span>
             </div>
-            <p class="text-sm text-on-surface-variant font-medium">Firmas Pendientes</p>
-            <h4 class="text-3xl font-black text-on-surface font-headline">{{ total_pendientes|default:"12" }}</h4>
-            <p class="text-[11px] text-on-surface-variant mt-2">Actas de entrega y bitácoras pendientes de validación técnica.</p>
+            <p class="text-sm text-on-surface-variant font-medium">Documentación Pendiente</p>
+            <h4 class="text-3xl font-black text-on-surface font-headline">{{ total_pendientes|default:"0" }}</h4>
+            <p class="text-[11px] text-on-surface-variant mt-2">Memorándums y actas por digitalizar en el sistema.</p>
         </div>
         
-        <a href="{% url 'crear_asignacion' %}" class="group bg-primary-container hover:bg-primary py-6 rounded-xl flex flex-col items-center justify-center transition-all duration-300 shadow-lg shadow-red-900/20 text-white">
+        <a href="{% url 'crear_asignacion' %}" class="group bg-primary-container hover:bg-primary py-6 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 shadow-lg shadow-red-900/20 text-white">
             <span class="material-symbols-outlined text-3xl mb-2 group-hover:scale-110 transition-transform notranslate">assignment_add</span>
-            <span class="font-bold tracking-tight uppercase text-xs">Asignar Nuevo Vehículo</span>
+            <span class="font-bold tracking-widest uppercase text-xs">Asignar Nuevo Vehículo</span>
         </a>
     </div>
 </div>
 
-<!-- Table Section -->
+<!-- Sección: Tabla de Asignaciones Vigentes -->
 <div class="mb-12">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 px-2">
         <h3 class="text-2xl font-black tracking-tight text-on-surface font-headline uppercase">Asignaciones de Vehículos</h3>
-        <a href="{% url 'gestion_catalogos' %}" class="text-primary font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-widest">
-            Ver todos los activos <span class="material-symbols-outlined text-sm notranslate">arrow_forward</span>
+        <a href="{% url 'historial_asignaciones' %}" class="text-primary font-bold text-xs flex items-center gap-1 hover:underline uppercase tracking-widest">
+            Ver todas las asignaciones <span class="material-symbols-outlined text-sm notranslate">arrow_forward</span>
         </a>
     </div>
-    <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-100">
-        <table class="w-full border-collapse text-left">
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100">
+        <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-slate-50 text-on-surface-variant text-[10px] uppercase tracking-widest font-black border-b">
-                    <th class="px-6 py-4">Identidad Vehículo</th>
-                    <th class="px-6 py-4">Conductor Actual</th>
-                    <th class="px-6 py-4">Fecha Asignación</th>
-                    <th class="px-6 py-4">Estado</th>
-                    <th class="px-6 py-4 text-right">Acciones</th>
+                <tr class="bg-slate-50 text-on-surface-variant text-[10px] uppercase tracking-[0.2em] font-black border-b border-slate-100">
+                    <th class="px-8 py-5">Identidad Vehículo</th>
+                    <th class="px-8 py-5">Conductor Actual</th>
+                    <th class="px-8 py-5">Fecha Asignación</th>
+                    <th class="px-8 py-5">Estado</th>
+                    <th class="px-8 py-5 text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody class="divide-y divide-slate-100 text-sm">
                 {% for asig in asignaciones %}
                 <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="px-6 py-4">
+                    <td class="px-8 py-5">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-primary border">
-                                <span class="material-symbols-outlined text-lg notranslate">directions_car</span>
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-primary border border-slate-200">
+                                <span class="material-symbols-outlined notranslate">directions_car</span>
                             </div>
                             <div>
-                                <div class="font-bold text-sm text-on-surface">{{ asig.vehiculo.placa }}</div>
-                                <div class="text-[11px] text-on-surface-variant uppercase font-bold">{{ asig.vehiculo.marca }} {{ asig.vehiculo.modelo }}</div>
+                                <div class="font-black text-slate-900">{{ asig.vehiculo.placa }}</div>
+                                <div class="text-[10px] font-bold text-slate-400 uppercase">{{ asig.vehiculo.marca }} {{ asig.vehiculo.modelo }}</div>
                             </div>
                         </div>
                     </td>
-                    <td class="px-6 py-4 font-bold text-sm text-slate-700">{{ asig.chofer.get_full_name }}</td>
-                    <td class="px-6 py-4 text-sm text-on-surface-variant">{{ asig.fecha_asignacion|date:"d M Y" }}</td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-0.5 {% if asig.vehiculo.estado == 'operacional' %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %} text-[10px] font-black rounded-full uppercase border">
+                    <td class="px-8 py-5">
+                        <p class="font-bold text-slate-700">{{ asig.chofer.get_full_name }}</p>
+                        <p class="text-[10px] text-slate-400 font-medium">Memo: {{ asig.nro_memorandum }}</p>
+                    </td>
+                    <td class="px-8 py-5 text-slate-500 font-medium">{{ asig.fecha_asignacion|date:"d M Y" }}</td>
+                    <td class="px-8 py-5">
+                        <span class="px-3 py-1 {% if asig.vehiculo.estado == 'operacional' %}bg-green-50 text-green-700 border-green-100{% else %}bg-amber-50 text-amber-700 border-amber-100{% endif %} text-[9px] font-black rounded-full uppercase border">
                             {{ asig.vehiculo.get_estado_display|upper }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-right">
-                        <button class="p-1 text-slate-300 hover:text-primary transition-colors">
+                    <td class="px-8 py-5 text-right">
+                        <button class="p-2 text-slate-300 hover:text-primary transition-colors">
                             <span class="material-symbols-outlined notranslate">more_vert</span>
                         </button>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="px-6 py-20 text-center text-slate-400 italic font-medium">No hay asignaciones activas registradas en este momento.</td>
+                    <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic font-medium">No existen asignaciones vehiculares vigentes en este momento.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -112,58 +116,68 @@
     </div>
 </div>
 
-<!-- Personnel Grid -->
+<!-- Sección: Personal de Conducción (Kardex Integrado) -->
 <div class="mb-12">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 px-2">
         <h3 class="text-2xl font-black tracking-tight text-on-surface font-headline uppercase">Personal de Conducción</h3>
         <div class="flex gap-2">
-            <a href="{% url 'exportar_excel' %}" class="px-4 py-2 bg-white border hover:bg-slate-50 text-on-surface text-[10px] font-black uppercase tracking-widest rounded-lg shadow-sm transition-all">Exportar Personal</a>
-            <a href="{% url 'crear_usuario' %}" class="px-4 py-2 bg-primary-container text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary transition-all shadow-md">Registrar Personal</a>
+            <a href="{% url 'exportar_excel' %}" class="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar Lista
+            </a>
         </div>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {% for chofer in conductores %}
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="w-12 h-12 rounded-full overflow-hidden bg-slate-200 border-2 border-primary/10">
-                    <img class="w-full h-full object-cover" src="https://ui-avatars.com/api/?name={{ chofer.first_name }}+{{ chofer.last_name }}&background=f7f9fc&color=a10508" alt="Perfil">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md group">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-primary font-black border border-slate-200 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    {{ chofer.first_name|first }}{{ chofer.last_name|first }}
                 </div>
                 <div class="min-w-0">
-                    <h4 class="font-bold text-sm text-on-surface truncate font-headline">{{ chofer.get_full_name }}</h4>
-                    <p class="text-[10px] text-on-surface-variant font-bold">CI: {{ chofer.ci|default:"S/N" }}</p>
+                    <h4 class="font-black text-sm text-slate-900 truncate font-headline">{{ chofer.get_full_name }}</h4>
+                    <p class="text-[10px] text-slate-400 font-bold uppercase">CI: {{ chofer.ci|default:"S/N" }}</p>
                 </div>
             </div>
-            <div class="space-y-3 mb-5">
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-on-surface-variant font-medium">Licencia:</span>
-                    <span class="font-black text-green-700 uppercase">{{ chofer.licencia_conducir|default:"VALIDA (Cat.C)" }}</span>
+            
+            <div class="space-y-3 mb-6 bg-slate-50/50 p-3 rounded-xl border border-slate-50">
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="text-slate-400 font-bold uppercase tracking-tighter">Secretaría:</span>
+                    <span class="font-black text-primary uppercase text-right leading-tight max-w-[120px]">{{ chofer.area.nombre|default:"SIN ASIGNAR" }}</span>
                 </div>
-                <div class="flex justify-between items-center text-xs">
-                    <span class="text-on-surface-variant font-medium">Vehículo:</span>
-                    <span class="font-bold text-slate-600">
-                        {% with chofer.asignacion_set.first as asig %}
-                            {{ asig.vehiculo.placa|default:"Sin Asignar" }}
-                        {% endwith %}
-                    </span>
+                <div class="flex justify-between items-center text-[11px]">
+                    <span class="text-slate-400 font-bold uppercase tracking-tighter">Vehículo:</span>
+                    <span class="font-black text-slate-700">{{ chofer.get_vehiculo_activo }}</span>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <a href="{% url 'editar_usuario' chofer.id %}" class="flex-1 py-2 text-center text-[10px] font-black uppercase tracking-widest text-primary bg-red-50 hover:bg-primary hover:text-white rounded-lg transition-all">Detalles</a>
-                <button class="px-2 py-2 text-slate-300 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-lg notranslate">file_upload</span>
-                </button>
+
+            <div class="flex gap-2 mt-6">
+                {% if chofer.get_vehiculo_activo == "Sin Asignar" %}
+                    <a href="{% url 'crear_asignacion' %}" class="flex-1 py-2.5 text-center text-[10px] font-black uppercase tracking-widest text-white bg-primary-container hover:bg-primary rounded-xl transition-all shadow-md">
+                        Asignar
+                    </a>
+                {% else %}
+                    <div class="flex gap-3 mt-4">
+                        <a href="{% url 'dar_baja_asignacion' chofer.asignacion_set.first.id %}" 
+                            class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-[0.1em] text-white bg-slate-900 hover:bg-black rounded-xl transition-all flex items-center justify-center gap-2 shadow-md">
+                            <span class="material-symbols-outlined text-sm notranslate">sync_alt</span>
+                            Traspaso
+                        </a>
+                {% endif %}
+                        <!-- BOTÓN 2: VER KARDEX -->
+                        <a href="{% url 'kardex_chofer' chofer.id %}" 
+                            class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-[0.1em] text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-sm notranslate">history_edu</span>
+                            Ver Kardex
+                        </a>
             </div>
         </div>
+        {% empty %}
+        <div class="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+            <span class="material-symbols-outlined text-slate-200 text-6xl mb-4 notranslate">person_off</span>
+            <p class="text-slate-400 font-bold uppercase tracking-widest text-xs">No hay conductores registrados</p>
+        </div>
         {% endfor %}
-        
-        <!-- Add New Card -->
-        <a href="{% url 'crear_usuario' %}" class="border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center p-5 group hover:border-primary/50 transition-all cursor-pointer bg-slate-50/50">
-            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white mb-2 transition-all shadow-sm">
-                <span class="material-symbols-outlined notranslate">person_add</span>
-            </div>
-            <span class="text-[10px] font-black text-slate-400 group-hover:text-primary uppercase tracking-widest">Añadir Nuevo</span>
-        </a>
     </div>
 </div>
 {% endblock %}

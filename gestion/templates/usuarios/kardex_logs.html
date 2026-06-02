@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-8">
+    <!-- Encabezado de Auditoría -->
+    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 flex justify-between items-center relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-10 opacity-5">
+            <span class="material-symbols-outlined text-[10rem] notranslate">policy</span>
+        </div>
+        
+        <div class="flex items-center gap-6 relative z-10">
+            <div class="w-20 h-20 rounded-3xl bg-slate-900 flex items-center justify-center text-white text-3xl font-black shadow-xl overflow-hidden border-2 border-white/10">
+                {% if usuario_auditado.foto %}
+                    <img src="{{ usuario_auditado.foto.url }}" alt="Foto {{ usuario_auditado.username }}" class="w-full h-full object-cover">
+                {% else %}
+                    {{ usuario_auditado.first_name|first }}{{ usuario_auditado.last_name|first }}
+                {% endif %}
+            </div>
+            <div>
+                <span class="text-primary font-black uppercase text-[9px] tracking-[0.4em] mb-1 block">Expediente de Seguridad</span>
+                <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">{{ usuario_auditado.get_full_name }}</h2>
+                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Rol: {{ usuario_auditado.get_rol_display }} | CI: {{ usuario_auditado.ci|default:"S/N" }}</p>
+            </div>
+        </div>
+        <a href="javascript:history.back()" class="bg-slate-100 text-slate-600 px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all relative z-10">Volver</a>
+    </div>
+
+    <!-- Timeline de Actividades -->
+    <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-10 flex items-center gap-3">
+            <span class="w-1.5 h-6 bg-primary rounded-full"></span>
+            Historial de Acciones en el Sistema
+        </h3>
+
+        <div class="space-y-12 relative">
+            <!-- Línea vertical decorativa -->
+            <div class="absolute left-[19px] top-2 bottom-0 w-0.5 bg-slate-100"></div>
+
+            {% for log in logs %}
+            <div class="relative flex gap-8 group">
+                <!-- Punto de la línea de tiempo -->
+                <div class="w-10 h-10 rounded-full bg-white border-4 {% if log.accion == 'login' %}border-green-500{% elif log.accion == 'modificacion' %}border-amber-500{% else %}border-primary{% endif %} flex shrink-0 items-center justify-center z-10 shadow-sm group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-sm notranslate">
+                        {% if log.accion == 'login' %}login{% elif log.accion == 'modificacion' %}edit_note{% else %}settings{% endif %}
+                    </span>
+                </div>
+
+                <!-- Contenido del Log -->
+                <div class="flex-1 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 group-hover:bg-white group-hover:shadow-md transition-all">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ log.fecha_hora|date:"d M Y — H:i:s" }}</p>
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded-lg border {% if log.accion == 'login' %}bg-green-50 text-green-700 border-green-100{% else %}bg-amber-50 text-amber-700 border-amber-100{% endif %} uppercase">
+                            {{ log.get_accion_display }}
+                        </span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm">{{ log.descripcion }}</h4>
+                    <p class="text-[11px] text-slate-500 mt-1">Módulo: <span class="font-mono">{{ log.tabla }}</span> | IP: {{ log.ip }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10">
+                <span class="material-symbols-outlined text-slate-200 text-6xl mb-4">history</span>
+                <p class="text-slate-400 font-bold uppercase text-xs tracking-widest">No hay registros de actividad para este usuario</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

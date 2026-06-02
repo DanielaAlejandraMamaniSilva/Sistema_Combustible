@@ -1,24 +1,64 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-8">
-    <div class="border-b pb-4">
-        <h2 class="text-3xl font-black font-headline uppercase">Roles y Permisos</h2>
-        <p class="text-slate-500">Definición de jerarquías y niveles de acceso al sistema.</p>
+<div class="space-y-10">
+    <!-- Encabezado -->
+    <div class="relative overflow-hidden rounded-[2rem] bg-white border border-slate-100 p-10 shadow-sm">
+        <div class="relative z-10">
+            <span class="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-3 block">Seguridad Institucional</span>
+            <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Jerarquía de Roles y Permisos</h2>
+            <p class="text-slate-500 font-medium mt-2 max-w-3xl">Definición de privilegios y niveles de acceso a la infraestructura digital del Gobierno Autónomo Departamental de Potosí.</p>
+        </div>
+        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-slate-50 text-[12rem] notranslate select-none">verified_user</span>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Grid de Roles -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {% for r in roles_info %}
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-            <div>
-                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-primary mb-4">
-                    <span class="material-symbols-outlined notranslate">shield_person</span>
+        <div class="group bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 flex flex-col">
+            
+            <!-- Header de Tarjeta -->
+            <div class="flex justify-between items-start mb-6">
+                <div class="w-14 h-14 rounded-2xl {{ r.bg }} flex items-center justify-center {{ r.color }} shadow-inner">
+                    <span class="material-symbols-outlined text-3xl notranslate">shield_person</span>
                 </div>
-                <h3 class="font-bold text-lg text-slate-900">{{ r.nombre }}</h3>
-                <p class="text-xs text-slate-400 uppercase font-black tracking-widest mt-1">Código: {{ r.codigo }}</p>
+                <div class="text-right">
+                    <span class="text-[9px] font-black {{ r.color }} bg-white border px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                        {{ r.nivel }}
+                    </span>
+                </div>
             </div>
-            <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center">
-                <span class="text-sm font-medium text-slate-600">{{ r.cantidad }} Usuarios</span>
-                <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase">Activo</span>
+
+            <!-- Info Principal -->
+            <div class="mb-6">
+                <h3 class="text-xl font-black text-slate-900 font-headline uppercase tracking-tight">{{ r.nombre }}</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID_SISTEMA: {{ r.codigo }}</p>
+                <p class="text-xs text-slate-500 mt-4 leading-relaxed font-medium">{{ r.descripcion }}</p>
+            </div>
+
+            <!-- Lista de Privilegios (Lo que le da sentido) -->
+            <div class="space-y-3 mb-8 flex-1">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Privilegios del Sistema</p>
+                {% for permiso in r.permisos %}
+                <div class="flex items-center gap-3 text-slate-700">
+                    <span class="material-symbols-outlined text-lg {{ r.color }} notranslate">check_circle</span>
+                    <span class="text-xs font-bold">{{ permiso }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Footer de Tarjeta -->
+            <div class="pt-6 border-t border-slate-50 flex justify-between items-center">
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-black text-slate-400 uppercase">Personal</span>
+                    <span class="text-sm font-black text-slate-900">{{ r.usuarios }} Usuarios</span>
+                </div>
+                
+                <!-- CAMBIA EL <button> POR ESTE <a> -->
+                <a href="{% url 'lista_usuarios' %}?rol={{ r.codigo }}" 
+                class="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:bg-primary hover:text-white transition-all group-hover:shadow-lg"
+                title="Ver personal con este rol">
+                    <span class="material-symbols-outlined notranslate">settings_accessibility</span>
+                </a>
             </div>
         </div>
         {% endfor %}

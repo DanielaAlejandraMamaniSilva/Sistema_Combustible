@@ -1,127 +1,171 @@
 {% extends 'base.html' %}
-{% block title %}Superadmin Console - Sovereign Archive{% endblock %}
+{% load static %}
+
+{% block title %}Consola de Mando - GADP{% endblock %}
 
 {% block content %}
-<div class="space-y-12">
-    <!-- Hero Banner -->
-    <header class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-container p-12 text-white shadow-xl" style="background-color: #770003">
-        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10">
-            <svg class="h-full w-full" viewBox="0 0 200 200"><path d="M44.7,-76.4C58.3,-69.2,70.1,-58.5,78.8,-45.5C87.4,-32.5,93,-16.2,91.8,-0.7C90.5,14.8,82.5,29.7,72.4,43.4C62.3,57.1,50.1,69.7,35.6,76.5C21,83.3,4.1,84.3,-12.8,81.5C-29.6,78.6,-46.4,71.9,-59.8,61C-73.1,50.2,-83.1,35.2,-87.3,19C-91.5,2.8,-89.9,-14.6,-83.1,-29.9C-76.3,-45.2,-64.3,-58.4,-50.2,-65.4C-36.1,-72.4,-18,-73.2,-0.4,-72.5C17.2,-71.8,31.1,-83.6,44.7,-76.4Z" fill="#FFFFFF" transform="translate(100 100)"></path></svg>
+<div class="space-y-10 animate-in fade-in duration-700">
+    
+    <!-- Hero Banner: Estilo Consola de Mando -->
+    <header class="relative overflow-hidden rounded-[2.5rem] bg-slate-900 shadow-2xl border border-white/5">
+        <!-- Marca de agua del Escudo -->
+        <div class="absolute top-0 right-0 w-1/3 h-full opacity-10 pointer-events-none flex items-center justify-center">
+            <img src="{% static 'img/logo_potosi.png' %}" class="w-64 h-64 grayscale invert">
         </div>
-        <div class="relative z-10">
-            <p class="text-red-200 uppercase tracking-[0.3em] font-bold text-xs mb-2">Centralized Authority</p>
-            <h1 class="text-5xl font-black mb-4 tracking-tighter font-headline">Superadmin Console</h1>
-            <p class="max-w-2xl text-lg text-white/80 font-light leading-relaxed">Control total sobre la infraestructura digital de hidrocarburos del Gobierno de Potosí. Gestión global de usuarios, protocolos de seguridad y catálogos institucionales.</p>
+        
+        <div class="relative z-10 p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/30 mb-6">
+                    <span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+                    <span class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Consola de Administración GADP</span>    
+                </div>
+                <h1 class="text-6xl font-black text-white mb-4 tracking-tighter font-headline leading-[0.9]">
+                    Panel de <br><span class="text-primary-container">Control Central</span>
+                </h1>
+                <p class="text-slate-400 text-lg font-light leading-relaxed">
+                    Gestión operativa del <span class="text-white font-bold">Gobierno Autónomo Departamental de Potosí</span>. 
+                    <br/> Supervise activos, combustible y personal desde un entorno seguro.
+                </p>
+            </div>
         </div>
     </header>
 
-    <!-- Global Metrics -->
+    <!-- Global Metrics: Tarjetas con bordes finos y sombras realistas -->
+    <!-- Global Metrics: Información Real del Sistema -->
     <section class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-primary ring-1 ring-slate-100">
-            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">group</span>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Usuarios Totales</p>
-            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ total_usuarios }}</h2>
-            <p class="text-[10px] text-green-600 font-bold mt-2">▲ +12% este mes</p>
-        </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
-            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">person_play</span>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Sesiones Activas</p>
-            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ sesiones_activas }}</h2>
-            <div class="flex items-center gap-2 mt-2">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <p class="text-[10px] text-slate-400">Estado nominal</p>
+        <!-- Usuarios Totales -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">group</span>
+                </div>
+                <span class="text-[10px] font-black text-green-600 bg-green-50 px-2 py-1 rounded-lg">SINCRO</span>
             </div>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Usuarios Totales</p>
+            <h2 class="text-4xl font-black text-slate-900 font-headline mt-1">{{ total_usuarios }}</h2>
+            <p class="text-[10px] text-green-600 font-bold mt-3 flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">trending_up</span> Base de datos activa
+            </p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
-            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">monitor_heart</span>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Salud Sistema</p>
-            <h2 class="text-3xl font-black text-slate-900 font-headline">{{ salud }}</h2>
-            <p class="text-[10px] text-slate-400 mt-2">Uptime: {{ uptime }}</p>
+
+        <!-- Sesiones Activas -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">person_play</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-green-50 px-2 py-1 rounded-lg">
+                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                    <span class="text-[9px] font-black text-green-700 uppercase">Live</span>
+                </div>
+            </div>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Sesiones Activas</p>
+            <h2 class="text-4xl font-black text-slate-900 font-headline mt-1">{{ sesiones_activas }}</h2>
+            <p class="text-[10px] text-slate-400 mt-3 font-medium uppercase tracking-tighter italic">Tráfico en tiempo real</p>
         </div>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-slate-200 ring-1 ring-slate-100">
-            <span class="material-symbols-outlined text-primary text-3xl mb-4 notranslate">rule</span>
-            <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Nivel de Auditoría</p>
-            <h2 class="text-3xl font-black text-red-700 font-headline">Nominal</h2>
-            <p class="text-[10px] text-slate-400 mt-2">0 alertas críticas</p>
+
+        <!-- Salud del Sistema -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">monitor_heart</span>
+                </div>
+            </div>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Salud Sistema</p>
+            <h2 class="text-4xl font-black text-slate-900 font-headline mt-1">{{ salud }}</h2>
+            <p class="text-[10px] text-slate-400 mt-3 font-medium uppercase tracking-tighter">Uptime: {{ uptime }}</p>
+        </div>
+
+        <!-- Nivel de Auditoría -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 transition-all duration-500">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined notranslate">rule</span>
+                </div>
+            </div>
+            <p class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Nivel Auditoría</p>
+            <h2 class="text-4xl font-black {{ color_auditoria }} font-headline mt-1">{{ nivel_auditoria }}</h2>
+            <p class="text-[10px] text-slate-400 mt-3 font-medium uppercase tracking-tighter">
+                {{ anomalias_count }} alertas detectadas
+            </p>
         </div>
     </section>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Main Core Modules -->
+        <!-- Módulos de Gestión Core -->
         <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white rounded-2xl p-8 shadow-sm border">
-                <h3 class="text-xl font-bold mb-8 text-red-900 font-headline flex items-center gap-2">
-                    <span class="material-symbols-outlined notranslate">settings_suggest</span> Módulos de Gestión Core
+            <div class="bg-white rounded-[2.5rem] p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-slate-100">
+                <h3 class="text-xl font-black mb-10 text-slate-800 font-headline uppercase tracking-tight flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-primary rounded-full"></span>
+                    Módulos de Gestión Core
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Gestión de Usuarios -->
-                    <a href="{% url 'lista_usuarios' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
-                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined notranslate">manage_accounts</span>
+                    <a href="{% url 'lista_usuarios' %}" class="flex items-center gap-6 p-6 bg-slate-50/50 rounded-3xl hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border border-transparent hover:border-slate-100 group">
+                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-2xl notranslate">manage_accounts</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm text-slate-900">Gestión de Usuarios (CRUD)</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">Crear, editar y dar de baja usuarios</p>
+                            <h4 class="font-black text-sm text-slate-900 uppercase tracking-tight">Personal</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Gestión de accesos y roles</p>
                         </div>
                     </a>
-                    <!-- Configuración Global -->
-                    <a href="{% url 'config_sistema' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
-                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined notranslate">tune</span>
+                    <!-- Configuración -->
+                    <a href="{% url 'config_sistema' %}" class="flex items-center gap-6 p-6 bg-slate-50/50 rounded-3xl hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border border-transparent hover:border-slate-100 group">
+                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-2xl notranslate">tune</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm text-slate-900">Configuración Global</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">Parámetros técnicos y umbrales</p>
+                            <h4 class="font-black text-sm text-slate-900 uppercase tracking-tight">Configuración</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Parámetros del servidor</p>
                         </div>
                     </a>
-                    <!-- Logs de Auditoría (Corregido el error 404) -->
-                    <a href="{% url 'log_auditoria' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
-                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined notranslate">history_edu</span>
+                    <!-- Auditoría -->
+                    <a href="{% url 'log_auditoria' %}" class="flex items-center gap-6 p-6 bg-slate-50/50 rounded-3xl hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border border-transparent hover:border-slate-100 group">
+                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-2xl notranslate">history_edu</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm text-slate-900">Logs de Auditoría</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">Trazabilidad total de acciones</p>
+                            <h4 class="font-black text-sm text-slate-900 uppercase tracking-tight">Auditoría</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Trazabilidad de acciones</p>
                         </div>
                     </a>
-                    <!-- Gestión de Catálogos -->
-                    <a href="{% url 'gestion_catalogos' %}" class="flex items-center gap-5 p-6 bg-slate-50 rounded-xl hover:bg-red-50 transition-all text-left border border-transparent hover:border-red-200 group">
-                        <div class="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined notranslate">inventory_2</span>
+                    <!-- Catálogos -->
+                    <a href="{% url 'gestion_catalogos' %}" class="flex items-center gap-6 p-6 bg-slate-50/50 rounded-3xl hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 border border-transparent hover:border-slate-100 group">
+                        <div class="w-14 h-14 rounded-2xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all">
+                            <span class="material-symbols-outlined text-2xl notranslate">inventory_2</span>
                         </div>
                         <div>
-                            <h4 class="font-bold text-sm text-slate-900">Gestión de Catálogos</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">Vehículos, Áreas y Combustible</p>
+                            <h4 class="font-black text-sm text-slate-900 uppercase tracking-tight">Recursos</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">Vehículos y Secretarías</p>
                         </div>
                     </a>
                 </div>
             </div>
 
             <!-- Catálogos Table -->
-            <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-                    <h3 class="font-bold text-slate-900 flex items-center gap-2 font-headline">
-                        <span class="material-symbols-outlined text-primary notranslate">analytics</span> Distribución de Catálogos
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
+                    <h3 class="font-black text-slate-900 flex items-center gap-3 font-headline uppercase text-sm tracking-widest">
+                        <span class="material-symbols-outlined text-primary notranslate">analytics</span> Recursos Institucionales
                     </h3>
-                    <a href="{% url 'gestion_catalogos' %}" class="text-xs font-bold text-primary hover:underline uppercase tracking-widest">Gestionar</a>
+                    <a href="{% url 'gestion_catalogos' %}" class="text-[10px] font-black text-primary hover:underline uppercase tracking-[0.2em]">Gestionar Todo</a>
                 </div>
                 <table class="w-full text-left">
-                    <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                    <thead class="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
                         <tr>
-                            <th class="px-8 py-4">Nombre Catálogo</th>
-                            <th class="px-8 py-4">Total Entradas</th>
-                            <th class="px-8 py-4 text-right">Ultimo Cambio</th>
-                            <th class="px-8 py-4 text-right">Estado</th>
+                            <th class="px-10 py-5">Nombre Catálogo</th>
+                            <th class="px-10 py-5">Entradas</th>
+                            <th class="px-10 py-5 text-right">Estado</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y text-sm">
+                    <tbody class="divide-y divide-slate-50 text-sm">
                         {% for cat in catalogos %}
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-8 py-5 font-bold text-slate-900">{{ cat.nombre }}</td>
-                            <td class="px-8 py-5 text-slate-500">{{ cat.total }}</td>
-                            <td class="px-8 py-5 text-right text-slate-400 text-xs">{{ cat.cambio }}</td>
-                            <td class="px-8 py-5 text-right">
-                                <span class="px-2 py-1 {% if cat.estado == 'Sincronizado' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %} text-[9px] font-black rounded-full uppercase">{{ cat.estado }}</span>
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-10 py-6 font-bold text-slate-900 uppercase text-xs">{{ cat.nombre }}</td>
+                            <td class="px-10 py-6 text-slate-500 font-medium">{{ cat.total }}</td>
+                            <td class="px-10 py-6 text-right">
+                                <span class="px-3 py-1 {% if cat.estado == 'Sincronizado' %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %} text-[9px] font-black rounded-full uppercase tracking-widest">{{ cat.estado }}</span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -130,58 +174,61 @@
             </div>
         </div>
 
-        <!-- Sidebar Maintenance -->
+        <!-- Sidebar Maintenance: Estilo Dark Sophisticated -->
         <div class="space-y-8">
             <!-- Integrity Card -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-700 shadow-inner">
                         <span class="material-symbols-outlined notranslate">database</span>
                     </div>
-                    <h3 class="font-bold text-sm font-headline text-slate-900">Integridad de Datos</h3>
+                    <h3 class="font-black text-sm font-headline text-slate-900 uppercase tracking-tight">Integridad</h3>
                 </div>
-                <p class="text-xs text-slate-500 leading-relaxed mb-6">Copia de seguridad automática completada con éxito. Redundancia operativa activa.</p>
+                <p class="text-xs text-slate-500 leading-relaxed mb-8">Copia de seguridad automática completada con éxito. Redundancia operativa activa en nodo central.</p>
                 
-                <!-- Exportar a EXCEL REAL (.xlsx) -->
-                <a href="{% url 'exportar_excel' %}" class="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg">
-                    <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar DB (.xlsx)
+                <a href="{% url 'centro_backups' %}" class="w-full bg-slate-900 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-black transition-all shadow-xl shadow-slate-200">
+                    <span class="material-symbols-outlined text-sm notranslate">download</span> Exportar DB (.sql)
                 </a>
             </div>
 
-            <!-- Recent Logs (REAL DATA) -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border">
-                <h3 class="font-bold text-sm font-headline mb-6 text-slate-900 flex justify-between items-center">
+            <!-- Recent Logs -->
+            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
+                <h3 class="font-black text-sm font-headline mb-8 text-slate-900 flex justify-between items-center uppercase tracking-widest">
                     Logs Recientes
-                    <a href="{% url 'log_auditoria' %}" class="hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined text-slate-300 text-sm notranslate">open_in_new</span>
+                    <a href="{% url 'log_auditoria' %}" class="text-slate-300 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined text-lg notranslate">open_in_new</span>
                     </a>
                 </h3>
                 <div class="space-y-6">
                     {% for log in logs %}
                     <div class="flex gap-4">
-                        <div class="w-1 h-10 {% if log.is_addition %}bg-green-500{% elif log.is_deletion %}bg-red-500{% else %}bg-primary-container{% endif %} rounded-full shrink-0"></div>
+                        <div class="w-1 h-10 {% if log.is_addition %}bg-green-500{% elif log.is_deletion %}bg-red-500{% else %}bg-primary{% endif %} rounded-full shrink-0"></div>
                         <div class="min-w-0">
-                            <p class="text-[9px] font-black text-primary uppercase">{{ log.content_type.model|upper }}</p>
-                            <p class="text-xs font-medium text-slate-800 truncate">
-                                <strong>{{ log.user.username }}</strong>: {{ log.get_change_message|default:"Acción registrada" }}
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-tighter">{{ log.content_type.model|upper }}</p>
+                            <p class="text-xs font-bold text-slate-800 truncate">
+                                {{ log.usuario.username|default:"Sistema" }}: 
+                                <span class="font-medium text-slate-500">{{ log.descripcion|default:"Acción registrada" }}</span>
                             </p>
-                            <p class="text-[10px] text-slate-400">{{ log.action_time|timesince }} ago</p>
+                            <p class="text-[9px] text-slate-400 mt-1">{{ log.action_time|timesince }} ago</p>
                         </div>
                     </div>
-                    {% empty %}
-                    <p class="text-xs text-slate-400 italic text-center">No hay acciones registradas.</p>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Technical Core Card -->
-            <div class="bg-slate-900 p-8 rounded-2xl text-white shadow-xl relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-primary opacity-20 rounded-full blur-3xl"></div>
-                <h4 class="font-black text-xl mb-4 font-headline tracking-tighter">Technical Core</h4>
-                <div class="space-y-3 font-mono text-[10px] opacity-80">
-                    <div class="flex justify-between border-b border-white/10 pb-1"><span>Versización</span><span>{{ version }}</span></div>
-                    <div class="flex justify-between border-b border-white/10 pb-1"><span>Instancia</span><span>{{ db_instance }}</span></div>
-                    <div class="flex justify-between"><span>Auditoría</span><span>{% now "d M Y" %}</span></div>
+            <!-- Technical Core Card: El toque final sofisticado -->
+            <div class="bg-slate-900 p-10 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden border border-white/5">
+                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-primary opacity-20 rounded-full blur-3xl"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span class="w-8 h-px bg-primary"></span>
+                        <h4 class="font-black text-xs uppercase tracking-[0.3em] text-primary-fixed">Technical Core</h4>
+                    </div>
+                    <div class="space-y-4 font-mono text-[10px] opacity-80">
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>VERSIÓN</span><span class="text-white font-bold">{{ version }}</span></div>
+                        <div class="flex justify-between border-b border-white/5 pb-2"><span>INSTANCIA</span><span class="text-white font-bold">{{ db_instance }}</span></div>
+                        <div class="flex justify-between"><span>AUDITORÍA</span><span class="text-white font-bold">{% now "d M Y" %}</span></div>
+                    </div>
                 </div>
             </div>
         </div>

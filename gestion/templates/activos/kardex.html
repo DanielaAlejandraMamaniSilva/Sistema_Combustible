@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-10">
+    
+    <!-- CABECERA DE NAVEGACIÓN -->
+    <div class="flex justify-between items-center no-print">
+        <div class="flex items-center gap-3">
+            <a href="javascript:history.back()" class="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary transition-all shadow-sm">
+                <span class="material-symbols-outlined notranslate">arrow_back</span>
+            </a>
+            <h2 class="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Expediente / Kardex de Conducción</h2>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 1: FICHA DE IDENTIDAD DEL CHOFER -->
+    <div class="bg-white rounded-[3rem] shadow-sm border border-slate-100 p-10 relative overflow-hidden">
+        <!-- Decoración de fondo -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full -mr-32 -mt-32 pointer-events-none"></div>
+        
+        <div class="flex flex-col lg:flex-row gap-12 relative z-10">
+            <!-- Foto de Perfil -->
+            <div class="shrink-0 mx-auto lg:mx-0">
+                <div class="w-48 h-56 rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl bg-slate-100 relative group">
+                    {% if chofer.foto %}
+                        <img src="{{ chofer.foto.url }}?t={% now 'U' %}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                            <span class="material-symbols-outlined text-6xl">person</span>
+                            <p class="text-[9px] font-black uppercase mt-2">Sin Fotografía</p>
+                        </div>
+                    {% endif %}
+                    <!-- Badge de Estado sobre la foto -->
+                    <div class="absolute bottom-4 left-0 right-0 px-4">
+                        <span class="block w-full py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-center shadow-lg
+                            {% if chofer.area %}bg-green-600 text-white{% else %}bg-red-600 text-white{% endif %}">
+                            {% if chofer.area %}En Servicio{% else %}Disponible{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Detallada -->
+            <div class="flex-1 space-y-8">
+                <div>
+                    <h1 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight leading-none">
+                        {{ chofer.get_full_name }}
+                    </h1>
+                    <p class="text-primary font-bold uppercase text-xs tracking-[0.3em] mt-2">Conductor Oficial GADP Potosí</p>
+                </div>
+
+                <!-- Grid de Datos -->
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-4 border-t border-slate-100 pt-8">
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cédula de Identidad</p>
+                        <p class="text-sm font-bold text-slate-700">{{ chofer.ci|default:"No registrado" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nº de Licencia</p>
+                        <p class="text-sm font-bold text-slate-700">{{ chofer.licencia_conducir|default:"No registrada" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Categoría</p>
+                        <p class="text-sm font-black text-primary uppercase">{{ chofer.categoria_licencia|default:"S/N" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vencimiento Licencia</p>
+                        <p class="text-sm font-bold {% if chofer.vencimiento_licencia < today %}text-red-600{% else %}text-slate-700{% endif %}">
+                            {{ chofer.vencimiento_licencia|date:"d M Y"|default:"---" }}
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Correo Electrónico</p>
+                        <p class="text-sm font-bold text-slate-700 truncate">{{ chofer.email|default:"Sin correo" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Secretaría Actual</p>
+                        <p class="text-sm font-black text-slate-900 uppercase">{{ chofer.area.nombre|default:"SIN ASIGNACIÓN" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN 2: HISTORIAL DE MOVIMIENTOS (KARDEX) -->
+    <div class="bg-white rounded-[3rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                <span class="w-1.5 h-5 bg-primary rounded-full"></span>
+                Historial de Asignaciones y Traspasos
+            </h3>
+            <span class="text-[10px] font-bold text-slate-400 uppercase">Total Movimientos: {{ historial.count }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-white text-[9px] font-black uppercase text-slate-400 tracking-widest border-b">
+                        <th class="px-8 py-4">Fecha</th>
+                        <th class="px-8 py-4">Evento Institucional</th>
+                        <th class="px-8 py-4">Secretaría / Área</th>
+                        <th class="px-8 py-4">Vehículo</th>
+                        <th class="px-8 py-4 text-right">Documentación</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for h in historial %}
+                    <!-- Fila de Alta -->
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-bold text-slate-900">{{ h.fecha_asignacion|date:"d/m/Y" }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-[9px] font-black uppercase border border-green-100">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                Alta / Asignación
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-medium text-slate-700 uppercase">{{ h.area.nombre|default:"ADMINISTRACIÓN" }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-slate-400 text-sm">directions_car</span>
+                                <p class="text-sm font-black text-slate-900 font-mono">{{ h.vehiculo.placa }}</p>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            {% if h.documento_acta %}
+                                <a href="{{ h.documento_acta.url }}" class="inline-flex items-center gap-2 text-primary font-black text-[10px] uppercase hover:underline" target="_blank">
+                                    <span class="material-symbols-outlined text-sm">description</span> MEMO_ALTA.PDF
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Fila de Baja (Si el registro está cerrado) -->
+                    {% if not h.esta_activo %}
+                    <tr class="bg-slate-50/30">
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-bold text-slate-400">{{ h.fecha_fin|date:"d/m/Y" }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 text-red-700 rounded-full text-[9px] font-black uppercase border border-red-100">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                                Baja / Retiro
+                            </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-xs text-slate-400 italic">Fin de funciones en {{ h.area.nombre }}</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-bold text-slate-400 font-mono">{{ h.vehiculo.placa }}</p>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            {% if h.documento_baja %}
+                                <a href="{{ h.documento_baja.url }}" class="inline-flex items-center gap-2 text-red-800 font-black text-[10px] uppercase hover:underline" target="_blank">
+                                    <span class="material-symbols-outlined text-sm">history_edu</span> MEMO_BAJA.PDF
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white !important; }
+        .max-w-6xl { max-width: 100% !important; width: 100% !important; }
+        .rounded-\[3rem\], .rounded-2xl { border-radius: 0 !important; border: none !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}
