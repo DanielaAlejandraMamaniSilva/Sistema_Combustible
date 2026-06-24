@@ -45,6 +45,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'gestion.context_processors.notificaciones_sistema',
+                'gestion.context_processors.contadores_globales',
             ],
         },
     },

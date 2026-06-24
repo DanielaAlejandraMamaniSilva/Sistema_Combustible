@@ -1,32 +1,33 @@
 {% extends 'base.html' %}
-{% block title %}Panel del Chofer - Soberanía Potosí{% endblock %}
+{% load static %}
+
+{% block title %}Panel del Chofer - GADP Potosí{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-8">
-    
+<div class="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8">    
     <!-- HEADER CON MÉTRICAS SUPERIORES -->
-    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <header class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div class="space-y-2">
-            <h1 class="font-['Montserrat'] text-4xl font-black tracking-tight text-slate-900">Panel del Chofer</h1>
-            <p class="text-slate-500 font-medium">Bitácora de Control de Combustible y Kilometraje</p>
+            <h1 class="font-['Montserrat'] text-3xl md:text-4xl font-black tracking-tight text-slate-900">Panel del Chofer</h1>
+            <p class="text-slate-500 font-medium text-sm md:text-base">Bitácora de Control de Combustible y Kilometraje</p>
         </div>
         
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col sm:flex-row items-center gap-4">
             <!-- Estado -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 flex items-center gap-4 min-w-[200px]">
-                <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center">
+            <div class="w-full sm:w-auto bg-whiteF p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 flex items-center gap-4 min-w-[200px]">
+                <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined notranslate text-emerald-600" style="font-variation-settings: 'FILL' 1">check_circle</span>
                 </div>
                 <div>
                     <p class="text-[10px] uppercase font-bold text-slate-400">Estado Actual</p>
                     <p class="text-sm font-black text-emerald-600 uppercase tracking-widest">
-                        {% if vehiculo %}EN RUTA{% else %}Disponible{% endif %}
+                        {% if viaje_activo %}EN RUTA{% else %}Disponible{% endif %}
                     </p>
                 </div>
             </div>
             <!-- Último Consumo -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-600 flex items-center gap-4 min-w-[200px]">
-                <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+            <div class="w-full sm:w-auto bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-600 flex items-center gap-4 min-w-[200px]">
+                <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined notranslate text-red-600" style="font-variation-settings: 'FILL' 1">local_gas_station</span>
                 </div>
                 <div>
@@ -39,181 +40,229 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
         
-        <!-- COLUMNA IZQUIERDA: FORMULARIO E IMAGEN (4 columnas) -->
+        <!-- COLUMNA IZQUIERDA: FORMULARIO DINÁMICO -->
         <div class="xl:col-span-4 space-y-8">
-            <!-- Card Formulario -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-                <div class="flex items-center gap-3 mb-8">
-                    <span class="material-symbols-outlined notranslate text-red-700">edit_note</span>
-                    <h2 class="text-xl font-bold font-['Montserrat'] uppercase">Nueva Bitácora</h2>
-                </div>
+            
+            {% if viaje_activo %}
+            <!-- TARJETA DE MISIÓN ACTIVA - DISEÑO PREMIUM -->
+            
+            <!-- TARJETA DE MISIÓN EN CURSO RESPONSIVE -->
+            <div class="bg-gradient-to-br from-[#770003] to-[#410001] rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-8 shadow-[0_20px_50px_rgba(119,0,3,0.3)] text-white relative overflow-hidden border border-white/10">
                 
-                <!-- 1. SI HAY UN VIAJE EN CURSO (MOSTRAR PANTALLA ROJA PARA FINALIZAR) -->
-                {% if viaje_activo %}
-                <div class="bg-red-900 rounded-2xl p-8 shadow-xl text-white relative overflow-hidden">
-                    <div class="absolute top-4 right-4 flex items-center gap-2">
-                        <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
-                        <span class="text-[10px] font-black uppercase tracking-widest text-red-200">En Ruta</span>
+                <!-- Decoración de fondo (Oculta en móviles muy pequeños para limpiar la vista) -->
+                <span class="material-symbols-outlined absolute -right-10 -top-10 text-[10rem] md:text-[15rem] opacity-5 notranslate select-none hidden sm:block">speed</span>
+
+                <!-- Header de la Tarjeta -->
+                <div class="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-2 mb-6 md:mb-8">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 md:w-14 md:h-10 bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl flex items-center justify-center border border-white/20 shadow-inner">
+                            <span class="material-symbols-outlined text-red-400 animate-pulse notranslate text-xl md:text-2xl md">sensors</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl md:text-1xl font-black font-headline uppercase tracking-tighter leading-tight">Misión en Curso</h2>
+                            <p class="text-red-300 text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em]">Seguimiento Activo</p>
+                        </div>
                     </div>
+                    <div class="bg-green-500/20 border border-green-400/30 px-3 py-1 rounded-full flex items-center gap-2 self-end sm:self-auto md:p-1 md:mt-5">
+                        <span class="w-1.5 h-1.5 md:w-1 md:h-0.5 bg-green-400 rounded-full animate-ping"></span>
+                        <span class="text-[8px] md:text-[8.5px] font-bold text-green-300 uppercase tracking-widest md:pr-1">Sistema Online</span>
+                    </div>
+                </div>
+
+                <!-- CRONÓMETRO DE TIEMPO EN CAMINO -->
+                <div class="relative z-10 bg-black/20 backdrop-blur-md rounded-2xl md:rounded-3xl p-4 md:p-6 border border-white/5 mb-6 md:mb-8 text-center">
+                    <p class="text-[8px] md:text-[9px] font-black text-red-300 uppercase tracking-[0.3em] mb-2">Tiempo Transcurrido</p>
+                    <!-- ID para el script del cronómetro -->
+                    <div id="cronometro_display" class="text-5xl md:text-3xl font-black font-mono tracking-widest text-white drop-shadow-lg">
+                        00:00:00
+                    </div>
+                    <div class="flex justify-center gap-4 md:gap-8 mt-4">
+                        <div class="text-center">
+                            <p class="text-[7px] md:text-[8px] text-red-400 uppercase font-bold">Salida</p>
+                            <p class="text-xs font-black">{{ viaje_activo.hora_salida|time:"H:i" }}</p>
+                        </div>
+                        <div class="w-px h-6 md:h-8 bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="text-[7px] md:text-[8px] text-red-400 uppercase font-bold">KM Inicial</p>
+                            <p class="text-xs font-black">{{ viaje_activo.km_inicial }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TRAYECTORIA VISUAL RESPONSIVE -->
+                <div class="relative z-10 mb-8 px-2 md:px-4">
+                    <div class="flex justify-between items-center relative">
+                        <div class="absolute left-0 right-0 top-4 md:top-5 h-1 bg-white/10 rounded-full"></div>
+                        <div class="absolute left-0 top-4 md:top-5 h-1 bg-gradient-to-r from-red-500 to-green-400 rounded-full transition-all duration-1000" style="width: 70%;"></div>
+
+                        <!-- Origen -->
+                        <div class="relative flex flex-col items-center gap-1 md:gap-2">
+                            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center shadow-xl border-2 md:border-4 border-red-900">
+                                <span class="material-symbols-outlined text-primary text-sm md:text-lg notranslate">location_on</span>
+                            </div>
+                            <p class="text-[7px] md:text-[9px] font-black uppercase truncate max-w-[60px]">{{ viaje_activo.origen }}</p>
+                        </div>
+
+                        <!-- Camión Animado -->
+                        <div class="bg-slate-900/80 backdrop-blur-md border border-white/10 px-3 py-1 md:px-4 md:py-1.5 rounded-xl md:rounded-2xl shadow-2xl -mt-6 md:-mt-8">
+                            <span class="material-symbols-outlined text-white text-xs md:text-sm animate-bounce notranslate">local_shipping</span>
+                        </div>
+
+                        <!-- Destino -->
+                        <div class="relative flex flex-col items-center gap-1 md:gap-2">
+                            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border-2 border-white/20">
+                                <span class="material-symbols-outlined text-white/40 text-sm md:text-lg notranslate">flag</span>
+                            </div>
+                            <p class="text-[7px] md:text-[9px] font-black uppercase opacity-50 truncate max-w-[60px]">{{ viaje_activo.destino }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO DE CIERRE -->
+                <form method="POST" class="relative z-10 space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="finalizar">
                     
-                    <div class="mb-6">
-                        <h2 class="text-2xl font-black font-headline uppercase tracking-tight">Viaje en Curso</h2>
-                        <p class="text-red-200 text-sm mt-1">Destino: <strong>{{ viaje_activo.destino }}</strong></p>
-                    </div>
-
-                    <!-- Tiempos y KM Bloqueados -->
-                    <div class="grid grid-cols-2 gap-4 mb-6 bg-black/20 p-4 rounded-xl border border-white/10">
-                        <div>
-                            <p class="text-[9px] uppercase tracking-widest text-red-300 font-bold">Hora de Salida</p>
-                            <p class="text-lg font-black font-mono">{{ viaje_activo.hora_salida|time:"h:i A" }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[9px] uppercase tracking-widest text-red-300 font-bold">Km Salida</p>
-                            <p class="text-lg font-black font-mono">{{ viaje_activo.km_inicial }}</p>
-                        </div>
-                    </div>
-
-                    <!-- Formulario para Finalizar -->
-                    <form method="POST" class="space-y-4">
-                        {% csrf_token %}
-                        <input type="hidden" name="accion" value="finalizar">
+                    <div class="bg-white/5 p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border border-white/10">
+                        <label class="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-red-300 mb-3 block ml-1">Kilometraje de Llegada</label>
+                        <input type="number" name="km_llegada" id="id_km_llegada" required 
+                            class="w-full bg-white border-none rounded-xl md:rounded-2xl p-3 md:p-4 text-xl md:text-2xl font-black text-slate-900 focus:ring-4 focus:ring-red-500/50 transition-all" 
+                            placeholder="--- ---">
                         
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-red-200">Kilometraje de Llegada</label>
-                            <input type="number" name="km_llegada" id="id_km_llegada" required class="bg-white border-none rounded-xl p-4 text-lg font-black text-slate-900 focus:ring-4 focus:ring-red-400" placeholder="Ej: {{ viaje_activo.km_inicial|add:15 }}">
-                        </div>
-
-                        <!-- Toggle Combustible (Opcional) -->
-                        <div class="bg-white/10 p-4 rounded-xl border border-white/20 mt-4">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="toggle_combustible" id="toggle_combustible" class="w-5 h-5 rounded border-white/30 text-red-900 focus:ring-0 cursor-pointer">
-                                <span class="text-sm font-bold uppercase tracking-wide">¿Recargó Combustible?</span>
+                        <!-- Toggle Combustible -->
+                        <div class="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-white/10">
+                            <label class="flex items-center justify-between cursor-pointer group">
+                                <span class="text-[10px] md:text-xs font-bold uppercase tracking-wide">¿Recargó Combustible?</span>
+                                <input type="checkbox" name="toggle_combustible" id="toggle_combustible" class="w-5 h-5 md:w-6 md:h-6 rounded-lg border-white/20 bg-white/10 text-red-600 focus:ring-0">
                             </label>
                             
-                            <div id="campos_combustible" class="hidden grid-cols-2 gap-4 mt-4 pt-4 border-t border-white/20">
-                                <input type="text" name="nro_vale" placeholder="Nº de Vale" class="bg-white border-none rounded-lg p-3 text-xs text-slate-900 font-bold">
-                                <input type="number" step="0.01" name="cantidad" id="id_cantidad" placeholder="Litros Cargados" class="bg-white border-none rounded-lg p-3 text-xs text-slate-900 font-bold">
+                            <div id="campos_combustible" class="hidden grid-cols-2 gap-3 md:gap-4 mt-4 animate-in slide-in-from-top-2 duration-300">
+                                <input type="text" name="nro_vale" placeholder="Nº Vale" class="bg-white border-none rounded-lg p-2.5 text-[10px] md:text-xs text-slate-900 font-bold">
+                                <input type="number" step="0.01" name="cantidad" id="id_cantidad" placeholder="Litros" class="bg-white border-none rounded-lg p-2.5 text-[10px] md:text-xs text-slate-900 font-bold">
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Cálculos Automáticos de Finalización -->
-                        <div class="bg-black/30 p-4 rounded-xl space-y-2 mt-4 border border-black/20">
-                            <div class="flex justify-between text-[10px] font-bold text-red-200 uppercase">
-                                <span>Recorrido Total:</span>
-                                <span id="recorrido_total_text" class="text-white font-black text-sm">0 Km</span>
-                            </div>
-                            <div class="flex justify-between text-[10px] font-bold text-red-200 uppercase">
-                                <span>Eficiencia Estimada:</span>
-                                <span id="eficiencia_text" class="text-white font-black text-sm">0 Km/L</span>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full bg-white text-red-900 py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-xl hover:bg-slate-100 transition-all active:scale-95 mt-4">
-                            Finalizar Viaje
-                        </button>
-                    </form>
+                    <button type="submit" class="w-full bg-white text-[#770003] py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-xl hover:bg-red-50 transition-all active:scale-95">
+                        Finalizar Misión
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <!-- PANTALLA BLANCA: INICIAR VIAJE -->
+            <!-- FORMULARIO DE INICIO DE RECORRIDO MEJORADO -->
+            <div class="bg-[#FAF2F2] rounded-[2rem] md:rounded-[2.5rem] p-5 sm:p-6 md:p-8 shadow-xl border border-red-100 relative overflow-hidden">
+                <!-- Decoración sutil mejorada -->
+                <div class="absolute top-0 right-0 p-4 opacity-[0.08] pointer-events-none">
+                    <span class="material-symbols-outlined text-7xl md:text-9xl notranslate text-red-900">route</span>
                 </div>
 
-                <!-- 2. SI NO HAY VIAJE (MOSTRAR PANTALLA BLANCA PARA INICIAR) -->
-                {% else %}
-                <form method="POST" class="space-y-5">
+                <!-- Cabecera del Formulario -->
+                <div class="flex items-center gap-3 mb-6 md:mb-8 relative z-10">
+                    <div class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
+                        <span class="material-symbols-outlined notranslate text-2xl md:text-3xl">play_circle</span>
+                    </div>
+                    <div>
+                        <h2 class="text-lg md:text-xl font-black font-headline text-slate-900 uppercase tracking-tight leading-tight">Iniciar Recorrido</h2>
+                        <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Registro de Salida y Misión</p>
+                    </div>
+                </div>
+                
+                <form method="POST" class="space-y-5 md:space-y-6 relative z-10">
                     {% csrf_token %}
                     <input type="hidden" name="accion" value="iniciar">
                     
-                    <div class="space-y-4">
-                        <!-- Fila: Origen y Destino -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="flex flex-col gap-1">
-                                <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Punto de Inicio</label>
-                                <input type="text" name="origen" required class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" value="Potosí">
+                    <div class="space-y-4 md:space-y-5">
+                        <!-- BLOQUE 1: RUTA (Responsive Grid) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Punto de Inicio</label>
+                                <div class="relative group">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm notranslate group-focus-within:text-primary transition-colors">location_on</span>
+                                    <input type="text" name="origen" required 
+                                        class="w-full pl-10 p-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" 
+                                        value="Potosí">
+                                </div>
                             </div>
-                            <div class="flex flex-col gap-1">
-                                <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Punto Destino</label>
-                                <input type="text" name="destino" required class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" placeholder="Ej: Uyuni">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Punto Destino</label>
+                                <div class="relative group">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm notranslate group-focus-within:text-primary transition-colors">flag</span>
+                                    <input type="text" name="destino" required 
+                                        class="w-full pl-10 p-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" 
+                                        placeholder="Ej: Uyuni">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Fila: Objeto y Responsable -->
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Objeto de Comisión</label>
-                            <textarea name="motivo" required class="bg-slate-50 border-none rounded-lg p-3 text-sm h-16 resize-none focus:ring-2 focus:ring-red-700" placeholder="Motivo del viaje..."></textarea>
-                        </div>
-                        
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Responsable de Viaje</label>
-                            <input type="text" name="responsable" required class="bg-slate-50 border-none rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-700" placeholder="Funcionario a cargo">
+                        <!-- BLOQUE 2: FACTORES DE CONSUMO (Mejorado para móviles pequeños) -->
+                        <div class="grid grid-cols-1 xs:grid-cols-2 gap-3 p-4 bg-white/50 rounded-[1.5rem] md:rounded-[2rem] border border-red-100/50 shadow-inner">
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black uppercase text-slate-400 ml-2 tracking-widest">Tipo de Terreno</label>
+                                <select name="terreno" class="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm">
+                                    <option value="plano">Plano (Normal)</option>
+                                    <option value="montana">Montaña (Alto Consumo)</option>
+                                    <option value="mixto">Mixto</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-[9px] font-black uppercase text-slate-400 ml-2 tracking-widest">Carga del Vehículo</label>
+                                <select name="carga" class="w-full p-2.5 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 focus:ring-2 focus:ring-primary outline-none cursor-pointer shadow-sm">
+                                    <option value="ligera">Ligera (Personal)</option>
+                                    <option value="pesada">Pesada (Materiales)</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <!-- Fila: Km Salida (Automático) -->
-                        <div class="flex flex-col gap-1 border-t border-slate-100 pt-4">
-                            <label class="text-[10px] font-bold uppercase text-slate-500 tracking-widest">Km Salida (Tablero)</label>
-                            <input type="number" name="km_salida" required class="border-none rounded-lg p-3 text-sm font-bold {% if km_actual > 0 %}bg-slate-100 text-slate-500 cursor-not-allowed{% else %}bg-slate-50 focus:ring-2 focus:ring-red-700 text-slate-900{% endif %}" 
-                                value="{% if km_actual > 0 %}{{ km_actual }}{% endif %}" 
-                                {% if km_actual > 0 %}readonly title="Automático del sistema"{% else %}placeholder="Ingrese KM actual"{% endif %}>
+                        <!-- BLOQUE 3: DETALLES DE MISIÓN -->
+                        <div class="space-y-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Objeto de Comisión</label>
+                                <textarea name="motivo" required 
+                                        class="w-full p-4 bg-white border border-slate-200 rounded-2xl text-sm font-medium h-24 resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" 
+                                        placeholder="Describa el motivo del viaje..."></textarea>
+                            </div>
+                            
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[10px] font-black uppercase text-slate-500 ml-2 tracking-widest">Responsable de Viaje</label>
+                                <div class="relative group">
+                                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm notranslate group-focus-within:text-primary transition-colors">person</span>
+                                    <input type="text" name="responsable" required 
+                                        class="w-full pl-10 p-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm" 
+                                        placeholder="Nombre del funcionario">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BLOQUE 4: KILOMETRAJE (Status Card) -->
+                        <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-red-100 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
+                                    <span class="material-symbols-outlined notranslate">speed</span>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">KM Salida (Tablero)</p>
+                                    <p class="text-lg font-black text-primary font-mono leading-none">{{ km_actual }}</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[8px] font-black bg-green-500 text-white px-2 py-1 rounded-lg uppercase tracking-tighter animate-pulse">Sincronizado</span>
+                                <span class="text-[7px] font-bold text-slate-300 uppercase">Dato de Sistema</span>
+                            </div>
                         </div>
                     </div>
 
-                    <button type="submit" {% if not vehiculo %}disabled{% endif %} class="w-full bg-red-800 hover:bg-red-900 text-white py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 mt-4 active:scale-95">
-                        Iniciar Viaje (Capturar Hora)
+                    <!-- Botón de Acción Principal -->
+                    <button type="submit" {% if not vehiculo %}disabled{% endif %} 
+                            class="w-full bg-primary-container hover:bg-primary text-white py-4 md:py-5 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group">
+                        <span class="material-symbols-outlined notranslate group-hover:rotate-12 transition-transform">timer</span>
+                        Iniciar Recorrido Oficial
                     </button>
                 </form>
-                {% endif %}
-
-                <!-- SCRIPT DE CÁLCULOS Y LÓGICA DE COMBUSTIBLE -->
-                <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        // 1. Mostrar/Ocultar campos de combustible
-                        const toggle = document.getElementById('toggle_combustible');
-                        const campos = document.getElementById('campos_combustible');
-                        
-                        if (toggle && campos) {
-                            toggle.addEventListener('change', function() {
-                                if(this.checked) {
-                                    campos.classList.remove('hidden');
-                                    campos.classList.add('grid');
-                                } else {
-                                    campos.classList.add('hidden');
-                                    campos.classList.remove('grid');
-                                }
-                            });
-                        }
-
-                        // 2. Cálculos en tiempo real (Solo si está en la pantalla de finalizar)
-                        const kmLlegadaInput = document.getElementById('id_km_llegada');
-                        const cantidadInput = document.getElementById('id_cantidad');
-                        const recorridoText = document.getElementById('recorrido_total_text');
-                        const eficienciaText = document.getElementById('eficiencia_text');
-                        
-                        // El KM de salida es fijo según el viaje activo
-                        const kmSalida = {% if viaje_activo %}{{ viaje_activo.km_inicial }}{% else %}0{% endif %};
-
-                        function actualizarCalculos() {
-                            if (!kmLlegadaInput) return;
-                            const llegada = parseInt(kmLlegadaInput.value) || 0;
-                            const litros = parseFloat(cantidadInput ? cantidadInput.value : 0) || 0;
-
-                            let recorrido = llegada - kmSalida;
-                            if (recorrido < 0) recorrido = 0;
-
-                            if (recorridoText) recorridoText.innerText = recorrido + ' Km';
-
-                            if (eficienciaText) {
-                                if (litros > 0 && recorrido > 0) {
-                                    const eficiencia = (recorrido / litros).toFixed(1);
-                                    eficienciaText.innerText = eficiencia + ' Km/L';
-                                } else {
-                                    eficienciaText.innerText = '0 Km/L';
-                                }
-                            }
-                        }
-
-                        if (kmLlegadaInput) kmLlegadaInput.addEventListener('input', actualizarCalculos);
-                        if (cantidadInput) cantidadInput.addEventListener('input', actualizarCalculos);
-                    });
-                </script>
             </div>
+            {% endif %}
 
-            <!-- Imagen del Volante (Decorativa) -->
+            <!-- Imagen del Volante -->
             <div class="relative h-48 rounded-2xl overflow-hidden shadow-md group">
                 <img src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=1000&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
@@ -222,31 +271,65 @@
             </div>
         </div>
 
-        <!-- COLUMNA DERECHA: GRÁFICO, AUTO Y TABLA (8 columnas) -->
         <div class="xl:col-span-8 space-y-8">
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <!-- Gráfico de Eficiencia Semanal (Simulado con barras) -->
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-                    <div class="flex justify-between items-start mb-6">
-                        <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">Eficiencia Semanal</h3>
-                        <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-full">+4% vs mes ant.</span>
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col h-full">
+                    <!-- Encabezado Formal -->
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 class="text-sm font-black text-slate-800 font-headline uppercase tracking-tighter">Eficiencia Semanal</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rendimiento Km/L</p>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                            <span class="text-[9px] font-black text-slate-600 uppercase">Sincronizado</span>
+                        </div>
                     </div>
-                    <div class="flex items-end gap-3 h-32">
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[40%]"></div>
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[60%]"></div>
-                        <div class="flex-1 bg-red-700 rounded-t-lg h-[85%] shadow-sm"></div>
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[55%]"></div>
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[70%]"></div>
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[45%]"></div>
-                        <div class="flex-1 bg-slate-100 rounded-t-lg h-[80%]"></div>
+                    
+                    <!-- Cuerpo del Gráfico (Termómetros de nivel) -->
+                    <div class="flex-1 flex items-end justify-between gap-3 px-2">
+                        {% for dato in datos_grafico %}
+                        <div class="flex-1 flex flex-col items-center h-full group relative">
+                            
+                            <!-- Valor flotante (Tooltip Profesional) -->
+                            <div class="absolute -top-6 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20">
+                                <span class="bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-lg shadow-xl">
+                                    {{ dato.eficiencia }}
+                                </span>
+                            </div>
+
+                            <!-- Carril del "Termómetro" -->
+                            <div class="w-full max-w-[14px] bg-slate-100 rounded-full relative h-full flex items-end overflow-hidden border border-slate-200/50">
+                                <!-- Nivel de Color -->
+                                <div class="w-full transition-all duration-1000 ease-out
+                                    {% if dato.es_hoy %}
+                                        bg-primary shadow-[0_0_15px_rgba(161,5,8,0.4)]
+                                    {% elif dato.altura > 0 %}
+                                        bg-slate-400
+                                    {% else %}
+                                        bg-transparent
+                                    {% endif %}" 
+                                    style="height: {{ dato.altura }}%;">
+                                    
+                                    <!-- Brillo sutil para el nivel -->
+                                    <div class="w-full h-full bg-gradient-to-r from-white/20 to-transparent"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Etiqueta del Día -->
+                            <span class="mt-4 text-[10px] font-black {% if dato.es_hoy %}text-primary{% else %}text-slate-300{% endif %} transition-colors">
+                                {{ dato.dia }}
+                            </span>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="flex justify-between mt-4 text-[10px] font-bold text-slate-400 uppercase">
-                        <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+
+                    <!-- Pie del gráfico con dato del día -->
+                    <div class="mt-6 pt-4 border-t border-slate-50 flex justify-between items-center">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">Promedio de la semana</p>
+                        <p class="text-xs font-black text-slate-700">Datos Actualizados</p>
                     </div>
                 </div>
-
-                <!-- Tarjeta del Vehículo Asignado (LA ROJA) -->
                 <div class="bg-red-800 text-white p-8 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-between">
                     <div class="relative z-10">
                         <h3 class="text-xs font-black uppercase opacity-60 mb-4 tracking-widest">Vehículo Asignado</h3>
@@ -272,7 +355,6 @@
                             <div class="flex flex-col items-center justify-center h-full py-4 text-center">
                                 <span class="material-symbols-outlined text-5xl mb-2 text-white/50">warning</span>
                                 <p class="font-bold text-sm uppercase">Sin Vehículo Asignado</p>
-                                <p class="text-[10px] opacity-70 mt-1">Contacta con el encargado de Activos.</p>
                             </div>
                         {% endif %}
                     </div>
@@ -295,7 +377,7 @@
                                 <th class="px-8 py-4">Fecha / Vale</th>
                                 <th class="px-8 py-4">Comisión / Destino</th>
                                 <th class="px-8 py-4 text-right">Recorrido</th>
-                                <th class="px-8 py-4 text-right">Consumo</th>
+                                <th class="px-8 py-4 text-right">Acción</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -307,12 +389,28 @@
                                 </td>
                                 <td class="px-8 py-5 text-sm font-medium text-slate-600">{{ b.destino }}</td>
                                 <td class="px-8 py-5 text-right">
-                                    <!-- Aquí se calcula el recorrido en el Backend, asumiendo que ya tienes una propiedad o pasas la resta -->
-                                    <p class="text-sm font-black text-slate-900">{{ b.km_final|add:"-"|add:b.km_inicial }} Km</p>
+                                    <p class="text-sm font-black text-slate-900">{{ b.recorrido_real }} Km</p>
                                     <p class="text-[10px] text-slate-400">{{ b.km_inicial }} - {{ b.km_final }}</p>
                                 </td>
                                 <td class="px-8 py-5 text-right">
-                                    <p class="text-sm font-black text-slate-900">{{ b.cantidad_litros }} Lts</p>
+                                    <!-- BOTÓN PARA ABRIR EL MODAL -->
+                                    <button onclick="openModal('{{ b.id }}', 
+                                                                '{{ b.fecha|date:'l, d F Y' }}', 
+                                                                '{{ b.vehiculo.placa }}', 
+                                                                '{{ b.nro_vale_combustible|default:'S/N' }}', 
+                                                                '{{ b.recorrido_real }}', 
+                                                                '{{ b.origen }}', 
+                                                                '{{ b.destino }}', 
+                                                                '{{ b.objetivo_comision }}', 
+                                                                '{{ b.solicitud_correccion }}',
+                                                                '{{ b.hora_salida|time:'H:i' }}',
+                                                                '{{ b.hora_llegada|time:'H:i' }}',
+                                                                '{{ b.combustible_utilizado|floatformat:2 }}',
+                                                                '{{ b.cantidad_litros|floatformat:2 }}',
+                                                                '{{ b.saldo_actual|floatformat:2 }}')" 
+                                            class="text-[10px] font-black text-red-700 uppercase hover:underline">
+                                        Ver Detalle
+                                    </button>
                                 </td>
                             </tr>
                             {% empty %}
@@ -328,36 +426,196 @@
     </div>
 </div>
 
-<!-- LÓGICA DE CÁLCULOS EN TIEMPO REAL -->
+<!-- VENTANA MODAL ACTUALIZADA -->
+<div id="modal-detalle" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 no-print">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="cerrarModal()"></div>
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        
+        <!-- Encabezado con Métricas -->
+        <div class="bg-primary p-6 text-white relative">
+            <button onclick="cerrarModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
+                <span class="material-symbols-outlined notranslate">close</span>
+            </button>
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Resumen de Operación</span>
+            <h3 id="modal-fecha" class="text-xl font-black font-headline uppercase mt-1">---</h3>
+            
+            <!-- Primera Fila de Datos -->
+            <div class="grid grid-cols-3 gap-2 mt-4">
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Vehículo</p>
+                    <p id="modal-vehiculo" class="text-[10px] font-black">---</p>
+                </div>
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Vale</p>
+                    <p id="modal-vale" class="text-[10px] font-black">---</p>
+                </div>
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Recorrido</p>
+                    <p id="modal-recorrido" class="text-[10px] font-black">---</p>
+                </div>
+            </div>
+
+            <!-- SEGUNDA FILA: TIEMPO Y CONSUMO -->
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <div class="bg-black/20 p-2 rounded-xl border border-white/5 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-red-300">schedule</span>
+                    <div>
+                        <p class="text-[7px] font-bold uppercase opacity-60">Tiempo en Ruta</p>
+                        <p id="modal-tiempo" class="text-[10px] font-black">---</p>
+                    </div>
+                </div>
+                <div class="bg-black/20 p-2 rounded-xl border border-white/5 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-red-300">local_gas_station</span>
+                    <div>
+                        <p class="text-[7px] font-bold uppercase opacity-60">Consumo Estimado</p>
+                        <p id="modal-consumo" class="text-[10px] font-black">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-6">
+            <!-- Balance de Combustible (NUEVO) -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cargado (Ingreso)</p>
+                    <p id="modal-cargado" class="text-sm font-black text-slate-900">0.00 Lts</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo en Tanque</p>
+                    <p id="modal-saldo" class="text-sm font-black text-green-600">0.00 Lts</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span class="w-1.5 h-5 bg-primary rounded-full"></span>
+                <h4 class="font-black text-slate-900 uppercase text-xs tracking-widest">Itinerario Detallado</h4>
+            </div>
+            
+            <div id="modal-lista-tramos" class="space-y-6 relative">
+                <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-100"></div>
+                <div class="relative flex gap-4">
+                    <div class="w-6 h-6 rounded-full bg-white border-4 border-primary z-10 flex shrink-0"></div>
+                    <div>
+                        <p id="modal-ruta" class="text-xs font-black text-slate-900 uppercase">---</p>
+                        <p id="modal-motivo" class="text-[10px] text-slate-500 font-medium mt-1">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer con botones -->
+        <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <button id="btn-solicitar-toggle" onclick="document.getElementById('form-solicitud-container').classList.toggle('hidden')" class="flex-1 bg-white text-slate-600 border border-slate-200 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all">
+                Solicitar Corrección
+            </button>
+            <button onclick="cerrarModal()" class="px-10 py-3 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all">
+                Entendido
+            </button>
+        </div>
+    </div>
+</div>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const kmSalidaInput = document.getElementById('id_km_salida');
-        const kmLlegadaInput = document.getElementById('id_km_llegada');
-        const cantidadInput = document.getElementById('id_cantidad');
-        
-        const recorridoText = document.getElementById('recorrido_total_text');
-        const eficienciaText = document.getElementById('eficiencia_text');
-
-        function actualizarCalculos() {
-            const salida = parseInt(kmSalidaInput.value) || 0;
-            const llegada = parseInt(kmLlegadaInput.value) || 0;
-            const litros = parseFloat(cantidadInput.value) || 0;
-
-            let recorrido = llegada - salida;
-            if (recorrido < 0) recorrido = 0;
-
-            recorridoText.innerText = recorrido + ' Km';
-
-            if (litros > 0 && recorrido > 0) {
-                const eficiencia = (recorrido / litros).toFixed(1);
-                eficienciaText.innerText = eficiencia + ' Km/L';
-            } else {
-                eficienciaText.innerText = '0 Km/L';
-            }
+        // 1. Toggle Combustible
+        const toggle = document.getElementById('toggle_combustible');
+        const campos = document.getElementById('campos_combustible');
+        if (toggle) {
+            toggle.addEventListener('change', function() {
+                campos.classList.toggle('hidden', !this.checked);
+                campos.classList.toggle('grid', this.checked);
+            });
         }
 
-        if(kmLlegadaInput) kmLlegadaInput.addEventListener('input', actualizarCalculos);
-        if(cantidadInput) cantidadInput.addEventListener('input', actualizarCalculos);
+        // 2. Cálculos en tiempo real
+        const kmLlegadaInput = document.getElementById('id_km_llegada');
+        const cantidadInput = document.getElementById('id_cantidad');
+        const kmSalida = {% if viaje_activo %}{{ viaje_activo.km_inicial }}{% else %}0{% endif %};
+
+        function actualizarCalculos() {
+            if (!kmLlegadaInput) return;
+            const llegada = parseInt(kmLlegadaInput.value) || 0;
+            const litros = parseFloat(cantidadInput ? cantidadInput.value : 0) || 0;
+            let recorrido = llegada - kmSalida;
+            if (recorrido < 0) recorrido = 0;
+            document.getElementById('recorrido_total_text').innerText = recorrido + ' Km';
+            if (litros > 0) {
+                document.getElementById('eficiencia_text').innerText = (recorrido / litros).toFixed(1) + ' Km/L';
+            }
+        }
+        if (kmLlegadaInput) kmLlegadaInput.addEventListener('input', actualizarCalculos);
+        if (cantidadInput) cantidadInput.addEventListener('input', actualizarCalculos);
     });
+
+function openModal(id, fecha, vehiculo, vale, recorrido, origen, destino, motivo, ya_solicitado, h_salida, h_llegada, consumo, cargado, saldo) {
+    // 1. Llenar textos básicos
+    document.getElementById('modal-fecha').innerText = fecha;
+    document.getElementById('modal-vehiculo').innerText = vehiculo;
+    document.getElementById('modal-vale').innerText = vale;
+    document.getElementById('modal-recorrido').innerText = recorrido + ' Km';
+    document.getElementById('modal-ruta').innerText = origen + ' → ' + destino;
+    document.getElementById('modal-motivo').innerText = 'Motivo: ' + motivo;
+
+    // 2. Llenar datos de Tiempo y Consumo (Fórmulas Matriz)
+    document.getElementById('modal-tiempo').innerText = h_salida + ' - ' + h_llegada;
+    document.getElementById('modal-consumo').innerText = consumo + ' Lts';
+    document.getElementById('modal-cargado').innerText = cargado + ' Lts';
+    document.getElementById('modal-saldo').innerText = saldo + ' Lts';
+
+    // 3. Configurar el panel de solicitud de corrección (CORRECCIÓN DEL ERROR 'form')
+    const btnSolicitar = document.getElementById('btn-solicitar-toggle');
+    const msgRevision = document.getElementById('mensaje-revision');
+    const formCorreccion = document.getElementById('form-solicitud-correccion'); // Declaración correcta
+    const formContainer = document.getElementById('form-solicitud-container');
+
+    if (formCorreccion) {
+        formCorreccion.action = "/chofer/solicitar-correccion/" + id + "/";
+    }
+
+    // Lógica de visibilidad de solicitud
+    if (ya_solicitado === 'True') {
+        if(btnSolicitar) btnSolicitar.classList.add('hidden');
+        if(msgRevision) msgRevision.classList.remove('hidden');
+    } else {
+        if(btnSolicitar) btnSolicitar.classList.remove('hidden');
+        if(msgRevision) msgRevision.classList.add('hidden');
+    }
+    
+    if(formContainer) formContainer.classList.add('hidden');
+
+    // 4. Mostrar el modal
+    const modal = document.getElementById('modal-detalle');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function cerrarModal() {
+    const modal = document.getElementById('modal-detalle');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarModal();
+    });
+
+    function actualizarCronometro() {
+        const horaSalidaStr = "{{ viaje_activo.hora_salida|time:'H:i:s' }}";
+        const ahora = new Date();
+        const [h, m, s] = horaSalidaStr.split(':');
+        const fechaSalida = new Date();
+        fechaSalida.setHours(h, m, s);
+        if (fechaSalida > ahora) fechaSalida.setDate(fechaSalida.getDate() - 1);
+        const diferencia = ahora - fechaSalida;
+        const horas = Math.floor(diferencia / 3600000);
+        const minutos = Math.floor((diferencia % 3600000) / 60000);
+        const segundos = Math.floor((diferencia % 60000) / 1000);
+        const display = document.getElementById('cronometro_display');
+        if (display) {
+            display.innerText = (horas < 10 ? "0" + horas : horas) + ":" + (minutos < 10 ? "0" + minutos : minutos) + ":" + (segundos < 10 ? "0" + segundos : segundos);
+        }
+    }
+    setInterval(actualizarCronometro, 1000);
+    actualizarCronometro();
 </script>
 {% endblock %}

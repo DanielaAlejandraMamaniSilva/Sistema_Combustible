@@ -13,7 +13,6 @@
         <div class="text-center">
             <p class="text-[10px] uppercase tracking-[0.15em] text-slate-400 font-bold">
                 {% if user.rol == 'chofer' %}Portal de Choferes
-                {% elif user.rol == 'bienes' %}Bienes y Servicios
                 {% elif user.rol == 'activos' %}Activos y Flota
                 {% elif user.rol == 'admin' %}Administración
                 {% elif user.rol == 'superadmin' %}Super Administrador{% endif %}
@@ -71,11 +70,7 @@
                 <span class="material-symbols-outlined notranslate">work_history</span>
                 <span>Historial de Asignaciones</span>
             </a>
-            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'lista_secretarias' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
-               href="{% url 'lista_secretarias' %}">
-                <span class="material-symbols-outlined notranslate">domain</span>
-                <span>Gestión de Secretarías</span>
-            </a>
+            
             <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'gestion_catalogos' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
                 href="{% url 'gestion_catalogos' %}">
                 <span class="material-symbols-outlined notranslate">inventory_2</span>
@@ -83,10 +78,18 @@
             </a>
         {% endif %}
 
-        <!-- MENÚ BIENES Y SERVICIOS -->
-        {% if user.rol == 'bienes' %}
-            <div class="pt-4 mt-4 border-t border-slate-200">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-3">Gestión de Insumos</p>
+        <!-- MENÚ UNIFICADO: ADMINISTRADOR / BIENES Y SERVICIOS -->
+        {% if user.rol == 'admin'  %}
+            <!-- 1. MÓDULO OPERACIONES -->
+            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'registros_visualizacion' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+               href="{% url 'registros_visualizacion' %}">
+                <span class="material-symbols-outlined notranslate">ballot</span>
+                <span>Registros Visualización</span>
+            </a>
+
+            <!-- 2. MÓDULO GESTIÓN DE INSUMOS (BIENES) -->
+            <div class="mx-4 my-2 border-t pt-4">
+                <p class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Gestión de Insumos</p>
                 
                 <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'supervision_combustible' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
                    href="{% url 'supervision_combustible' %}">
@@ -94,16 +97,10 @@
                     <span>Supervisión de Combustible</span>
                 </a>
 
-                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'validar_consumo_bienes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
-                   href="{% url 'validar_consumo_bienes' %}">
+                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'validar_registros' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                   href="{% url 'validar_registros' %}">
                     <span class="material-symbols-outlined notranslate">verified</span>
-                    <span>Validación de Consumo</span>
-                </a>
-
-                <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'reportes_bienes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
-                   href="{% url 'reportes_bienes' %}">
-                    <span class="material-symbols-outlined notranslate">description</span>
-                    <span>Reportes Administrativos</span>
+                    <span>Validación de Registros</span>
                 </a>
 
                 <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'control_abastecimiento' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
@@ -112,29 +109,27 @@
                     <span>Control de Abastecimiento</span>
                 </a>
             </div>
-        {% endif %}
-        
-        <!-- MENÚ ADMINISTRADOR -->
-        {% if user.rol == 'admin' %}
-            <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'registros_visualizacion' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
-               href="{% url 'registros_visualizacion' %}">
-                <span class="material-symbols-outlined notranslate">ballot</span>
-                <span>Registros Visualización</span>
-            </a>
+
+            <!-- 3. MÓDULO REPORTES Y MONITOREO -->
             <div class="mx-4 my-2 border-t pt-4">
-                <p class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reportes</p>
+                <p class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reportes y Monitoreo</p>
                 <div class="space-y-1">
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="{% url 'reporte_por_chofer' %}">
-                        <span class="material-symbols-outlined mr-3 text-lg">person</span> Por Chofer
+                    <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'reporte_por_chofer' or request.resolver_match.url_name == 'reportes_bienes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                       href="{% url 'reporte_por_chofer' %}">
+                        <span class="material-symbols-outlined notranslate">person</span>
+                        <span>Reporte por Chofer</span>
                     </a>
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium transition-all" href="{% url 'reporte_por_vehiculo_select' %}">
-                        <span class="material-symbols-outlined mr-3 text-lg">directions_car</span> Por Vehículo
+
+                    <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'reporte_por_vehiculo_select' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                       href="{% url 'reporte_por_vehiculo_select' %}">
+                        <span class="material-symbols-outlined notranslate">directions_car</span>
+                        <span>Reporte por Vehículo</span>
                     </a>
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="{% url 'monitoreo_real' %}">
-                        <span class="material-symbols-outlined mr-3 text-lg">distance</span> Monitoreo Tiempo Real
-                    </a>
-                    <a class="text-slate-600 hover:bg-slate-200 rounded-lg flex items-center px-4 py-2 text-sm font-medium" href="{% url 'validar_registros' %}">
-                        <span class="material-symbols-outlined mr-3 text-lg">verified_user</span> Validación de Registros
+
+                    <a class="flex items-center gap-3 px-3 py-2.5 {% if request.resolver_match.url_name == 'monitoreo_real' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-slate-200{% endif %} rounded-lg transition-all" 
+                       href="{% url 'monitoreo_real' %}">
+                        <span class="material-symbols-outlined notranslate">distance</span>
+                        <span>Monitoreo Tiempo Real</span>
                     </a>
                 </div>
             </div>
@@ -171,6 +166,19 @@
                     <span class="material-symbols-outlined notranslate">backup</span>
                     <span>Respaldos SQL</span>
                 </a>
+                <!-- Dentro del bloque de Superadmin -->
+                <a class="flex items-center justify-between px-3 py-2.5 {% if request.resolver_match.url_name == 'lista_solicitudes' %}bg-red-50 text-red-800 font-bold{% else %}text-slate-600 hover:bg-red-50{% endif %} rounded-lg transition-all" 
+                href="{% url 'lista_solicitudes' %}">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined notranslate">mark_as_unread</span>
+                        <span>Solicitudes de Edición</span>
+                    </div>
+                    {% if num_solicitudes_pendientes > 0 %}
+                        <span class="bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                            {{ num_solicitudes_pendientes }}
+                        </span>
+                    {% endif %}
+                </a>
             </div>
 
             <!-- Botón Modo Seguro Dinámico -->
@@ -196,7 +204,7 @@
                 Nuevo Activo
             </a>
         <div class="mt-auto pt-6 border-t border-slate-200 space-y-1">
-        {% elif user.rol == 'bienes' %}
+        {% elif user.rol == 'admin' %}
             <a href="{% url 'nuevo_registro_bienes' %}" class="w-full mb-4 py-2.5 bg-primary-container text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary transition-all shadow-sm">
                 <span class="material-symbols-outlined notranslate">add</span>
                 Nuevo Registro

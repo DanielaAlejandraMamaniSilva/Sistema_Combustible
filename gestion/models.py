@@ -32,7 +32,6 @@ class Usuario(AbstractUser):
         ('superadmin', 'Super Administrador'),
         ('admin', 'Administrador'),
         ('activos', 'Encargado de Activos'),
-        ('bienes', 'Bienes y Servicios'),
         ('chofer', 'Chofer'),
     )
     ESTADOS = (
@@ -77,6 +76,8 @@ class Vehiculo(models.Model):
         ('mantenimiento', 'EN MANTENIMIENTO'),
         ('inactivo', 'INACTIVO'),
     )
+    foto = models.ImageField(upload_to='vehiculos/', null=True, blank=True, verbose_name="Fotografía del Vehículo")
+    vencimiento_soat = models.DateField(null=True, blank=True, verbose_name="Vencimiento SOAT")
     placa = models.CharField(max_length=15, unique=True)
     marca = models.CharField(max_length=50)
     modelo = models.CharField(max_length=50)
@@ -89,6 +90,28 @@ class Vehiculo(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADOS, default='operacional')
     rendimiento_km_litro = models.DecimalField(max_digits=5, decimal_places=2, default=5.00, help_text="KM por Litro")
     area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True)
+    rendimiento_km_litro = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=6.0, 
+        verbose_name="Rendimiento KM/L (Constante Matriz)"
+    )
+    combustible_inicial = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.0, 
+        verbose_name="Litros Iniciales en Tanque"
+    )
+    combustible_actual = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.0, 
+        verbose_name="Saldo de Combustible Actual"
+    )
+    fecha_actualizacion_rendimiento = models.DateField(
+        auto_now_add=True, 
+        verbose_name="Última actualización de rendimiento"
+    )
 
     TIPOS_COMBUSTIBLE = (
         ('Gasolina', 'Gasolina'),
@@ -102,6 +125,8 @@ class Vehiculo(models.Model):
     )
     def save(self, *args, **kwargs):
         accion = 'modificacion' if self.pk else 'creacion'
+        if not self.pk:
+            self.combustible_actual = self.combustible_inicial
         super().save(*args, **kwargs)
         
         LogAuditoria.objects.create(
@@ -142,7 +167,6 @@ class Asignacion(models.Model):
                     raise ValidationError({'vehiculo': "Este vehículo ya se encuentra asignado a otro conductor."})
 
     def __str__(self):
-        # Método str defensivo para evitar errores en logs o admin
         try:
             return f"{self.vehiculo.placa} - {self.chofer.get_full_name()}"
         except:
@@ -169,83 +193,123 @@ class Bitacora(models.Model):
         ('Rural', 'Rural'),
         ('Mixta', 'Mixta'),
     )
-
-    # 2. RELACIONES
+    # Relaciones y Campos base
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.CASCADE)
     chofer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
+
     reporte_cerrado = models.BooleanField(default=False)
-    
-    # 3. CAMPOS DE CONTROL
+    documento_enmienda = models.FileField(upload_to='enmiendas/', null=True, blank=True, verbose_name="Documento de Respaldo de Enmienda")
+    # Control de Viaje
     estado_viaje = models.CharField(max_length=20, choices=ESTADOS_VIAJE, default='finalizado')
-    estado_validacion = models.CharField(
-        max_length=20, 
-        choices=ESTADOS_VALIDACION, 
-        default='validado' 
-    )
-    solicitud_correccion = models.BooleanField(default=False)
-    mensaje_solicitud = models.TextField(blank=True, null=True)
-    observacion_admin = models.TextField(verbose_name="Observación de Auditoría", blank=True, null=True)
+    estado_validacion = models.CharField(max_length=20, choices=ESTADOS_VALIDACION, default='validado')
     hora_salida = models.TimeField(null=True, blank=True)
     hora_llegada = models.TimeField(null=True, blank=True)
     responsable_viaje = models.CharField(max_length=150, blank=True, null=True)
     origen = models.CharField(max_length=150, default="Potosí")
-    
-    terreno = models.CharField(max_length=20, choices=TERRENO_CHOICES, default='plano')
-    carga = models.CharField(max_length=20, choices=CARGA_CHOICES, default='ligera')
-    tipo_ruta = models.CharField(max_length=20, choices=TIPO_RUTA_CHOICES, default='Urbana')
-    distancia_estimada = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
-    km_inicial = models.PositiveIntegerField(default=0)
-    km_final = models.PositiveIntegerField(default=0)
     destino = models.CharField(max_length=255)
     objetivo_comision = models.TextField(verbose_name="Objetivo de la comisión")
-    
-    # 4. COMBUSTIBLE
+    # Factores de Cálculo
+    terreno = models.CharField(max_length=20, choices=TERRENO_CHOICES, default='plano')
+    carga = models.CharField(max_length=20, choices=CARGA_CHOICES, default='ligera')
+    rendimiento_aplicado = models.DecimalField(max_digits=5, decimal_places=2, default=6.0)
+    # Kilometraje   
+    km_inicial = models.PositiveIntegerField(default=0)
+    km_final = models.PositiveIntegerField(default=0)
+    distancia_estimada = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Combustible (Fórmulas del Reporte Matriz)
+    saldo_anterior = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     nro_vale_combustible = models.CharField(max_length=50, verbose_name="Nro. de Vale", blank=True, null=True)
     cantidad_litros = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    combustible_utilizado = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    saldo_actual = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Otros
     costo_total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Costo en Bs.", default=0)
     nro_factura = models.CharField(max_length=50, default="S/N")
+    estacion_servicio = models.CharField(max_length=150, blank=True, null=True, verbose_name="Estación de Servicio")
+    solicitud_correccion = models.BooleanField(default=False)
+    motivo_correccion = models.TextField(blank=True, null=True)
+    
+    observacion_admin = models.TextField(verbose_name="Observación de Auditoría", blank=True, null=True)
+    tipo_ruta = models.CharField(max_length=20, choices=TIPO_RUTA_CHOICES, default='Urbana')
 
     def save(self, *args, **kwargs):
-        # SOLO ejecutamos las matemáticas y actualizamos KM si el viaje ya FINALIZÓ
         if self.estado_viaje == 'finalizado' and self.km_final > self.km_inicial:
-            
-            # 1. Rendimiento base del vehículo
-            rendimiento_base = self.vehiculo.rendimiento_km_litro if self.vehiculo.rendimiento_km_litro > 0 else Decimal('5.0')
-            
-            # 2. Factores de ajuste por terreno y carga (Control de combustible inteligente)
+            self.rendimiento_aplicado = self.vehiculo.rendimiento_km_litro if self.vehiculo.rendimiento_km_litro > 0 else Decimal('5.0')
+            distancia = self.km_final - self.km_inicial
             factores_terreno = {'plano': 1.0, 'montana': 0.75, 'mixto': 0.85}
             factores_carga = {'ligera': 1.0, 'pesada': 0.85}
+            f_t = Decimal(str(factores_terreno.get(self.terreno, 1.0)))
+            f_c = Decimal(str(factores_carga.get(self.carga, 1.0)))
+            rendimiento_final = self.rendimiento_aplicado * f_t * f_c
+            recorrido = self.km_final - self.km_inicial
+            self.combustible_utilizado = Decimal(recorrido) / rendimiento_final 
+            self.saldo_actual = self.saldo_anterior + self.cantidad_litros - self.combustible_utilizado
+            ultimo = Bitacora.objects.filter(vehiculo=self.vehiculo, estado_viaje='finalizado').exclude(id=self.id).order_by('-fecha', '-id').first()
             
-            # 3. Cálculo del rendimiento final adaptado
-            rendimiento_final = rendimiento_base * Decimal(str(factores_terreno.get(self.terreno, 1.0))) * Decimal(str(factores_carga.get(self.carga, 1.0)))
+            if ultimo:
+                self.saldo_anterior = ultimo.saldo_actual
+            else:
+                self.saldo_anterior = self.vehiculo.combustible_inicial
             
-            # 4. Cálculo de distancia real
-            distancia = self.km_final - self.km_inicial
+            self.saldo_actual = self.saldo_anterior + self.cantidad_litros - self.combustible_utilizado
             
-            # 5. Cálculo de consumo teórico estimado
-            consumo_teorico = Decimal(distancia) / rendimiento_final
-            
-            # 6. Margen de tolerancia automatizado (15% según requerimiento)
-            margen_tolerancia = consumo_teorico * Decimal('0.15')
-            
-            # 7. Comparación y generación de alertas
             if self.cantidad_litros > 0:
-                diferencia = abs(Decimal(self.cantidad_litros) - consumo_teorico)
-                if diferencia > margen_tolerancia:
+                margen = self.combustible_utilizado * Decimal('0.15')
+                if abs(self.cantidad_litros - self.combustible_utilizado) > margen:
                     self.estado_validacion = 'anomalia'
                 else:
                     self.estado_validacion = 'pendiente'
-
-            # Sincronización del kilometraje actual del activo
-            self.vehiculo.kilometraje_actual = self.km_final
-            self.vehiculo.save()
+            vehiculo_a_actualizar = self.vehiculo
+            vehiculo_a_actualizar.kilometraje_actual = self.km_final
+            vehiculo_a_actualizar.save()
+            v = self.vehiculo
+            v.kilometraje_actual = self.km_final
+            v.combustible_actual = self.saldo_actual 
+            v.save()
             
         super().save(*args, **kwargs)
-
+    @property
+    def recorrido_real(self):
+        return self.km_final - self.km_inicial
+    def get_motivo_oficial(self):
+        """
+        Lógica de Negocio: Si todos los viajes del día son en Potosí/Tomás Frías,
+        devuelve 'APOYO LOCAL'. De lo contrario, devuelve el motivo real.
+        """
+        # Palabras clave para identificar la zona local
+        zona_local = ['potosí', 'potosi', 'tomas frías', 'tomas frias', 'tomás frías']
+        
+        # Obtenemos los viajes registrados en el formset para esta bitácora
+        viajes = self.viajes.all()
+        
+        # Si el chofer no registró tramos detallados, usamos el objetivo general
+        if not viajes.exists():
+            return self.objetivo_comision
+            
+        es_todo_local = True
+        
+        for v in viajes:
+            # Verificamos origen y destino de cada tramo
+            o = v.origen.lower()
+            d = v.destino.lower()
+            
+            # Si algún punto NO es local, marcamos como falso
+            o_es_local = any(zona in o for zona in zona_local)
+            d_es_local = any(zona in d for zona in zona_local)
+            
+            if not (o_es_local and d_es_local):
+                es_todo_local = False
+                break
+        
+        if es_todo_local:
+            return "APOYO LOCAL"
+        
+        return self.objetivo_comision
     def __str__(self):
-        return f"Bitácora {self.fecha.date()} - {self.vehiculo.placa}"
+        f = self.fecha.strftime('%d/%m/%Y') if self.fecha else "En proceso"
+        p = self.vehiculo.placa if self.vehiculo else "S/N"
+        return f"Bitácora {f} - {p}"       
     
 class InventarioCombustible(models.Model):
     tipo = models.CharField(max_length=50) 
@@ -288,9 +352,10 @@ class Viaje(models.Model):
         return self.km_fin - self.km_inicio
 
     def get_motivo_oficial(self):
-        if "Potosí" in self.origen and "Potosí" in self.destino:
-            return "APOYO LOCAL"
-        return f"{self.origen} a {self.destino}"
+        zona = ['potosí', 'potosi', 'tomas frías', 'tomas frias']
+        if any(z in self.origen.lower() for z in zona) and any(z in self.destino.lower() for z in zona):
+            return "Apoyo Local"
+        return self.objetivo_comision
     
     def save(self, *args, **kwargs):
         self.distancia_real = self.km_fin - self.km_inicio
@@ -306,26 +371,6 @@ class Peaje(models.Model):
     def __str__(self):
         return f"Peaje: {self.lugar} - Bs {self.monto}"       
 
-class Ciudad(models.Model):
-    nombre = models.CharField(max_length=100)
-    lat = models.FloatField()
-    lon = models.FloatField()
-
-    def __str__(self):
-        return self.nombre
-
-class Ruta(models.Model):
-    origen = models.ForeignKey(Ciudad, related_name='rutas_origen', on_delete=models.CASCADE)
-    destino = models.ForeignKey(Ciudad, related_name='rutas_destino', on_delete=models.CASCADE)
-    km = models.FloatField()
-    tiempo_horas = models.FloatField()
-
-    class Meta:
-        unique_together = ('origen', 'destino')
-
-    def __str__(self):
-        return f"{self.origen.nombre} a {self.destino.nombre}"
-
 class ValeCombustible(models.Model):
     chofer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nro_vale = models.CharField(max_length=50, unique=True)
@@ -337,9 +382,6 @@ class ValeCombustible(models.Model):
     def __str__(self):
         return f"Vale N° {self.nro_vale}"
 
-# ==========================================
-# FUNCIONES AUXILIARES DE CÁLCULO LOGÍSTICO
-# ==========================================
 def calcular_saldo_combustible(chofer, dias=15):
     limite = timezone.now() - timedelta(days=dias)
     bitacoras = Bitacora.objects.filter(chofer=chofer, fecha__gte=limite)
@@ -408,8 +450,6 @@ class LogAuditoria(models.Model):
 
     def __str__(self):
         return f"{self.fecha_hora} - {self.usuario_nombre} - {self.accion}"
-    
-# gestion/models.py
 
 class BitacoraActividad(models.Model):
     CATEGORIAS = (
@@ -448,3 +488,15 @@ class JustificacionEdicion(models.Model):
 
     def __str__(self):
         return f"Enmienda {self.tabla_afectada} ID:{self.registro_id} - {self.fecha_hora.date()}"
+    
+class SolicitudEdicion(models.Model):
+    ESTADOS = (('pendiente', 'Pendiente'), ('aprobada', 'Aprobada'), ('rechazada', 'Rechazada'))
+    
+    bitacora = models.ForeignKey(Bitacora, on_delete=models.CASCADE, related_name='solicitudes')
+    chofer = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    motivo_correccion = models.TextField()
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')
+
+    def __str__(self):
+        return f"Solicitud de {self.chofer.username} para Bitácora #{self.bitacora.id}"

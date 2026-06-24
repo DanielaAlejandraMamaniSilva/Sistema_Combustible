@@ -81,13 +81,26 @@
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Documento de Respaldo *</label>
                         <div class="relative group">
-                            <div class="flex items-center gap-4 p-4 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl group-hover:border-red-500 transition-all">
-                                <span class="material-symbols-outlined text-red-500">upload_file</span>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-[10px] font-bold text-white uppercase truncate">Subir Nota Escaneada</p>
-                                    <p class="text-[9px] text-slate-500 uppercase">PDF, JPG o PNG</p>
+                            <div class="flex flex-col items-center justify-center min-h-[160px] p-4 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl group-hover:border-red-500 transition-all cursor-pointer overflow-hidden" 
+                                onclick="triggerUpload()">
+                                
+                                <img id="image-preview" class="hidden w-full h-32 object-cover rounded-lg shadow-2xl mb-2 border border-white/10">
+
+                                <div id="pdf-icon" class="hidden flex flex-col items-center mb-2">
+                                    <span class="material-symbols-outlined text-red-500 text-5xl">picture_as_pdf</span>
                                 </div>
-                                {{ form.documento_respaldo }}
+
+                                <div id="upload-placeholder" class="flex flex-col items-center text-center">
+                                    <span class="material-symbols-outlined text-red-500 text-3xl mb-2" id="main-icon">upload_file</span>
+                                    <div class="flex-1 min-w-0">
+                                        <p id="file-name-display" class="text-[10px] font-bold text-white uppercase truncate">Subir Nota Escaneada</p>
+                                        <p id="file-info-display" class="text-[9px] text-slate-500 uppercase">PDF, JPG o PNG</p>
+                                    </div>
+                                </div>
+
+                                <div class="hidden">
+                                    {{ form.documento_respaldo }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,4 +158,40 @@
         border-color: #ef4444 !important;
     }
 </style>
+<script>
+    function triggerUpload() {
+        document.getElementById('id_documento_respaldo').click();
+    }
+
+    document.getElementById('id_documento_respaldo').onchange = function(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('image-preview');
+        const pdfIcon = document.getElementById('pdf-icon');
+        const placeholderIcon = document.getElementById('main-icon');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const fileInfoDisplay = document.getElementById('file-info-display');
+
+        if (file) {
+            fileNameDisplay.innerText = file.name;
+            fileNameDisplay.classList.add('text-red-400');
+            fileInfoDisplay.innerText = (file.size / 1024 / 1024).toFixed(2) + " MB";
+
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden'); 
+                    pdfIcon.classList.add('hidden');    
+                    placeholderIcon.classList.add('hidden'); 
+                }
+                reader.readAsDataURL(file);
+            } 
+            else if (file.type === 'application/pdf') {
+                preview.classList.add('hidden');
+                pdfIcon.classList.remove('hidden');
+                placeholderIcon.classList.add('hidden');
+            }
+        }
+    };
+</script>
 {% endblock %}

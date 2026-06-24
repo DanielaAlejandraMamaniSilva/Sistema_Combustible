@@ -1,134 +1,264 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Reporte Oficial - Potosí{% endblock %}
+
+{% block title %}Reporte Matriz de Control - GADP Potosí{% endblock %}
 
 {% block content %}
 <style>
-    /* Estilos específicos para el Reporte Matriz */
-    @media print {
-        body * { visibility: hidden !important; }
-        #printableArea, #printableArea * { visibility: visible !important; }
-        #printableArea { position: absolute; left: 0; top: 0; width: 100%; }
-        .no-print { display: none !important; }
-        @page { size: landscape; margin: 1cm; }
+    /* Estilos de Documento Formal */
+    .report-body {
+        background-color: #f1f5f9;
+        padding: 3rem 1rem;
+        min-height: 100vh;
+        font-family: 'Inter', 'Roboto', sans-serif;
     }
-    
-    .table-matriz { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 9px; color: black; }
-    .table-matriz td, .table-matriz th { border: 1px solid black; padding: 4px; text-align: center; }
-    
-    /* Colores institucionales exactos */
-    .bg-yellow { background-color: #FFFF00 !important; -webkit-print-color-adjust: exact; }
-    .bg-green-excel { background-color: #92D050 !important; -webkit-print-color-adjust: exact; }
-    .bg-orange-excel { background-color: #FFC000 !important; -webkit-print-color-adjust: exact; }
-    .bg-gray-excel { background-color: #D9D9D9 !important; -webkit-print-color-adjust: exact; }
+
+    .sheet {
+        background: white;
+        width: 297mm; /* Tamaño A4 Horizontal */
+        margin: 0 auto;
+        padding: 2cm;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        position: relative;
+        color: #1e293b;
+    }
+
+    /* Marca de agua sutil */
+    .sheet::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 400px;
+        height: 400px;
+        background-image: url('{% static "img/escudo_potosi.png" %}');
+        background-size: contain;
+        background-repeat: no-repeat;
+        opacity: 0.03;
+        pointer-events: none;
+    }
+
+    .table-official {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+        border: 1.5px solid #0f172a;
+    }
+
+    .table-official th, .table-official td {
+        border: 1px solid #334155;
+        padding: 6px 8px;
+    }
+
+    /* Colores de Auditoría Sofisticados */
+    .bg-header-yellow { background-color: #fffbeb !important; } /* Amarillo crema */
+    .bg-data-green { background-color: #f0fdf4 !important; }   /* Verde menta suave */
+    .bg-calc-orange { background-color: #fff7ed !important; }  /* Naranja melocotón */
+    .bg-label-gray { background-color: #f8fafc !important; }   /* Gris azulado */
+
+    .text-primary-potosi { color: #770003; }
+
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white !important; }
+        .report-body { padding: 0; background: white; }
+        .sheet { 
+            box-shadow: none; 
+            padding: 0; 
+            width: 100%;
+            margin: 0;
+        }
+        @page { size: landscape; margin: 0.5cm; }
+    }
 </style>
 
-<div class="max-w-7xl mx-auto page-content">
-    
-    <!-- Botones de Acción (Ocultos en impresión) -->
-    <div class="no-print flex gap-4 mb-6">
-        <button onclick="window.print()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 uppercase text-xs">
-            <span class="material-symbols-outlined">print</span> Imprimir
-        </button>
-        <a href="?anio={{anio}}&mes={{mes}}&periodo={{periodo}}&tipo=pdf" class="bg-red-800 text-white px-8 py-3 rounded-xl font-black uppercase text-xs hover:bg-red-900 transition-all">
-            Descargar PDF Oficial
-        </a>
+<div class="report-body">
+    <!-- BARRA DE HERRAMIENTAS SUPERIOR -->
+    <div class="max-w-[297mm] mx-auto no-print flex justify-between items-center mb-10">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'lista_reportes_chofer' chofer.id %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-slate-400 hover:text-primary transition-all">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div>
+                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Expediente de Control</h2>
+                <p class="text-slate-500 text-xs font-bold uppercase tracking-widest">Vista Previa de Impresión Oficial</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button onclick="window.print()" class="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl">
+                <span class="material-symbols-outlined text-sm">print</span> Imprimir Documento
+            </button>
+            <a href="?anio={{anio}}&mes={{mes_num}}&periodo={{periodo}}&tipo=pdf" class="flex items-center gap-2 px-8 py-3 bg-primary-container text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-xl shadow-red-900/20">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Descargar PDF
+            </a>
+        </div>
     </div>
 
-    <!-- REPORTE MATRIZ -->
-    <div id="printableArea" class="bg-white p-4">
-        <table class="table-matriz">
+    <!-- HOJA DE REPORTE -->
+    <div class="sheet">
+        <!-- ENCABEZADO INSTITUCIONAL -->
+        <div class="flex justify-between items-start mb-8 border-b-2 border-slate-900 pb-6">
+            <div class="flex items-center gap-6">
+                <img src="{% static 'img/logo_potosi.png' %}" class="h-20 w-auto" alt="Escudo Potosí">
+                <div class="space-y-0.5">
+                    <h1 class="text-lg font-black text-slate-900 leading-none uppercase">Gobierno Autónomo Departamental de Potosí</h1>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Secretaría Departamental Administrativa y Financiera</p>
+                    <p class="text-[9px] font-medium text-slate-400 uppercase">Unidad de Activos Fijos y Control de Combustible</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="inline-block border-2 border-primary px-4 py-2 rounded-xl">
+                    <p class="text-[10px] font-black text-primary uppercase tracking-widest">Formulario Matriz</p>
+                    <p class="text-xl font-black text-slate-900">Nº {{ bitacoras.0.id|default:"000" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dentro de planilla_oficial.html -->
+        <tr>
+            <th colspan="12" class="text-center font-bold text-sm py-2">
+                REPORTE DE USO DE COMBUSTIBLE - {{ periodo_nombre|upper }}
+            </th>
+        </tr>
+
+        <!-- BLOQUE DE INFORMACIÓN GENERAL -->
+        <table class="table-official mb-6">
+            <tr class="bg-header-yellow">
+                <td class="font-black text-slate-500 w-32">GESTIÓN</td>
+                <td class="font-bold text-slate-900">{{ anio }}</td>
+                <td class="font-black text-slate-500 w-32">SECRETARÍA</td>
+                <td class="font-bold text-slate-900" colspan="3">ADMINISTRATIVA FINANCIERA</td>
+            </tr>
+            <tr class="bg-header-yellow">
+                <td class="font-black text-slate-500">MES</td>
+                <td class="font-bold text-slate-900">{{ mes }}</td>
+                <td class="font-black text-slate-500">TIPO VEHÍCULO</td>
+                <td class="font-bold text-slate-900">{{ vehiculo.tipo|upper }}</td>
+                <td class="font-black text-slate-500 w-32">PLACA</td>
+                <td class="font-bold text-slate-900">{{ vehiculo.placa }}</td>
+            </tr>
+            <tr class="bg-header-yellow">
+                <td class="font-black text-slate-500">CONDUCTOR</td>
+                <td class="font-bold text-slate-900">{{ chofer.get_full_name|upper }}</td>
+                <td class="font-black text-slate-500">LUGAR</td>
+                <td class="font-bold text-slate-900">POTOSÍ</td>
+                <td class="font-black text-slate-500">COLOR</td>
+                <td class="font-bold text-slate-900">{{ vehiculo.color|upper }}</td>
+            </tr>
+        </table>
+
+        <!-- TABLA DE MOVIMIENTOS -->
+        <table class="table-official">
             <thead>
-                <tr><th colspan="12" class="text-center font-bold text-sm py-2">REPORTE DE USO DE COMBUSTIBLE EN VEHICULOS</th></tr>
-                <!-- CABECERAS DE DATOS -->
-                <tr>
-                    <td class="bg-yellow font-bold text-left">GESTION</td><td class="bg-yellow">{{ anio }}</td>
-                    <td colspan="3" class="bg-yellow"></td>
-                    <td colspan="2" class="bg-yellow font-bold">SECRETARIA</td>
-                    <td colspan="5" class="bg-yellow">ADMINISTRATIVA FINANCIERA</td>
+                <tr class="bg-slate-900 text-white text-center font-black">
+                    <th rowspan="2" class="w-20">FECHA</th>
+                    <th rowspan="2" class="w-16">Nº VALE</th>
+                    <th rowspan="2" class="w-12">CANT.</th>
+                    <th rowspan="2">OBJETO DE VIAJE O TRABAJO</th>
+                    <th colspan="3" class="bg-slate-800">COMBUSTIBLE (LTS)</th>
+                    <th colspan="3" class="bg-slate-800">KILOMETRAJE</th>
+                    <th rowspan="2" class="w-16">KM/L</th>
+                    <th rowspan="2" class="w-24">RESPONSABLE</th>
                 </tr>
-                <tr>
-                    <td class="bg-yellow font-bold text-left">MES</td><td class="bg-yellow">{{ mes }}</td>
-                    <td colspan="3" class="bg-yellow"></td>
-                    <td colspan="2" class="bg-yellow font-bold">TIPO VEHÍCULO</td>
-                    <td colspan="5" class="bg-yellow">{{ vehiculo.tipo|upper }}</td>
-                </tr>
-                <tr>
-                    <td class="bg-yellow font-bold text-left">CHOFER</td><td class="bg-yellow">{{ chofer.get_full_name|upper }}</td>
-                    <td colspan="3" class="bg-yellow"></td>
-                    <td colspan="2" class="bg-yellow font-bold">PLACA</td>
-                    <td colspan="5" class="bg-yellow">{{ vehiculo.placa }}</td>
-                </tr>
-                <tr>
-                    <td class="bg-yellow font-bold text-left">LUGAR</td><td class="bg-yellow">POTOSI</td>
-                    <td colspan="3" class="bg-yellow"></td>
-                    <td colspan="2" class="bg-yellow font-bold">COLOR</td>
-                    <td colspan="5" class="bg-yellow">{{ vehiculo.color|upper }}</td>
-                </tr>
-                
-                <!-- CABECERA TABLA -->
-                <tr class="bg-gray-excel font-bold">
-                    <td rowspan="2">FECHA</td><td rowspan="2">Nº VALE</td><td rowspan="2">CANT.</td><td rowspan="2">OBJETO DE VIAJE</td>
-                    <td colspan="3">COMBUSTIBLE</td><td colspan="3">KILOMETRAJE</td>
-                    <td rowspan="2">KM/L</td><td rowspan="2">RESPONSABLE</td>
-                </tr>
-                <tr class="bg-gray-excel font-bold">
-                    <td>ING</td><td>UTI</td><td>SALDO</td>
-                    <td>SAL</td><td>LLEG</td><td>REC</td>
+                <tr class="bg-slate-800 text-white text-[8px] font-bold">
+                    <th>ING.</th><th>UTI.(*)</th><th>SALDO</th>
+                    <th>SAL.</th><th>LLEG.</th><th>REC.</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- SALDO ANTERIOR -->
-                <tr>
-                    <td colspan="4" class="text-right font-bold bg-gray-excel">SALDO ANTERIOR</td>
+                <tr class="bg-label-gray font-bold italic">
+                    <td colspan="4" class="text-right pr-4">SALDO ANTERIOR ACUMULADO</td>
                     <td></td><td></td>
-                    <td class="bg-orange-excel font-bold">{{ saldo_anterior }}</td>
-                    <td class="bg-orange-excel font-bold">{{ km_inicial_mes }}</td>
-                    <td colspan="4"></td>
+                    <td class="bg-calc-orange text-center text-primary-potosi">{{ saldo_anterior }}</td>
+                    <td class="text-center">{{ km_inicial_mes }}</td>
+                    <td></td><td></td><td></td><td></td>
                 </tr>
-                <!-- VIAJES -->
+
                 {% for r in registros %}
-                <tr class="bg-green-excel">
-                    <td>{{ r.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ r.vale }}</td>
-                    <td>{{ r.ingreso }}</td>
-                    <td class="text-left">{{ r.objeto }}</td>
-                    <td>{{ r.ingreso }}</td>
-                    <td class="bg-orange-excel">{{ r.utilizado }}</td>
-                    <td class="bg-orange-excel font-bold">{{ r.saldo }}</td>
-                    <td>{{ r.salida }}</td>
-                    <td>{{ r.llegada }}</td>
-                    <td class="bg-orange-excel font-bold">{{ r.recorrido }}</td>
-                    <td>{{ vehiculo.rendimiento_km_litro }}</td>
-                    <td>{{ chofer.first_name|first }}. {{ chofer.last_name }}</td>
+                <tr class="bg-data-green">
+                    <td class="text-center font-bold">{{ r.fecha|date:"d/m/Y" }}</td>
+                    <td class="text-center">{{ r.vale|default:"---" }}</td>
+                    <td class="text-center">{{ r.ingreso }}</td>
+                    <td class="text-left font-medium">{{ r.objeto }}</td>
+                    <td class="text-center">{{ r.ingreso }}</td>
+                    <td class="bg-calc-orange text-center">{{ r.utilizado }}</td>
+                    <td class="bg-calc-orange text-center font-black">{{ r.saldo }}</td>
+                    <td class="text-center">{{ r.salida }}</td>
+                    <td class="text-center">{{ r.llegada }}</td>
+                    <td class="bg-calc-orange text-center font-black">{{ r.recorrido }}</td>
+                    <td class="text-center font-bold">{{ vehiculo.rendimiento_km_litro }}</td>
+                    <td class="text-center text-[8px]">{{ chofer.last_name }}</td>
                 </tr>
                 {% endfor %}
+
+                <!-- FILAS DE RELLENO PARA ESTÉTICA -->
+                {% with ""|center:8 as range %}
+                {% for _ in range %}
+                <tr>
+                    {% for i in "123456789012" %}<td class="py-3">&nbsp;</td>{% endfor %}
+                </tr>
+                {% endfor %}
+                {% endwith %}
             </tbody>
         </table>
 
-        <!-- RESUMEN INFERIOR -->
-        <div class="mt-4 flex gap-4">
-            <table class="table-matriz w-1/3">
-                <tr><td class="bg-gray-excel font-bold text-left">KM INICIAL</td><td class="bg-orange-excel font-bold">{{ km_inicial_mes }}</td></tr>
-                <tr><td class="bg-gray-excel font-bold text-left">KM FINAL</td><td class="bg-orange-excel font-bold">{{ vehiculo.kilometraje_actual }}</td></tr>
-                <tr><td class="bg-gray-excel font-bold text-left">KM RECORRIDO</td><td class="bg-orange-excel font-bold">{{ total_recorrido }}</td></tr>
-                <tr><td class="bg-gray-excel font-bold text-left">LITROS SOBRANTES</td><td class="bg-orange-excel font-bold">{{ saldo_final }}</td></tr>
-            </table>
+        <!-- RESUMEN TÉCNICO Y FIRMAS -->
+        <div class="mt-8 flex gap-10 items-start">
+            <!-- Cuadro de Totales -->
+            <div class="w-1/3">
+                <table class="table-official">
+                    <tr><td class="bg-label-gray font-black">KILOMETRAJE INICIAL</td><td class="bg-calc-orange text-center font-black">{{ km_inicial_mes }}</td></tr>
+                    <tr><td class="bg-label-gray font-black">KILOMETRAJE FINAL</td><td class="bg-calc-orange text-center font-black">{{ vehiculo.kilometraje_actual }}</td></tr>
+                    <tr><td class="bg-label-gray font-black">KILOMETRAJE RECORRIDO</td><td class="bg-calc-orange text-center font-black">{{ total_recorrido }}</td></tr>
+                    <tr><td class="bg-label-gray font-black">COMBUSTIBLE CARGADO</td><td class="bg-calc-orange text-center font-black">{{ total_cargado }}</td></tr>
+                    <tr><td class="bg-label-gray font-black">COMBUSTIBLE CONSUMIDO</td><td class="bg-calc-orange text-center font-black">{{ total_utilizado }}</td></tr>
+                    <tr><td class="bg-label-gray font-black text-red-700">LITROS SOBRANTES</td><td class="bg-calc-orange text-center font-black text-red-700">{{ saldo_final }}</td></tr>
+                </table>
+            </div>
 
-            <div class="w-2/3 grid grid-cols-5 gap-1 border-t border-black text-[8px] text-center pt-8">
-                <div class="border-t border-black">FIRMA CONDUCTOR</div>
-                <div class="border-t border-black">SUP. INMEDIATO</div>
-                <div class="border-t border-black">MAESTRANZA</div>
-                <div class="border-t border-black">ACTIVOS FIJOS</div>
-                <div class="border-t border-black">RESP. COMBUSTIBLE</div>
+            <!-- Bloque de Firmas Formal -->
+            <div class="flex-1 grid grid-cols-5 gap-0 border border-slate-900 h-32">
+                <div class="border-r border-slate-900 flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
+                    <div class="border-t border-slate-400 mx-2 mb-2"></div>
+                    Firma Conductor
+                </div>
+                <div class="border-r border-slate-900 flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
+                    <div class="border-t border-slate-400 mx-2 mb-2"></div>
+                    Inmediato Superior
+                </div>
+                <div class="border-r border-slate-900 flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
+                    <div class="border-t border-slate-400 mx-2 mb-2"></div>
+                    Maestranza
+                </div>
+                <div class="border-r border-slate-900 flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
+                    <div class="border-t border-slate-400 mx-2 mb-2"></div>
+                    Activos Fijos
+                </div>
+                <div class="flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
+                    <div class="border-t border-slate-400 mx-2 mb-2"></div>
+                    Resp. Combustible
+                </div>
             </div>
         </div>
-        
+
         <!-- OBSERVACIONES -->
-        <table class="table-matriz mt-4">
-            <tr><td class="bg-gray-excel font-bold w-32">OBSERVACIONES</td><td class="bg-green-excel h-10"></td></tr>
-            <tr><td class="bg-green-excel h-10" colspan="2"></td></tr>
-        </table>
+        <div class="mt-6">
+            <table class="table-official">
+                <tr>
+                    <td class="bg-label-gray font-black w-32 text-center">OBSERVACIONES</td>
+                    <td class="bg-data-green h-12"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer de página -->
+        <div class="mt-10 flex justify-between items-center text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+            <span>Generado por: {{ user.get_full_name }}</span>
+            <span>Fecha de Emisión: {% now "d/m/Y H:i" %}</span>
+            <span>Soberanía Potosí - Sistema de Gestión de Flotas</span>
+        </div>
     </div>
 </div>
 {% endblock %}

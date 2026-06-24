@@ -59,12 +59,12 @@
                         </td>
                         <td class="px-8 py-5 text-right">
                             <div class="flex justify-end gap-2">
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Imprimir Memorándum">
+                                <a href="{% url 'imprimir_memorandum' asig.id %}" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Imprimir Memorándum">
                                     <span class="material-symbols-outlined notranslate text-lg">print</span>
-                                </button>
-                                <button class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Ver Detalles">
+                                </a>
+                                <a href="{% url 'ver_memorandum' asig.id %}" target="_blank" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-primary transition-colors" title="Ver Documento Digital">
                                     <span class="material-symbols-outlined notranslate text-lg">visibility</span>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>

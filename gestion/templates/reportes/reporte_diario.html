@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white p-10 shadow-lg border border-slate-200" id="printableArea">
+    
+    <!-- Encabezado (Igual al anterior) -->
+    <div class="border-b-2 border-slate-900 pb-6 mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-black uppercase font-headline">Bitácora de Viajes: {{ bitacora.fecha|date:"d/m/Y" }}</h1>
+            <p class="text-slate-500 font-bold uppercase text-xs tracking-widest">Gobierno Autónomo Departamental de Potosí</p>
+        </div>
+        <div class="text-right">
+            <span class="bg-green-100 text-green-700 px-4 py-1 rounded-full font-black text-[10px] uppercase border border-green-200">
+                Estado: {{ bitacora.get_estado_validacion_display }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Info Chofer/Vehículo -->
+    <div class="grid grid-cols-3 gap-4 mb-8 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+        <div>
+            <p class="text-[9px] font-black text-slate-400 uppercase">Chofer</p>
+            <p class="text-sm font-bold text-slate-800">{{ bitacora.chofer.get_full_name }}</p>
+        </div>
+        <div>
+            <p class="text-[9px] font-black text-slate-400 uppercase">Vehículo</p>
+            <p class="text-sm font-bold text-slate-800">{{ bitacora.vehiculo.placa }}</p>
+        </div>
+        <div class="text-right">
+            <p class="text-[9px] font-black text-slate-400 uppercase">Total Día</p>
+            <p class="text-sm font-black text-primary">{{ total_km_dia }} KM</p>
+        </div>
+    </div>
+
+    <!-- TABLA DE TRAYECTOS (CORREGIDA) -->
+    <div class="space-y-4">
+        <h3 class="font-black text-slate-900 uppercase text-xs tracking-widest ml-2">Detalle de Trayectos</h3>
+        <table class="w-full border-collapse border border-slate-200 text-xs">
+            <thead>
+                <tr class="bg-slate-100 text-slate-600">
+                    <th class="border border-slate-200 p-3 text-center">HORARIO</th>
+                    <th class="border border-slate-200 p-3 text-left">RUTA (ORIGEN → DESTINO)</th>
+                    <th class="border border-slate-200 p-3 text-left">MOTIVO / COMISIÓN</th>
+                    <th class="border border-slate-200 p-3 text-right">RECORRIDO</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in viajes %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="border border-slate-200 p-3 text-center font-mono">
+                        {{ v.hora_salida|time:"H:i" }} - {{ v.hora_llegada|time:"H:i" }}
+                    </td>
+                    <td class="border border-slate-200 p-3 font-bold uppercase">
+                        {{ v.origen }} <span class="text-slate-300 mx-1">→</span> {{ v.destino }}
+                    </td>
+                    <td class="border border-slate-200 p-3 text-slate-600">
+                        {{ v.objetivo_comision }}
+                    </td>
+                    <td class="border border-slate-200 p-3 text-right font-black text-slate-900">
+                        {{ v.recorrido_real }} KM
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Firmas (Igual al anterior) -->
+    <div class="grid grid-cols-2 gap-20 mt-20 px-10 no-print">
+        <div class="border-t border-slate-900 text-center pt-2">
+            <p class="text-[10px] font-black uppercase">Firma Conductor</p>
+        </div>
+        <div class="border-t border-slate-900 text-center pt-2">
+            <p class="text-[10px] font-black uppercase">Sello y Firma Responsable</p>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto mt-6 flex justify-end no-print">
+    <button onclick="window.print()" class="bg-slate-900 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-black transition-all">
+        Imprimir Reporte Diario
+    </button>
+</div>
+{% endblock %}

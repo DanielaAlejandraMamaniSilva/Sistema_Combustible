@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: letter; margin: 2cm; }
+        body { font-family: Helvetica, Arial, sans-serif; color: #000; line-height: 1.4; font-size: 11px; }
+        .header { text-align: center; border-bottom: 2px solid #770003; padding-bottom: 10px; margin-bottom: 20px; }
+        .title { font-size: 16px; font-weight: bold; text-align: center; text-decoration: underline; margin-bottom: 20px; }
+        .section-title { background-color: #f2f2f2; font-weight: bold; padding: 5px; border: 1px solid #000; margin-top: 15px; text-transform: uppercase; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .data-table td { border: 1px solid #000; padding: 6px; vertical-align: top; }
+        .label { font-weight: bold; width: 30%; background-color: #fafafa; }
+        .content-text { text-align: justify; margin-top: 20px; }
+        .footer-signatures { margin-top: 60px; width: 100%; }
+        .signature-box { text-align: center; width: 45%; }
+        .line { border-top: 1px solid #000; width: 80%; margin: 0 auto; margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2 style="color: #770003; margin: 0;">GOBIERNO AUTÓNOMO DE POTOSÍ</h2>
+        <p style="margin: 0; font-weight: bold;">DIRECCIÓN DE ACTIVOS FIJOS Y FLOTA VEHICULAR</p>
+    </div>
+
+    <div class="title">ACTA DE ENTREGA Y RECEPCIÓN DE VEHÍCULO</div>
+
+    <p>En la ciudad de Potosí, a fecha <strong>{{ asig.fecha_asignacion|date:"d \d\e F \d\e Y" }}</strong>, se procede a la entrega formal del activo bajo las siguientes condiciones:</p>
+
+    <div class="section-title">1. Datos del Conductor (Depositario)</div>
+    <table class="data-table">
+        <tr>
+            <td class="label">Nombre Completo:</td>
+            <td>{{ asig.chofer.get_full_name|upper }}</td>
+        </tr>
+        <tr>
+            <td class="label">Cédula de Identidad:</td>
+            <td>{{ asig.chofer.ci|default:"S/N" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Licencia de Conducir:</td>
+            <td>{{ asig.chofer.licencia_conducir }} (Cat. {{ asig.chofer.categoria_licencia }})</td>
+        </tr>
+    </table>
+
+    <div class="section-title">2. Especificaciones del Activo</div>
+    <table class="data-table">
+        <tr>
+            <td class="label">Placa de Control:</td>
+            <td style="font-weight: bold; font-size: 13px;">{{ asig.vehiculo.placa }}</td>
+            <td class="label">Marca / Modelo:</td>
+            <td>{{ asig.vehiculo.marca }} {{ asig.vehiculo.modelo }}</td>
+        </tr>
+        <tr>
+            <td class="label">Color:</td>
+            <td>{{ asig.vehiculo.color|upper }}</td>
+            <td class="label">Año:</td>
+            <td>{{ asig.vehiculo.anio }}</td>
+        </tr>
+        <tr>
+            <td class="label">Nº de Chasis:</td>
+            <td>{{ asig.vehiculo.nro_chasis }}</td>
+            <td class="label">Kilometraje Entrega:</td>
+            <td style="font-weight: bold;">{{ asig.vehiculo.kilometraje_actual }} KM</td>
+        </tr>
+    </table>
+
+    <div class="section-title">3. Declaración de Responsabilidad</div>
+    <div class="content-text">
+        El conductor arriba mencionado declara recibir el vehículo en condiciones operativas y se compromete a:
+        <ul>
+            <li>Utilizar el vehículo exclusivamente para funciones oficiales de la <strong>{{ asig.area.nombre }}</strong>.</li>
+            <li>Velar por el mantenimiento preventivo y la limpieza de la unidad.</li>
+            <li>Registrar obligatoriamente todos los recorridos y cargas de combustible en el sistema digital.</li>
+            <li>Asumir la responsabilidad civil y penal por el mal uso o negligencia en la custodia del activo.</li>
+        </ul>
+    </div>
+
+    <table class="footer-signatures">
+        <tr>
+            <td class="signature-box">
+                <div class="line"></div>
+                <strong>ENTREGUÉ CONFORME</strong><br>
+                Responsable de Activos Fijos<br>
+                GADP Potosí
+            </td>
+            <td style="width: 10%;"></td>
+            <td class="signature-box">
+                <div class="line"></div>
+                <strong>RECIBÍ CONFORME</strong><br>
+                {{ asig.chofer.get_full_name }}<br>
+                CI: {{ asig.chofer.ci }}
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 50px; text-align: center; font-size: 8px; color: #666;">
+        Documento generado por el Sistema de Control de Flotas - Soberanía Potosí<br>
+        ID de Transacción: #ASIG-{{ asig.id|stringformat:"05d" }}
+    </div>
+</body>
+</html>

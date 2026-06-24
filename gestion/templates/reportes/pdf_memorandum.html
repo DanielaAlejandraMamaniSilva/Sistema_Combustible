@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: letter; margin: 2cm; }
+        body { font-family: Helvetica, sans-serif; color: #333; line-height: 1.5; }
+        .header { text-align: center; border-bottom: 2px solid #770003; padding-bottom: 10px; }
+        .title { font-size: 18px; font-weight: bold; margin-top: 20px; text-align: center; }
+        .content { margin-top: 30px; }
+        .info-table { width: 100%; margin-top: 20px; }
+        .info-table td { padding: 5px; vertical-align: top; }
+        .footer { margin-top: 100px; text-align: center; }
+        .signature { border-top: 1px solid #000; width: 200px; margin: 0 auto; padding-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3 style="color: #770003; margin: 0;">GOBIERNO AUTÓNOMO DE POTOSÍ</h3>
+        <p style="font-size: 10px; margin: 0;">ADMINISTRACIÓN DE ACTIVOS Y FLOTA</p>
+    </div>
+
+    <div class="title">MEMORÁNDUM DE ASIGNACIÓN VEHICULAR<br>Nº {{ asig.nro_memorandum }}</div>
+
+    <div class="content">
+        <table class="info-table">
+            <tr><td width="20%"><strong>DE:</strong></td><td>ENCARGADO DE ACTIVOS FIJOS</td></tr>
+            <tr><td><strong>PARA:</strong></td><td>{{ asig.chofer.get_full_name|upper }}</td></tr>
+            <tr><td><strong>REF:</strong></td><td>ASIGNACIÓN DE RESPONSABILIDAD DE ACTIVO</td></tr>
+            <tr><td><strong>FECHA:</strong></td><td>{{ asig.fecha_asignacion|date:"d \d\e F \d\e Y" }}</td></tr>
+        </table>
+
+        <p style="margin-top: 30px; text-align: justify;">
+            Mediante el presente, se le comunica que a partir de la fecha se le asigna la responsabilidad directa del vehículo oficial con placa <strong>{{ asig.vehiculo.placa }}</strong>, marca {{ asig.vehiculo.marca }}, modelo {{ asig.vehiculo.modelo }}.
+        </p>
+        <p style="text-align: justify;">
+            Usted es responsable del buen uso, mantenimiento y custodia del activo mencionado, debiendo registrar obligatoriamente cada movimiento en la bitácora digital del sistema.
+        </p>
+    </div>
+
+    <div class="footer">
+        <div class="signature">
+            <strong>ENTREGADO POR</strong><br>
+            <span style="font-size: 9px;">Activos Fijos - GADP</span>
+        </div>
+    </div>
+</body>
+</html>

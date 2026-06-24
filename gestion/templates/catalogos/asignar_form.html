@@ -1,54 +1,143 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-8">
-    {% if messages %}
-        <div class="space-y-3">
-            {% for message in messages %}
-                <div class="flex items-center justify-between p-4 {% if message.tags == 'error' %}bg-red-600{% else %}bg-green-600{% endif %} text-white rounded-2xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined notranslate">
-                            {% if message.tags == 'error' %}report{% else %}check_circle{% endif %}
-                        </span>
-                        <p class="text-xs font-black uppercase tracking-widest">{{ message }}</p>
-                    </div>
-                    <button onclick="this.parentElement.remove()" class="opacity-50 hover:opacity-100">
-                        <span class="material-symbols-outlined notranslate">close</span>
-                    </button>
-                </div>
-            {% endfor %}
+<div class="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500">
+    
+    <!-- Cabecera de Protocolo -->
+    <div class="flex justify-between items-center border-b border-slate-200 pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">Protocolo de Asignación</h2>
+            <p class="text-slate-500 font-medium uppercase text-[10px] tracking-[0.3em]">Gestión de Responsabilidad Civil y Activos</p>
         </div>
-    {% endif %}
-
-    <div class="bg-white p-10 rounded-2xl shadow-sm border border-slate-100">
-        <div class="mb-8 border-b pb-6">
-            <h2 class="text-3xl font-black font-headline uppercase text-slate-900 tracking-tight">Nueva Asignación de Vehículo</h2>
-            <p class="text-slate-500 font-medium">Vincule una unidad vehicular con un conductor oficial.</p>
+        <div class="bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
+            <span class="text-[10px] font-black text-primary uppercase tracking-widest">GADP POTOSÍ</span>
         </div>
-
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
-            {% csrf_token %}
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {% for field in form %}
-                <div class="flex flex-col gap-2">
-                    <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <p class="text-red-600 text-[10px] font-bold">{{ field.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="pt-8 border-t border-slate-50 flex gap-4">
-                <button type="submit" class="flex-1 bg-primary-container text-white py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-primary transition-all">
-                    Confirmar Asignación
-                </button>
-                <a href="{% url 'dashboard' %}" class="px-8 py-4 bg-slate-100 text-slate-600 rounded-xl font-bold uppercase tracking-widest text-center">
-                    Cancelar
-                </a>
-            </div>
-        </form>
     </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- COLUMNA IZQUIERDA: VÍNCULO (7 Columnas) -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+                    
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-3">
+                        <span class="w-1.5 h-6 bg-primary rounded-full"></span>
+                        Vínculo de Activo y Personal
+                    </h3>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Vehículo -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Unidad Vehicular (Placa / Marca)</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate">directions_car</span>
+                                <div class="pl-12">{{ form.vehiculo }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Chofer -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Conductor Responsable</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate">person</span>
+                                <div class="pl-12">{{ form.chofer }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Secretaría -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Secretaría / Dirección Destino</label>
+                            <div class="relative">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate">account_balance</span>
+                                <div class="pl-12">{{ form.area }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: RESPALDO LEGAL (5 Columnas) -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-slate-900 p-10 rounded-[2.5rem] shadow-2xl text-white relative overflow-hidden">
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-primary opacity-20 rounded-full blur-3xl"></div>
+                    
+                    <h3 class="text-sm font-black text-red-500 uppercase tracking-widest mb-8 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-sm">verified_user</span>
+                        Respaldo Legal
+                    </h3>
+
+                    <div class="space-y-6">
+                        <!-- Nro Memorandum -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nº de Memorándum</label>
+                            {{ form.nro_memorandum }}
+                        </div>
+
+                        <!-- Carga de Acta -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Acta de Entrega (PDF/Imagen)</label>
+                            <div class="relative group">
+                                <div id="drop-area" class="flex flex-col items-center justify-center p-6 bg-white/5 border-2 border-dashed border-white/20 rounded-2xl group-hover:border-red-500 transition-all cursor-pointer"
+                                     onclick="document.getElementById('id_documento_acta').click();">
+                                    <span class="material-symbols-outlined text-red-500 text-3xl mb-2">upload_file</span>
+                                    <p id="file-name" class="text-[10px] font-bold text-white uppercase text-center">Subir documento escaneado</p>
+                                </div>
+                                <div class="hidden">{{ form.documento_acta }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 pt-8 border-t border-white/10">
+                        <button type="submit" class="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-red-900/40 hover:bg-red-900 transition-all active:scale-95">
+                            CONFIRMAR ASIGNACIÓN
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="block text-center mt-4 text-slate-500 font-bold uppercase text-[9px] tracking-widest hover:text-white transition-colors">
+                            Cancelar Operación
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Aviso de Normativa -->
+                <div class="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex gap-4">
+                    <span class="material-symbols-outlined text-blue-600">info</span>
+                    <p class="text-[10px] text-blue-800 font-medium leading-relaxed italic">
+                        De acuerdo al D.S. 27327, la asignación de vehículos oficiales debe estar respaldada por un memorándum de designación específico.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+
+<script>
+    // Mostrar nombre del archivo seleccionado
+    const fileInput = document.getElementById('id_documento_acta');
+    const fileNameDisplay = document.getElementById('file-name');
+    const dropArea = document.getElementById('drop-area');
+
+    fileInput.onchange = evt => {
+        const [file] = fileInput.files;
+        if (file) {
+            fileNameDisplay.innerText = "ARCHIVO: " + file.name;
+            fileNameDisplay.classList.add('text-green-400');
+            dropArea.classList.add('border-green-500', 'bg-green-500/5');
+        }
+    }
+</script>
+
+<style>
+    /* Ajuste para los selectores de Django */
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.5em;
+    }
+</style>
 {% endblock %}

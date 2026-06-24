@@ -1,37 +1,66 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="space-y-8">
-    <div class="border-b pb-6">
-        <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Actas de Entrega y Recepción</h2>
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Cabecera -->
+    <div class="border-b border-slate-200 pb-6">
+        <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">Actas de Entrega y Recepción</h2>
         <p class="text-slate-500 font-medium">Control de documentos de responsabilidad civil por activo asignado.</p>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
-                <tr>
-                    <th class="px-8 py-4">Vehículo</th>
-                    <th class="px-8 py-4">Chofer Asignado</th>
-                    <th class="px-8 py-4 text-center">Estado del Documento</th>
-                    <th class="px-8 py-4 text-right">Acción</th>
+    <!-- Tabla Sofisticada -->
+    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-100">
+                    <th class="px-8 py-5">Vehículo / Activo</th>
+                    <th class="px-8 py-5">Conductor Responsable</th>
+                    <th class="px-8 py-5 text-center">Estado Documental</th>
+                    <th class="px-8 py-5 text-right">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="divide-y text-sm">
+            <tbody class="divide-y divide-slate-50">
                 {% for a in asignaciones %}
-                <tr class="hover:bg-slate-50 transition-colors">
+                <tr class="hover:bg-slate-50/50 transition-colors group">
                     <td class="px-8 py-5">
-                        <p class="font-black text-slate-900">{{ a.vehiculo.placa }}</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                                <span class="material-symbols-outlined notranslate">directions_car</span>
+                            </div>
+                            <div>
+                                <p class="font-black text-slate-900 uppercase text-sm">{{ a.vehiculo.placa }}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ a.vehiculo.marca }} {{ a.vehiculo.modelo }}</p>
+                            </div>
+                        </div>
                     </td>
-                    <td class="px-8 py-5 font-medium">{{ a.chofer.get_full_name }}</td>
+                    <td class="px-8 py-5">
+                        <p class="font-bold text-slate-700 text-sm">{{ a.chofer.get_full_name }}</p>
+                        <p class="text-[10px] text-slate-400 font-medium uppercase">CI: {{ a.chofer.ci|default:"S/N" }}</p>
+                    </td>
                     <td class="px-8 py-5 text-center">
                         {% if a.documento_acta %}
-                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold text-[9px] uppercase">DOCUMENTO CARGADO</span>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-100">
+                                <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                                <span class="text-[9px] font-black uppercase">Documento Cargado</span>
+                            </div>
                         {% else %}
-                            <span class="bg-red-50 text-red-600 px-3 py-1 rounded-full font-bold text-[9px] uppercase">SIN ACTA DIGITAL</span>
+                            <div class="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-full border border-red-100">
+                                <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                                <span class="text-[9px] font-black uppercase">Sin Acta Digital</span>
+                            </div>
                         {% endif %}
                     </td>
                     <td class="px-8 py-5 text-right">
-                        <button class="text-primary font-black uppercase text-xs hover:underline">Subir / Ver</button>
+                        <div class="flex justify-end gap-2">
+                            {% if a.documento_acta %}
+                                <a href="{{ a.documento_acta.url }}" target="_blank" class="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-primary hover:text-white transition-all" title="Ver Acta">
+                                    <span class="material-symbols-outlined notranslate text-lg">visibility</span>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'subir_acta' a.id %}" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all shadow-md">
+                                <span class="material-symbols-outlined text-sm notranslate">upload_file</span>
+                                {% if a.documento_acta %}Reemplazar{% else %}Subir Acta{% endif %}
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

@@ -83,7 +83,9 @@
                                             </button>
                                         </form>
                                     {% endif %}
-
+                                    <a href="{% url 'kardex_vehiculo' v.id %}" class="p-1.5 text-slate-400 hover:text-blue-600 transition-all" title="Ver Kardex del Vehículo">
+                                        <span class="material-symbols-outlined notranslate">assignment_ind</span>
+                                    </a>
                                     <!-- Botones de Edición y Borrado -->
                                     <div class="flex items-center border-l pl-3 ml-1 gap-1">
                                         <a href="{% url 'editar_vehiculo' v.pk %}" class="p-1.5 text-slate-400 hover:text-primary transition-all">
@@ -119,99 +121,220 @@
 
     <!-- 2. Pestaña de Áreas -->
     <div id="tab-areas" class="tab-content hidden">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-6 bg-slate-50/50 flex justify-between items-center border-b border-slate-100">
-                <h3 class="font-bold text-slate-700 uppercase text-[10px] tracking-[0.2em]">Secretarías y Direcciones</h3>
-                <a href="{% url 'crear_secretaria' %}" class="bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-md hover:bg-primary transition-all">
-                    + Nueva Área
+        <div class="space-y-6">
+            <!-- Barra de Resumen Rápido -->
+            <div class="flex justify-between items-center">
+                <div class="flex gap-4">
+                    <div class="bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Total Secretarías</p>
+                        <p class="text-lg font-black text-primary">{{ areas.count }}</p>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+                        <p class="text-[9px] font-black text-slate-400 uppercase">Áreas Activas</p>
+                        <p class="text-lg font-black text-green-600">
+                            {{ areas.count }} <!-- Aquí podrías filtrar por estado si lo tienes -->
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'crear_secretaria' %}" class="bg-primary text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">add_business</span>
+                    Nueva Secretaría
                 </a>
             </div>
-            <table class="w-full text-left">
-                <thead class="bg-white text-[10px] font-black uppercase text-slate-400 border-b">
-                    <tr>
-                        <th class="px-8 py-4">Nombre de la Dependencia</th>
-                        <th class="px-8 py-4 text-right">Acción</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y text-sm">
-                    {% for a in areas %}
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-5 font-bold text-slate-900">{{ a.nombre }}</td>
-                        <td class="px-8 py-5 text-right">
-                            <a href="{% url 'editar_secretaria' a.id %}" class="text-primary hover:text-red-900 font-bold text-xs uppercase tracking-tighter transition-colors">
-                                Editar
+
+            <!-- Grid de Secretarías -->
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {% for s in areas %}
+                <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group">
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                                <span class="material-symbols-outlined text-2xl">account_balance</span>
+                            </div>
+                            <span class="bg-green-50 text-green-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-green-100">
+                                Activo
+                            </span>
+                        </div>
+
+                        <div class="space-y-1 mb-8">
+                            <h4 class="font-black text-slate-900 uppercase text-sm leading-tight h-10 overflow-hidden">
+                                {{ s.nombre }}
+                            </h4>
+                            <p class="text-[10px] font-bold text-primary tracking-widest uppercase opacity-70">
+                                {{ s.area_especifica|default:"Dependencia General" }}
+                            </p>
+                        </div>
+
+                        <!-- Estadísticas de la Secretaría -->
+                        <div class="grid grid-cols-2 gap-4 py-4 border-y border-slate-50">
+                            <div class="text-center border-r border-slate-50">
+                                <p class="text-[18px] font-black text-slate-900">{{ s.num_vehiculos }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Vehículos</p>
+                            </div>
+                            <div class="text-center cursor-pointer group/stat" onclick="abrirModalChoferes('{{ s.id }}')">
+                                <p class="text-[18px] font-black text-primary group-hover/stat:scale-125 transition-transform">{{ s.num_choferes }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase group-hover/stat:text-primary transition-colors">Choferes</p>
+                            </div>
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="mt-6 flex gap-2">
+                            <a href="{% url 'editar_secretaria' s.id %}" class="flex-1 bg-slate-50 text-slate-600 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all text-center">
+                                Editar Área
                             </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="2" class="px-8 py-16 text-center text-slate-400 italic">No hay áreas registradas.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-span-full py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                    <span class="material-symbols-outlined text-slate-200 text-6xl mb-4">domain_disabled</span>
+                    <p class="text-slate-400 font-bold uppercase tracking-widest">No hay secretarías registradas</p>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-    <!-- 3. Catálogo de Combustibles -->
-    <div id="tab-combustible" class="tab-content hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-8 bg-slate-50/30 flex justify-between items-center border-b border-slate-100">
-                <div>
-                    <h3 class="font-black text-slate-900 uppercase text-sm tracking-widest flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary notranslate">local_gas_station</span>
-                        Insumos de Energía y Combustible
-                    </h3>
-                </div>
-                <!-- BOTÓN AHORA FUNCIONAL -->
-                <a href="{% url 'crear_combustible' %}" class="bg-primary-container text-white px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-900/20 hover:bg-primary hover:-translate-y-0.5 transition-all flex items-center gap-2">
-                    <span class="material-symbols-outlined text-sm">add</span>
+    <!-- 3. Pestaña de Tipos de Combustible (Ajustada a Carga en Gasolinera) -->
+    <div id="tab-combustible" class="tab-content hidden">
+        <div class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.3em] px-2">Monitoreo de Consumo Externo</h3>
+                <a href="{% url 'crear_combustible' %}" class="bg-primary text-white px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">add_circle</span>
                     Nuevo Insumo
                 </a>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">
-                        <tr>
-                            <th class="px-10 py-5">Descripción del Insumo</th>
-                            <th class="px-10 py-5 text-center">Vehículos Asociados</th> <!-- NUEVA COLUMNA -->
-                            <th class="px-10 py-5 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-50 text-sm">
-                        {% for c in combustibles %}
-                        <tr class="hover:bg-slate-50/50 transition-colors group">
-                            <td class="px-10 py-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                                        <span class="material-symbols-outlined notranslate">oil_barrel</span>
-                                    </div>
-                                    <p class="font-bold text-slate-900 uppercase tracking-tight">{{ c.nombre }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {% for c in combustibles %}
+                <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden group hover:shadow-xl transition-all duration-500">
+                    <div class="p-8">
+                        <div class="flex justify-between items-start mb-8">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                    <span class="material-symbols-outlined text-3xl">local_gas_station</span>
                                 </div>
-                            </td>
-                            <!-- CONTEO DINÁMICO -->
-                            <td class="px-10 py-6 text-center">
-                                <div class="inline-flex flex-col items-center">
-                                    <span class="text-lg font-black text-slate-900">{{ c.total_vehiculos }}</span>
-                                    <span class="text-[8px] font-black text-slate-400 uppercase">Unidades</span>
+                                <div>
+                                    <h4 class="font-black text-slate-900 uppercase text-lg tracking-tight">{{ c.nombre }}</h4>
+                                    <p class="text-[10px] font-bold text-primary uppercase tracking-widest opacity-70">Carga en Estación de Servicio</p>
                                 </div>
-                            </td>
-                            <td class="px-10 py-6 text-right">
-                                <a href="{% url 'editar_combustible' c.id %}" class="p-2 text-slate-400 hover:text-primary hover:bg-white hover:shadow-sm rounded-xl transition-all">
-                                    <span class="material-symbols-outlined text-lg">edit</span>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            </div>
+                        </div>
+
+                        <!-- Monitor de Gasto Mensual -->
+                        <div class="space-y-3 mb-8">
+                            <div class="flex justify-between items-end">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Consumo Acumulado (Mes Actual)</p>
+                                <p class="text-sm font-black text-slate-900">{{ c.consumo_mes|floatformat:2 }} <span class="text-[10px] font-normal text-slate-400">LTS</span></p>
+                            </div>
+                            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
+                                <!-- La barra ahora indica cuánto del cupo mensual se ha consumido -->
+                                <div class="h-full rounded-full bg-primary transition-all duration-1000" 
+                                    style="width: {{ c.porcentaje_uso }}%"></div>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <p class="text-[9px] text-slate-400 font-bold uppercase">Gasto Total: <span class="text-slate-900">Bs. {{ c.gasto_mes|floatformat:2 }}</span></p>
+                                <p class="text-[9px] text-primary font-black uppercase">{{ c.porcentaje_uso }}% del cupo</p>
+                            </div>
+                        </div>
+
+                        <!-- Datos de Impacto -->
+                        <div class="grid grid-cols-2 gap-4 py-6 border-t border-slate-50">
+                            <div class="flex flex-col items-center border-r border-slate-50">
+                                <span class="material-symbols-outlined text-slate-300 mb-1">payments</span>
+                                <p class="text-xl font-black text-slate-900">Bs. {{ c.gasto_mes|floatformat:0 }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Inversión Mensual</p>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <span class="material-symbols-outlined text-slate-300 mb-1">directions_car</span>
+                                <p class="text-xl font-black text-slate-900">{{ c.num_vehiculos }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">Unidades Activas</p>
+                            </div>
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="mt-4 flex gap-2">
+                            <a href="{% url 'detalle_vales_combustible' c.id %}" class="flex-1 bg-slate-900 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all text-center flex items-center justify-center">
+                                Ver Detalle de Vales
+                            </a>
+                            <a href="{% url 'editar_combustible' c.id %}" class="px-4 bg-slate-50 text-slate-400 rounded-xl hover:text-primary transition-all border border-slate-100 flex items-center justify-center">
+                                <span class="material-symbols-outlined notranslate text-sm">edit</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
+</div>
+<!-- MODAL DE LISTADO DE PERSONAL -->
+<div id="modal-choferes" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 no-print">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="cerrarModalChoferes()"></div>
+    <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 id="modal-area-titulo" class="text-lg font-black text-slate-900 uppercase leading-tight">---</h3>
+                    <p class="text-[10px] font-bold text-primary uppercase tracking-widest">Personal Asignado</p>
+                </div>
+                <button onclick="cerrarModalChoferes()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-600 transition-all">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            </div>
 
+            <div id="lista-choferes-content" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                <!-- Aquí se cargarán los choferes vía JS -->
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Lógica de Pestañas -->
 <script>
+    function abrirModalChoferes(areaId) {
+        const content = document.getElementById('lista-choferes-content');
+        content.innerHTML = '<div class="py-10 text-center"><span class="material-symbols-outlined animate-spin text-primary">sync</span></div>';
+        
+        document.getElementById('modal-choferes').classList.remove('hidden');
+        document.getElementById('modal-choferes').classList.add('flex');
+
+        fetch(`/api/area/${areaId}/choferes/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modal-area-titulo').innerText = data.area;
+                content.innerHTML = '';
+                
+                if (data.choferes.length === 0) {
+                    content.innerHTML = '<p class="text-center text-slate-400 text-xs py-10 italic">No hay personal asignado a esta área.</p>';
+                    return;
+                }
+
+                data.choferes.forEach(c => {
+                    const fotoHtml = c.foto 
+                        ? `<img src="${c.foto}" class="w-full h-full object-cover">`
+                        : `<span class="material-symbols-outlined text-slate-300">person</span>`;
+
+                    content.innerHTML += `
+                        <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center">
+                                ${fotoHtml}
+                            </div>
+                            <div>
+                                <p class="text-xs font-black text-slate-800 uppercase">${c.nombre}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase">CI: ${c.ci}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function cerrarModalChoferes() {
+        document.getElementById('modal-choferes').classList.add('hidden');
+        document.getElementById('modal-choferes').classList.remove('flex');
+    }
+<!-- Lógica de Pestañas -->
     function showTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => {
             el.classList.add('hidden');

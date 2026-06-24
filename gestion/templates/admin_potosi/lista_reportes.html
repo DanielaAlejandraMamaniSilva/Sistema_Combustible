@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-500">
+    
+    <!-- PERFIL DEL CONDUCTOR (Header) -->
+    <div class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 flex justify-between items-center">
+        <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-lg overflow-hidden">
+                {% if chofer.foto %}<img src="{{ chofer.foto.url }}" class="w-full h-full object-cover">{% else %}{{ chofer.first_name|first }}{{ chofer.last_name|first }}{% endif %}
+            </div>
+            <div>
+                <h2 class="text-2xl font-black font-headline text-slate-900 uppercase tracking-tight">{{ chofer.get_full_name }}</h2>
+                <p class="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Expediente: {{ chofer.ci }}</p>
+            </div>
+        </div>
+        <a href="{% url 'reporte_por_chofer' %}" class="bg-slate-100 text-slate-600 px-6 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all">Volver</a>
+    </div>
+
+    <!-- DASHBOARD DE SELECCIÓN -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- TARJETA 1: REPORTE DIARIO (CON CALENDARIO) -->
+        <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+            <div class="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center text-blue-600 mb-6 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500">
+                <span class="material-symbols-outlined text-4xl notranslate">calendar_today</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Reporte Diario</h3>
+            <p class="text-xs text-slate-400 mt-2 mb-8">Seleccione un día en el calendario para ver el detalle de rutas.</p>
+            
+            <form action="{% url 'buscar_diario_por_fecha' chofer.id %}" method="GET" class="w-full space-y-4">
+                <!-- INPUT TIPO FECHA (CALENDARIO NATIVO OFFLINE) -->
+                <input type="date" name="fecha" required 
+                       class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 text-xs font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                
+                <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-blue-600 transition-all">
+                    Generar Hoja de Ruta
+                </button>
+            </form>
+        </div>
+
+        <!-- TARJETA 2: REPORTE QUINCENAL -->
+        <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+            <div class="w-20 h-20 bg-amber-50 rounded-[2rem] flex items-center justify-center text-amber-600 mb-6 group-hover:bg-amber-500 group-hover:text-white transition-all duration-500">
+                <span class="material-symbols-outlined text-4xl notranslate">event_repeat</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Reporte Quincenal</h3>
+            <p class="text-xs text-slate-400 mt-2 mb-8">Planilla matriz acumulada de 15 días para control de combustible.</p>
+            
+            <div class="w-full space-y-3">
+                <select id="mes-quincena" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700">
+                    {% for m in meses %}
+                        <option value="{{ m|date:'n' }}">{{ m|date:"F Y" }}</option>
+                    {% endfor %}
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="generarMatriz('quincena1')" class="bg-slate-100 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase hover:bg-amber-500 hover:text-white transition-all">1ra Quincena</button>
+                    <button onclick="generarMatriz('quincena2')" class="bg-slate-100 text-slate-600 py-3 rounded-xl font-black text-[9px] uppercase hover:bg-amber-500 hover:text-white transition-all">2da Quincena</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETA 3: REPORTE MENSUAL -->
+        <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex flex-col items-center text-center group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+            <div class="w-20 h-20 bg-red-50 rounded-[2rem] flex items-center justify-center text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                <span class="material-symbols-outlined text-4xl notranslate">calendar_month</span>
+            </div>
+            <h3 class="text-lg font-black text-slate-900 uppercase tracking-tighter">Reporte Mensual</h3>
+            <p class="text-xs text-slate-400 mt-2 mb-8">Cierre total del mes. Consolidado oficial para auditoría y descargos.</p>
+            
+            <div class="w-full space-y-4">
+                <select id="mes-mensual" class="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700">
+                    {% for m in meses %}
+                        <option value="{{ m|date:'n' }}">{{ m|date:"F Y" }}</option>
+                    {% endfor %}
+                </select>
+                <button onclick="generarMatriz('mensual')" class="w-full bg-primary text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 hover:bg-red-900 transition-all">Descargar Matriz Total</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function generarMatriz(periodo) {
+        const choferId = "{{ chofer.id }}";
+        const anio = "{{ anio_actual }}";
+        let mes = (periodo === 'mensual') ? document.getElementById('mes-mensual').value : document.getElementById('mes-quincena').value;
+        window.location.href = `/reportes/planilla-oficial/${choferId}/?anio=${anio}&mes=${mes}&periodo=${periodo}`;
+    }
+</script>
+{% endblock %}

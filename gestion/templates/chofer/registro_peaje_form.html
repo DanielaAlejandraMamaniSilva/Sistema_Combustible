@@ -1,13 +1,106 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border">
-    <h2 class="text-xl font-black mb-6 uppercase">Nuevo Registro de Peaje</h2>
-    <form method="POST" enctype="multipart/form-data" class="space-y-4">
-        {% csrf_token %}
-        <input type="text" name="lugar" placeholder="Ubicación" class="w-full p-3 bg-slate-50 border rounded-lg" required>
-        <input type="number" name="monto" step="0.01" placeholder="Monto Bs." class="w-full p-3 bg-slate-50 border rounded-lg" required>
-        <input type="file" name="comprobante" class="w-full p-3 bg-slate-50 border rounded-lg" required>
-        <button class="w-full bg-red-800 text-white py-3 rounded-lg font-bold uppercase">Registrar Peaje</button>
-    </form>
+<div class="max-w-3xl mx-auto space-y-8">
+    <!-- Cabecera del Formulario -->
+    <div class="flex justify-between items-center border-b border-slate-200 pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">Nuevo Registro de Peaje</h2>
+            <p class="text-slate-500 font-medium uppercase text-[10px] tracking-widest">Control de Tránsito y Gastos Operativos</p>
+        </div>
+        <div class="bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
+            <span class="text-[10px] font-black text-primary uppercase tracking-widest">GADP POTOSÍ</span>
+        </div>
+    </div>
+
+    <!-- Card Principal -->
+    <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Ubicación -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Ubicación / Tranca</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate">location_on</span>
+                        <input type="text" name="lugar" required 
+                               class="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-700" 
+                               placeholder="Ej: Tranca de San Antonio">
+                    </div>
+                </div>
+
+                <!-- Monto -->
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Monto Pagado (Bs)</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 notranslate">payments</span>
+                        <input type="number" name="monto" step="0.01" required 
+                               class="w-full pl-12 p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-black text-slate-900 text-lg" 
+                               placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Carga de Comprobante -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">Fotografía del Comprobante / Ticket</label>
+                <div class="relative group">
+                    <div id="drop-area" class="w-full h-64 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center transition-all group-hover:border-primary group-hover:bg-primary/5 cursor-pointer overflow-hidden"
+                         onclick="document.getElementById('id_comprobante').click();">
+                        
+                        <div id="placeholder-content" class="text-center">
+                            <div class="w-16 h-16 bg-white rounded-2xl shadow-md flex items-center justify-center text-slate-300 mx-auto mb-4 group-hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-3xl notranslate">add_a_photo</span>
+                            </div>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Haga clic para subir o capturar foto</p>
+                            <p class="text-[9px] text-slate-300 mt-1 uppercase">Formatos: JPG, PNG (Máx 5MB)</p>
+                        </div>
+
+                        <img id="preview-img" class="hidden w-full h-full object-cover">
+                    </div>
+                    
+                    <!-- Input real oculto -->
+                    <input type="file" name="comprobante" id="id_comprobante" accept="image/*" required class="hidden">
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex gap-4 pt-4">
+                <button type="submit" class="flex-1 bg-primary text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 hover:bg-red-900 transition-all active:scale-95 flex items-center justify-center gap-3">
+                    <span class="material-symbols-outlined notranslate">save</span>
+                    REGISTRAR PEAJE
+                </button>
+                <a href="{% url 'lista_vales_peajes' %}" class="px-12 py-5 bg-slate-100 text-slate-500 rounded-[1.5rem] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center">
+                    CANCELAR
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 flex gap-4 items-start">
+        <span class="material-symbols-outlined text-amber-600 notranslate">info</span>
+        <p class="text-[11px] text-amber-800 font-medium leading-relaxed">
+            <strong>Nota Importante:</strong> La fotografía debe ser legible y mostrar claramente el monto y la fecha del ticket para evitar el rechazo del registro por parte de la unidad de Bienes y Servicios.
+        </p>
+    </div>
 </div>
+
+<script>
+    const fileInput = document.getElementById('id_comprobante');
+    const previewImg = document.getElementById('preview-img');
+    const placeholder = document.getElementById('placeholder-content');
+
+    fileInput.onchange = evt => {
+        const [file] = fileInput.files;
+        if (file) {
+            previewImg.src = URL.createObjectURL(file);
+            previewImg.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        }
+    }
+</script>
 {% endblock %}

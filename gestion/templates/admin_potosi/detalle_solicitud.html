@@ -16,82 +16,89 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- COLUMNA IZQUIERDA: LA SOLICITUD Y MENSAJE -->
+        <!-- COLUMNA IZQUIERDA: AUDITORÍA Y SOLICITUDES -->
         <div class="lg:col-span-7 space-y-6">
             
-            <!-- PANEL DEL MENSAJE DEL CHOFER (Aquí ves la solicitud) -->
-            {% if bitacora.solicitud_cambio %}
-            <div class="bg-amber-50 border-2 border-amber-200 rounded-[2.5rem] p-8 relative overflow-hidden shadow-inner">
+            <!-- 1. CERTIFICADO DE ENMIENDA (Solo si hubo cambios legales) -->
+            {% if bitacora.documento_enmienda %}
+            <div class="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden border border-white/10">
                 <div class="absolute top-0 right-0 p-6 opacity-10">
-                    <span class="material-symbols-outlined text-7xl text-amber-600 notranslate">chat_bubble</span>
+                    <span class="material-symbols-outlined text-7xl notranslate">gavel</span>
                 </div>
                 
                 <div class="relative z-10">
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center text-white shadow-lg">
-                            <span class="material-symbols-outlined notranslate">priority_high</span>
+                        <div class="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center shadow-lg">
+                            <span class="material-symbols-outlined text-white notranslate">history_edu</span>
                         </div>
-                        <div>
-                            <h3 class="font-black text-amber-900 uppercase text-sm tracking-widest">Solicitud de Corrección</h3>
-                            <p class="text-amber-700 text-[9px] font-bold uppercase">Enviada por: {{ bitacora.chofer.get_full_name }}</p>
-                        </div>
+                        <h3 class="font-black uppercase text-xs tracking-[0.2em]">Certificado de Enmienda</h3>
                     </div>
-                    
-                    <div class="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-amber-100 shadow-sm">
-                        <p class="text-slate-400 text-[9px] font-black uppercase mb-2 tracking-widest">Mensaje del Conductor:</p>
-                        <p class="text-slate-800 font-medium italic leading-relaxed text-sm">
-                            "{{ bitacora.mensaje_solicitud|default:'El chofer no especificó un mensaje, pero requiere una enmienda en este registro.' }}"
+
+                    <div class="space-y-4">
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Este registro fue rectificado manualmente por la administración. Se adjunta el documento probatorio para fines de auditoría.
                         </p>
+                        
+                        <a href="{{ bitacora.documento_enmienda.url }}" target="_blank" class="inline-flex items-center gap-3 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-2xl transition-all group">
+                            <span class="material-symbols-outlined text-red-500 group-hover:scale-110 transition-transform">picture_as_pdf</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest">Ver Nota de Respaldo</span>
+                        </a>
+                    </div>
+
+                    <!-- Bitácora de Cambios (Logs) -->
+                    <div class="mt-8 pt-6 border-t border-white/5">
+                        <p class="text-[9px] font-black text-slate-500 uppercase mb-3 tracking-widest">Bitácora de Cambios:</p>
+                        {% for log in logs_enmienda %}
+                        <div class="text-[10px] text-slate-300 font-medium bg-white/5 p-3 rounded-xl mb-2 border border-white/5">
+                            <span class="text-red-400 font-bold">[{{ log.fecha_hora|date:"d/m/y H:i" }}]</span> {{ log.descripcion }}
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-            </div>
-            {% else %}
-            <div class="bg-white border border-slate-100 rounded-[2.5rem] p-10 text-center">
-                <span class="material-symbols-outlined text-slate-200 text-6xl mb-4">verified</span>
-                <p class="text-slate-400 font-bold uppercase text-xs tracking-widest">Este registro no tiene solicitudes de cambio.</p>
             </div>
             {% endif %}
 
-            <!-- DETALLE DE TRAMOS (Punto 4 de requerimientos) -->
-            <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-                <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.3em] mb-6 flex items-center gap-3">
-                    <span class="w-1.5 h-4 bg-primary rounded-full"></span> Detalle de Movimientos
-                </h3>
-                <div class="space-y-3">
-                    {% for v in viajes %}
-                    <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <span class="text-primary material-symbols-outlined text-sm">route</span>
-                            <p class="text-xs font-bold text-slate-700">{{ v.origen }} <span class="text-slate-300 mx-2">→</span> {{ v.destino }}</p>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400">{{ v.km_recorridos }} KM</span>
+            <!-- 2. ESTADO DE SOLICITUDES DEL CHOFER -->
+            <div class="bg-white border border-slate-100 rounded-[2.5rem] p-10 text-center shadow-sm">
+                {% if bitacora.solicitud_correccion %}
+                    <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mx-auto mb-4">
+                        <span class="material-symbols-outlined text-3xl animate-pulse">priority_high</span>
                     </div>
-                    {% empty %}
-                    <p class="text-xs text-slate-400 italic text-center py-4">No hay tramos detallados para este registro.</p>
-                    {% endfor %}
-                </div>
+                    <h3 class="text-sm font-black text-amber-900 uppercase tracking-widest">Solicitud de Rectificación</h3>
+                    <div class="bg-slate-50 p-6 rounded-2xl mt-4 border border-slate-100">
+                        <p class="text-slate-400 text-[9px] font-black uppercase mb-2 tracking-widest">Mensaje del Conductor:</p>
+                        <p class="text-slate-600 text-sm italic">"{{ bitacora.motivo_correccion }}"</p>
+                    </div>
+                {% else %}
+                    <div class="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4">
+                        <span class="material-symbols-outlined text-3xl">verified</span>
+                    </div>
+                    <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Este registro no tiene solicitudes de cambio.</p>
+                {% endif %}
             </div>
         </div>
 
-        <!-- COLUMNA DERECHA: ACCIÓN DE ENMIENDA -->
+        <!-- COLUMNA DERECHA: ACCIONES Y ACTIVO -->
         <div class="lg:col-span-5 space-y-6">
+            
+            <!-- Acción Administrativa -->
             <div class="bg-slate-900 p-10 rounded-[3rem] shadow-2xl text-white relative overflow-hidden border border-white/5">
                 <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-primary opacity-20 rounded-full blur-3xl"></div>
                 
                 <div class="relative z-10">
-                    <h3 class="text-xs font-black uppercase tracking-[0.3em] text-primary-fixed mb-6">Acción Administrativa</h3>
+                    <h3 class="text-xs font-black uppercase tracking-[0.3em] text-red-400 mb-6">Acción Administrativa</h3>
                     <p class="text-slate-400 text-sm leading-relaxed mb-10">
-                        Si la solicitud del chofer es procedente, inicie el **Protocolo de Enmienda**. El sistema le solicitará la **Nota de Respaldo** obligatoria.
+                        Si la solicitud del chofer es procedente, inicie el **Protocolo de Enmienda**. El sistema registrará el cambio en los logs de auditoría.
                     </p>
                     
-                    <a href="{% url 'enmienda_bitacora' bitacora.id %}" class="w-full bg-primary-container text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary transition-all shadow-xl shadow-red-900/20 active:scale-95">
+                    <a href="{% url 'editar_bitacora_admin' bitacora.id %}" class="w-full bg-primary-container text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-primary transition-all shadow-xl shadow-red-900/20 active:scale-95">
                         <span class="material-symbols-outlined notranslate">gavel</span>
                         Realizar Enmienda
                     </a>
                 </div>
             </div>
 
-            <!-- Info del Vehículo -->
+            <!-- Activo Vinculado -->
             <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                 <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Activo Vinculado</h4>
                 <div class="flex items-center gap-4">

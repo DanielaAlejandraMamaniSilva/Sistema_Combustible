@@ -1,90 +1,191 @@
 {% extends 'base.html' %}
-{% block title %}Vales y Peajes{% endblock %}
+{% block title %}Vales y Peajes - GADP Potosí{% endblock %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto space-y-8">
-    <div class="flex justify-between items-center border-b pb-6">
-        <div>
-            <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Vales y Peajes</h2>
-            <p class="text-slate-500 font-medium">Control de Insumos y Tránsito</p>
+    
+    <!-- CABECERA SOFISTICADA Y COMPACTA -->
+    <div class="relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-sm">
+        <div class="relative z-10 flex justify-between items-center">
+            <div>
+                <span class="text-primary font-black uppercase text-[9px] tracking-[0.4em] mb-2 block">Administración de Insumos y Tránsito</span>
+                <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">Vales y Peajes</h2>
+                <p class="text-slate-500 text-xs font-medium mt-1">Control de abastecimiento y registro de gastos de peaje.</p>
+            </div>
+            <div class="hidden md:block">
+                <!-- El resumen ahora se enfoca en Peajes, ya que los vales son control físico -->
+                <div class="bg-slate-900 text-white p-4 rounded-[2rem] shadow-xl flex items-center gap-4 border border-white/10">
+                    <div class="text-right">
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Gastos en Peajes</p>
+                        <p class="text-xl font-black text-white">Bs. {{ total_peajes|default:"0.00" }}</p>
+                    </div>
+                    <span class="material-symbols-outlined text-primary text-3xl notranslate">payments</span>
+                </div>
+            </div>
         </div>
+        <span class="material-symbols-outlined absolute -right-8 -bottom-8 text-slate-50 text-[12rem] notranslate select-none opacity-50">receipt_long</span>
     </div>
 
-    <!-- Sección Vales -->
-    <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <h3 class="font-bold flex items-center gap-2 text-red-900 mb-6 uppercase text-xs tracking-widest font-headline">
-            <span class="material-symbols-outlined text-primary notranslate">local_gas_station</span> Vales Registrados
-        </h3>
-        <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b border-slate-100">
-                <tr>
-                    <th class="p-4">Voucher #</th>
-                    <th class="p-4">Fecha</th>
-                    <th class="p-4">Litros</th>
-                    <th class="p-4">Monto</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-                {% for b in vales %}
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="p-4 font-black text-red-800">{{ b.nro_vale_combustible }}</td>
-                    <td class="p-4 text-slate-600 font-medium">{{ b.fecha|date:"d/m/Y" }}</td>
-                    <td class="p-4 font-bold text-slate-900">{{ b.cantidad_litros }} L</td>
-                    <td class="p-4 font-black text-slate-900">Bs. {{ b.costo_total }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="p-8 text-center text-slate-400 italic">No hay vales de combustible registrados.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
+    <div class="grid grid-cols-1 gap-8">
+        
+        <!-- SECCIÓN 1: VALES DE COMBUSTIBLE (CONTROL FÍSICO - SIN COSTOS) -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3 px-4">
+                <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-sm notranslate">local_gas_station</span>
+                </div>
+                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Vales de Combustible Registrados</h3>
+            </div>
 
-    <!-- Sección Peajes -->
-    <section class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-        <h3 class="font-bold flex items-center gap-2 text-red-900 mb-6 uppercase text-xs tracking-widest font-headline">
-            <span class="material-symbols-outlined text-primary notranslate">toll</span> Peajes Registrados
-        </h3>
-        <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-[10px] font-black text-slate-400 uppercase border-b border-slate-100">
-                <tr>
-                    <th class="p-4">Ubicación</th>
-                    <th class="p-4">Fecha</th>
-                    <th class="p-4">Hora</th>
-                    <th class="p-4">Monto</th>
-                    <th class="p-4">Comprobante</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-50">
-                {% for p in peajes %}
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="p-4 font-bold text-slate-900">{{ p.lugar }}</td>
-                    <td class="p-4 text-slate-600 font-medium">{{ p.fecha|date:"d/m/Y" }}</td>
-                    <td class="p-4 text-slate-600 font-medium">{{ p.fecha|date:"h:i A" }}</td>
-                    <td class="p-4 font-black text-slate-900">Bs. {{ p.monto }}</td>
-                    <td class="p-4">
-                        {% if p.comprobante %}
-                            <!-- MINIATURA DE LA FOTO DEL PEAJE -->
-                            <a href="{{ p.comprobante.url }}" target="_blank" class="block w-16 h-8 rounded border border-slate-300 overflow-hidden shadow-sm hover:opacity-80 hover:shadow-md transition-all" title="Ver comprobante completo">
-                                <img src="{{ p.comprobante.url }}" alt="Ticket Peaje" class="w-full h-full object-cover">
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 text-slate-400 uppercase text-[9px] font-black tracking-widest border-b border-slate-100">
+                            <th class="px-8 py-4">Nº Voucher</th>
+                            <th class="px-8 py-4">Estación de Servicio</th>
+                            <th class="px-8 py-4">Fecha / Hora</th>
+                            <th class="px-8 py-4 text-right">Volumen</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for b in vales %}
+                        <tr class="hover:bg-slate-50/50 transition-all group">
+                            <td class="px-8 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                                        <span class="material-symbols-outlined text-sm notranslate">confirmation_number</span>
+                                    </div>
+                                    <p class="font-black text-slate-900 text-xs uppercase">
+                                        {{ b.nro_vale_combustible|default:"S/N" }}
+                                    </p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-slate-300 text-sm notranslate">location_on</span>
+                                    <span class="text-xs font-bold text-slate-600 uppercase">{{ b.estacion_servicio|default:"No especificado" }}</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-4">
+                                <span class="text-xs font-bold text-slate-700">{{ b.fecha|date:"d M Y" }}</span>
+                                <span class="text-[10px] text-slate-400 ml-1">{{ b.fecha|date:"H:i" }}</span>
+                            </td>
+                            <td class="px-8 py-4 text-right">
+                                <span class="text-sm font-black text-primary">{{ b.cantidad_litros|floatformat:2 }}</span>
+                                <span class="text-[9px] font-bold text-primary/50 ml-0.5 uppercase">Lts</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-8 py-12 text-center">
+                                <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">Sin registros de combustible</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- PAGINACIÓN VALES (BOTONES MOVIDOS A LA IZQUIERDA) -->
+                {% if vales.paginator.num_pages > 1 %}
+                <div class="bg-slate-50/50 p-4 border-t border-slate-100 flex justify-between items-center px-8">
+                    <div class="flex gap-4 items-center">
+                        {% if vales.has_previous %}
+                            <a href="?page_vales={{ vales.previous_page_number }}&page_peajes={{ peajes.number }}" class="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                                <span class="material-symbols-outlined text-sm notranslate">chevron_left</span>
                             </a>
-                        {% else %}
-                            <span class="material-symbols-outlined text-red-300 notranslate" title="Sin comprobante">block</span>
                         {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="p-8 text-center text-slate-400 italic">No hay peajes registrados.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
+                        {% if vales.has_next %}
+                            <a href="?page_vales={{ vales.next_page_number }}&page_peajes={{ peajes.number }}" class="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                                <span class="material-symbols-outlined text-sm notranslate">chevron_right</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Página {{ vales.number }} de {{ vales.paginator.num_pages }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
 
-    <a href="{% url 'registrar_peaje' %}" class="fixed bottom-8 right-8 bg-red-900 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:bg-red-800 transition-all hover:scale-105 z-50">
-        <span class="material-symbols-outlined text-3xl notranslate">add</span>
+        <!-- SECCIÓN 2: PEAJES Y TRÁNSITO (MANTIENE COSTOS) -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3 px-4">
+                <div class="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    <span class="material-symbols-outlined text-sm notranslate">toll</span>
+                </div>
+                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Control de Peajes y Tránsito</h3>
+            </div>
+
+            <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 text-slate-400 uppercase text-[9px] font-black tracking-widest border-b border-slate-100">
+                            <th class="px-8 py-4">Ubicación / Tranca</th>
+                            <th class="px-8 py-4">Fecha / Hora</th>
+                            <th class="px-8 py-4 text-right">Monto Pagado</th>
+                            <th class="px-8 py-4 text-center">Comprobante</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for p in peajes %}
+                        <tr class="hover:bg-slate-50/50 transition-all group">
+                            <td class="px-8 py-4">
+                                <p class="font-black text-slate-900 text-xs uppercase">{{ p.lugar }}</p>
+                            </td>
+                            <td class="px-8 py-4">
+                                <span class="text-xs font-bold text-slate-700">{{ p.fecha|date:"d M Y" }}</span>
+                                <span class="text-[10px] text-slate-400 ml-1">{{ p.fecha|date:"H:i" }}</span>
+                            </td>
+                            <td class="px-8 py-4 text-right">
+                                <p class="text-sm font-black text-slate-900">Bs. {{ p.monto }}</p>
+                            </td>
+                            <td class="px-8 py-4 text-center">
+                                {% if p.comprobante %}
+                                <a href="{{ p.comprobante.url }}" target="_blank" class="inline-block group/img relative">
+                                    <div class="w-12 h-8 rounded-lg overflow-hidden border border-slate-200 shadow-sm group-hover/img:scale-110 transition-transform">
+                                        <img src="{{ p.comprobante.url }}" class="w-full h-full object-cover">
+                                    </div>
+                                </a>
+                                {% else %}
+                                <span class="material-symbols-outlined text-slate-200 text-sm notranslate">no_photography</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-8 py-12 text-center">
+                                <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">No hay peajes registrados</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- PAGINACIÓN PEAJES (BOTONES MOVIDOS A LA IZQUIERDA) -->
+                {% if peajes.paginator.num_pages > 1 %}
+                <div class="bg-slate-50/50 p-4 border-t border-slate-100 flex justify-between items-center px-8">
+                    <div class="flex gap-2">
+                        {% if peajes.has_previous %}
+                            <a href="?page_peajes={{ peajes.previous_page_number }}&page_vales={{ vales.number }}" class="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                                <span class="material-symbols-outlined text-sm notranslate">chevron_left</span>
+                            </a>
+                        {% endif %}
+                        {% if peajes.has_next %}
+                            <a href="?page_peajes={{ peajes.next_page_number }}&page_vales={{ vales.number }}" class="p-2 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all">
+                                <span class="material-symbols-outlined text-sm notranslate">chevron_right</span>
+                            </a>
+                        {% endif %}
+                    </div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Página {{ peajes.number }} de {{ peajes.paginator.num_pages }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+
+    <!-- BOTÓN FLOTANTE -->
+    <a href="{% url 'registrar_peaje' %}" class="fixed bottom-10 right-10 w-16 h-16 bg-primary-container text-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(161,5,8,0.3)] flex items-center justify-center hover:bg-primary hover:-translate-y-2 transition-all duration-300 group z-50">
+        <span class="material-symbols-outlined text-3xl notranslate group-hover:rotate-90 transition-transform duration-500">add</span>
+        <span class="absolute right-20 bg-slate-900 text-white text-[10px] font-black px-4 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-widest">Registrar Peaje</span>
     </a>
 </div>
 {% endblock %}

@@ -1,44 +1,231 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Historial de Viajes - GADP Potosí{% endblock %}
+
 {% block content %}
-<div class="space-y-8">
-    <h2 class="text-3xl font-black font-headline uppercase text-slate-900">Historial de Viajes</h2>
-    <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
-        <table class="w-full text-left">
-            <thead class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 border-b">
-                <tr>
-                    <th class="px-8 py-4">Fecha</th>
-                    <th class="px-8 py-4">Vale</th>
-                    <th class="px-8 py-4">Misión</th>
-                    <th class="px-8 py-4 text-right">Recorrido</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y text-sm">
-                {% for v in viajes %}
-                <tr>
-                    <td>{{ v.fecha|date:"d/m/Y" }}</td>
-                    <td>{{ v.destino }}</td>
-                    <td class="text-right">
-                        {% if not v.solicitud_correccion %}
-                            <a href="{% url 'solicitar_correccion' v.id %}" class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold uppercase">
-                                Solicitar Cambio
-                            </a>
-                        {% else %}
-                            <span class="text-[10px] text-amber-500 italic font-bold">Corrección Pendiente...</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-                <tr class="hover:bg-slate-50">
-                    <td class="px-8 py-5 font-bold text-slate-900">{{ v.fecha|date:"d/m/Y" }}</td>
-                    <td class="px-8 py-5">#{{ v.nro_vale_combustible }}</td>
-                    <td class="px-8 py-5 text-slate-600">{{ v.destino }}</td>
-                    <td class="px-8 py-5 text-right font-black">{{ v.km_final|add:v.km_inicial|add:"-0" }} Km</td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 italic">No tienes viajes registrados.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="max-w-7xl mx-auto space-y-8">
+    
+    <!-- CABECERA CON FILTROS Y MÉTRICAS -->
+    <div class="relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-10 shadow-sm">
+        <div class="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8">
+            <div>
+                <span class="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-3 block">Archivo Digital de Conducción</span>
+                <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Historial de Viajes</h2>
+                <p class="text-slate-500 font-medium mt-2">Registro cronológico y auditoría de rutas realizadas.</p>
+            </div>
+
+            <!-- FORMULARIO DE FILTRO POR MES -->
+            <form method="GET" class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-100 shadow-inner">
+                <div class="flex items-center px-3 gap-2 border-r border-slate-200">
+                    <span class="material-symbols-outlined text-slate-400 text-sm">calendar_month</span>
+                    <select name="mes" class="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-slate-600 focus:ring-0 cursor-pointer">
+                        <option value="0">Todos los meses</option>
+                        {% for num, nombre in meses %}
+                            <option value="{{ num }}" {% if mes_actual == num %}selected{% endif %}>{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="bg-primary text-white px-5 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-red-900 transition-all shadow-md active:scale-95">
+                    Filtrar
+                </button>
+            </form>
+
+            <div class="text-right bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl min-w-[200px]">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Recorrido en Periodo</p>
+                <p class="text-3xl font-black font-headline">{{ total_km_historico|default:"0" }} <span class="text-sm text-primary">KM</span></p>
+            </div>
+        </div>
+        <span class="material-symbols-outlined absolute -right-8 -bottom-8 text-slate-50 text-[15rem] notranslate select-none opacity-50">history</span>
+    </div>
+
+    <!-- TABLA DE RESULTADOS -->
+    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-900 text-white">
+                    <tr class="text-[10px] font-black uppercase tracking-[0.2em]">
+                        <th class="px-8 py-5">Fecha y Hora</th>
+                        <th class="px-8 py-5">Ruta / Misión</th>
+                        <th class="px-8 py-5">Vehículo</th>
+                        <th class="px-8 py-5 text-right">Distancia</th>
+                        <th class="px-8 py-5 text-center">Estado</th>
+                        <th class="px-8 py-5 text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for v in page_obj %}
+                    <tr class="hover:bg-slate-50/50 transition-all group">
+                        <td class="px-8 py-6">
+                            <p class="font-black text-slate-900 uppercase text-sm">{{ v.fecha|date:"d M Y" }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">{{ v.hora_salida|time:"H:i" }} - {{ v.hora_llegada|time:"H:i" }}</p>
+                        </td>
+                        <td class="px-8 py-6">
+                            <p class="font-black text-slate-700 text-xs uppercase">{{ v.destino }}</p>
+                            <p class="text-[9px] text-primary font-black uppercase tracking-widest mt-1">VALE: {{ v.nro_vale_combustible|default:"S/N" }}</p>
+                        </td>
+                        <td class="px-8 py-6">
+                            <span class="font-mono font-bold text-slate-500 uppercase">{{ v.vehiculo.placa }}</span>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <p class="text-sm font-black text-slate-900">{{ v.recorrido_real }} Km</p>
+                            <p class="text-[9px] text-slate-300 font-bold">{{ v.km_inicial }} - {{ v.km_final }}</p>
+                        </td>
+                        <td class="px-8 py-6 text-center">
+                            <span class="bg-green-50 text-green-600 px-3 py-1 rounded-full text-[9px] font-black uppercase border border-green-100">Finalizado</span>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <button onclick="abrirDetalleViaje('{{ v.fecha|date:'l, d F Y' }}', 
+                                                            '{{ v.vehiculo.placa }}', 
+                                                            '{{ v.nro_vale_combustible|default:'S/N' }}', 
+                                                            '{{ v.recorrido_real }}', 
+                                                            '{{ v.origen }}', 
+                                                            '{{ v.destino }}', 
+                                                            '{{ v.objetivo_comision }}', 
+                                                            '{{ v.hora_salida|time:'H:i' }}',
+                                                            '{{ v.hora_llegada|time:'H:i' }}',
+                                                            '{{ v.combustible_utilizado }}',
+                                                            '{{ v.cantidad_litros }}',
+                                                            '{{ v.saldo_actual }}')" 
+                                    class="text-[10px] font-black text-red-700 uppercase tracking-widest hover:underline flex items-center justify-end gap-1 ml-auto">
+                                Ver Detalle
+                                <span class="material-symbols-outlined text-sm">open_in_new</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center opacity-20">
+                                <span class="material-symbols-outlined text-6xl mb-2">route</span>
+                                <p class="text-xs font-black uppercase tracking-widest">No se encontraron viajes en este periodo</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="px-8 py-6 bg-slate-50/50 border-t border-slate-100">
+            {% include 'components/pagination.html' %}
+        </div>
     </div>
 </div>
+
+<!-- VENTANA MODAL FLOTANTE -->
+<div id="modal-detalle" class="fixed inset-0 z-[150] hidden flex items-center justify-center p-4 no-print">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="cerrarModal()"></div>
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        
+        <!-- Encabezado Rojo -->
+        <div class="bg-primary p-6 text-white relative">
+            <button onclick="cerrarModal()" class="absolute top-4 right-4 hover:rotate-90 transition-transform">
+                <span class="material-symbols-outlined notranslate">close</span>
+            </button>
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Resumen de Operación</span>
+            <h3 id="modal-fecha" class="text-xl font-black font-headline uppercase mt-1">---</h3>
+            
+            <div class="grid grid-cols-3 gap-2 mt-4">
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10 text-center">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Vehículo</p>
+                    <p id="modal-vehiculo" class="text-[10px] font-black">---</p>
+                </div>
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10 text-center">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Vale</p>
+                    <p id="modal-vale" class="text-[10px] font-black">---</p>
+                </div>
+                <div class="bg-white/10 p-2 rounded-xl border border-white/10 text-center">
+                    <p class="text-[7px] font-bold uppercase opacity-60">Recorrido</p>
+                    <p id="modal-recorrido" class="text-[10px] font-black">---</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <div class="bg-black/20 p-2 rounded-xl border border-white/5 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-red-300">schedule</span>
+                    <div>
+                        <p class="text-[7px] font-bold uppercase opacity-60">Tiempo en Ruta</p>
+                        <p id="modal-tiempo" class="text-[10px] font-black">---</p>
+                    </div>
+                </div>
+                <div class="bg-black/20 p-2 rounded-xl border border-white/5 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm text-red-300">local_gas_station</span>
+                    <div>
+                        <p class="text-[7px] font-bold uppercase opacity-60">Consumo Estimado</p>
+                        <p id="modal-consumo" class="text-[10px] font-black">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-6">
+            <!-- Balance de Combustible -->
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Cargado (Ingreso)</p>
+                    <p id="modal-cargado" class="text-sm font-black text-slate-900">0.00 Lts</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Saldo en Tanque</p>
+                    <p id="modal-saldo" class="text-sm font-black text-green-600">0.00 Lts</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+                <span class="w-1.5 h-5 bg-primary rounded-full"></span>
+                <h4 class="font-black text-slate-900 uppercase text-xs tracking-widest">Itinerario Detallado</h4>
+            </div>
+            
+            <div class="space-y-6 relative">
+                <div class="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-100"></div>
+                <div class="relative flex gap-4">
+                    <div class="w-6 h-6 rounded-full bg-white border-4 border-primary z-10 flex shrink-0"></div>
+                    <div>
+                        <p id="modal-ruta" class="text-xs font-black text-slate-900 uppercase">---</p>
+                        <p id="modal-motivo" class="text-[10px] text-slate-500 font-medium mt-1">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer (Sin botón de solicitar corrección) -->
+        <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
+            <button onclick="cerrarModal()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-primary transition-all">
+                Cerrar Expediente
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Lógica del Modal
+    function abrirDetalleViaje(fecha, vehiculo, vale, recorrido, origen, destino, motivo, h_salida, h_llegada, consumo, cargado, saldo) {
+        document.getElementById('modal-fecha').innerText = fecha;
+        document.getElementById('modal-vehiculo').innerText = vehiculo;
+        document.getElementById('modal-vale').innerText = vale;
+        document.getElementById('modal-recorrido').innerText = recorrido + ' Km';
+        document.getElementById('modal-ruta').innerText = origen + ' → ' + destino;
+        document.getElementById('modal-motivo').innerText = 'Motivo: ' + motivo;
+        document.getElementById('modal-tiempo').innerText = h_salida + ' - ' + h_llegada;
+        document.getElementById('modal-consumo').innerText = consumo + ' Lts';
+        document.getElementById('modal-cargado').innerText = cargado + ' Lts';
+        document.getElementById('modal-saldo').innerText = saldo + ' Lts';
+
+        const modal = document.getElementById('modal-detalle');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function cerrarModal() {
+    const modal = document.getElementById('modal-detalle');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') cerrarModal();
+    });
+</script>
 {% endblock %}

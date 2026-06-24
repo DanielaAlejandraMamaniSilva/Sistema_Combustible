@@ -37,10 +37,13 @@ class UsuarioCreationForm(UserCreationForm):
 class VehiculoForm(forms.ModelForm):
     class Meta:
         model = Vehiculo
-        fields = ['placa', 'marca', 'modelo', 'tipo', 'color', 'nro_chasis', 'kilometraje_actual', 'estado', 'tipo_combustible']
+        fields = ['placa', 'marca', 'modelo', 'anio', 'tipo', 'color', 
+                  'capacidad_tanque', 'rendimiento_km_litro', 'combustible_inicial', 'kilometraje_actual','nro_chasis', 
+                   'vencimiento_soat', 'estado', 'foto']
         widgets = {
             'estado': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'}),
             'tipo_combustible': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none focus:ring-2 focus:ring-primary'}),
+            'vencimiento_soat': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -59,23 +62,20 @@ class AsignacionForm(forms.ModelForm):
     )
     class Meta:
         model = Asignacion
-        fields = ['vehiculo', 'chofer', 'nro_memorandum', 'documento_acta']
+        fields = ['vehiculo', 'chofer', 'area', 'nro_memorandum', 'documento_acta']
         widgets = {
-            'vehiculo': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
-            'chofer': forms.Select(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
-            'nro_memorandum': forms.TextInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none', 'placeholder': 'Ej: MEMO/ACT/001/2024'}),
-            'documento_acta': forms.FileInput(attrs={'class': 'w-full p-3 bg-slate-50 border rounded-xl outline-none'}),
+            'vehiculo': forms.Select(attrs={'class': 'w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-700'}),
+            'chofer': forms.Select(attrs={'class': 'w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-700'}),
+            'area': forms.Select(attrs={'class': 'w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-700'}),
+            'nro_memorandum': forms.TextInput(attrs={'class': 'w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary transition-all font-bold text-slate-900', 'placeholder': 'Ej: MEMO/GADP/045/2024'}),
         }
     def clean(self):
         cleaned_data = super().clean()
         chofer = cleaned_data.get('chofer')
         vehiculo = cleaned_data.get('vehiculo')
 
-        # 1. Validar si el Chofer ya tiene vehículo asignado
         if chofer and Asignacion.objects.filter(chofer=chofer, esta_activo=True).exists():
             self.add_error('chofer', f"ALERTA: El conductor {chofer.get_full_name().upper()} ya tiene un vehículo bajo su responsabilidad.")
-
-        # 2. Validar si el Vehículo ya está ocupado
         if vehiculo and Asignacion.objects.filter(vehiculo=vehiculo, esta_activo=True).exists():
             self.add_error('vehiculo', f"ALERTA: El vehículo {vehiculo.placa} ya se encuentra asignado a otro chofer.")
 
@@ -101,7 +101,6 @@ class BitacoraForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
-        # Recibimos el usuario como parámetro al instanciar el form
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
 
@@ -112,13 +111,11 @@ class BitacoraForm(forms.ModelForm):
         km_salida = cleaned_data.get('km_inicial')
         litros = cleaned_data.get('cantidad_litros')
         
-        # Validación de rango
         if km_llegada and km_salida and km_llegada <= km_salida:
             raise forms.ValidationError("El kilometraje de llegada debe ser mayor al de salida.")
             
         if nro_vale and Bitacora.objects.filter(nro_vale_combustible=nro_vale).exists():
             raise forms.ValidationError(f"El vale N° {nro_vale} ya fue registrado anteriormente.")
-        # Validación de consumo excesivo (si supera el 50% de lo esperado, alerta)
         distancia = km_llegada - km_salida
         if litros > 0 and distancia > 0:
             rendimiento = distancia / litros
@@ -150,18 +147,14 @@ class ViajeForm(forms.ModelForm):
 class RegistroGastoForm(forms.Form):
     TIPO_CHOICES = [('vale', 'Vale Combustible'), ('peaje', 'Peaje')]
     tipo = forms.ChoiceField(choices=TIPO_CHOICES, widget=forms.Select(attrs={'class': '...'}))
-    # Campos comunes o específicos
     lugar = forms.CharField(required=False)
     monto = forms.DecimalField()
     comprobante = forms.ImageField(required=False)
 
 class RegistroChoferCompletoForm(forms.ModelForm):
-    # Campos del Chofer
     first_name = forms.CharField(label="Nombre")
     last_name = forms.CharField(label="Apellido")
     area = forms.ModelChoiceField(queryset=Area.objects.all(), label="Secretaría/Área")
-    
-    # Campos de Asignación
     nro_memorandum = forms.CharField(label="Nº Memorándum")
     vehiculo = forms.ModelChoiceField(queryset=Vehiculo.objects.filter(estado='operacional'), label="Vehículo")
     documento_acta = forms.FileField(label="Acta de Entrega (PDF)")
@@ -184,7 +177,7 @@ class AreaForm(forms.ModelForm):
                 'placeholder': 'Ej: Administrativa Financiera'
             }),
             'estado': forms.CheckboxInput(attrs={
-                'class': 'w-6 h-6 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer'
+                'class': 'sr-only peer',
             }),
         }
 
@@ -224,19 +217,20 @@ class TraspasoAreaForm(forms.Form):
     )
 
 class EnmiendaBitacoraForm(forms.ModelForm):
-    # Campos de la Bitácora que se pueden corregir
     km_inicial = forms.IntegerField(label="Kilometraje Inicial")
     km_final = forms.IntegerField(label="Kilometraje Final")
-    cantidad_litros = forms.DecimalField(label="Cantidad de Litros")
-    
-    # Campos obligatorios de la Justificación
+    cantidad_litros = forms.DecimalField(label="Cantidad de Litros", max_digits=10, decimal_places=2)
     motivo_enmienda = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'w-full p-3 bg-white border rounded-xl h-24', 'placeholder': 'Describa por qué se corrige este registro...'}),
+        widget=forms.Textarea(attrs={
+            'id': 'id_motivo_enmienda', 
+            'placeholder': 'Describa detalladamente el motivo técnico de esta corrección...'
+        }),
         label="Motivo de la Enmienda"
     )
     documento_respaldo = forms.FileField(
-        widget=forms.FileInput(attrs={'class': 'hidden', 'id': 'file-upload'}),
-        label="Nota de Respaldo (PDF/Imagen)"
+        widget=forms.FileInput(attrs={'class': 'hidden', 'id': 'id_documento_respaldo'}),
+        label="Nota de Respaldo (PDF/Imagen)",
+        required=True
     )
 
     class Meta:
@@ -245,9 +239,8 @@ class EnmiendaBitacoraForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields:
-            if field not in ['motivo_enmienda', 'documento_respaldo']:
-                self.fields[field].widget.attrs.update({'class': 'w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold'})
+        self.fields['origen'].widget.attrs.update({'placeholder': 'Lugar de salida'})
+        self.fields['destino'].widget.attrs.update({'placeholder': 'Lugar de llegada'})
 
 class TipoCombustibleForm(forms.ModelForm):
     class Meta:

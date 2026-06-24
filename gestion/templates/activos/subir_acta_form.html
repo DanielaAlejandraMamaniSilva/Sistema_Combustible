@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-8">
+    <div class="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+        
+        <div class="mb-8">
+            <h2 class="text-2xl font-black font-headline text-slate-900 uppercase tracking-tight">Cargar Acta Digital</h2>
+            <p class="text-slate-500 text-sm mt-1">Vincule el documento físico escaneado a la asignación oficial.</p>
+        </div>
+
+        <!-- Resumen de la Asignación -->
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 mb-8 grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Vehículo</p>
+                <p class="font-black text-slate-900">{{ asignacion.vehiculo.placa }}</p>
+            </div>
+            <div>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Chofer</p>
+                <p class="font-black text-slate-900">{{ asignacion.chofer.get_full_name }}</p>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[2rem] p-10 hover:border-primary transition-all bg-slate-50/50 group cursor-pointer" onclick="document.getElementById('file-input').click()">
+                <span class="material-symbols-outlined text-5xl text-slate-300 group-hover:text-primary mb-4 transition-colors">cloud_upload</span>
+                <p id="file-name" class="text-xs font-bold text-slate-500 uppercase tracking-widest">Haga clic para seleccionar el archivo PDF o Imagen</p>
+                <input type="file" name="documento_acta" id="file-input" class="hidden" onchange="document.getElementById('file-name').innerText = this.files[0].name">
+            </div>
+
+            <div class="flex gap-4">
+                <button type="submit" class="flex-1 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-red-900 transition-all">
+                    Confirmar y Guardar
+                </button>
+                <a href="{% url 'lista_actas' %}" class="px-8 py-4 bg-slate-100 text-slate-500 rounded-2xl font-bold uppercase text-xs flex items-center">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

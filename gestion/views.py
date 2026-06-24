@@ -3,33 +3,33 @@ from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustib
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
-from django.db.models import Avg, Sum, F, ExpressionWrapper, DecimalField, Count
-from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm, BitacoraForm, ViajeFormSet, RegistroChoferCompletoForm, AreaForm, TraspasoAreaForm, EnmiendaBitacoraForm
+from django.db.models import Sum, F, Count
+from .forms import UsuarioCreationForm, UserChangeForm, VehiculoForm, AsignacionForm, BitacoraForm, ViajeFormSet, RegistroChoferCompletoForm, AreaForm, TraspasoAreaForm, EnmiendaBitacoraForm, TipoCombustibleForm
 from django.contrib import messages
-from .utils import obtener_ruta_dijkstra, calcular_distancia, buscar_coordenadas, obtener_ip, generar_sql_insert, generar_respaldo_sql,evaluar_tipo_bitacora, registrar_auditoria
+from .utils import obtener_ip, generar_sql_insert,evaluar_tipo_bitacora, registrar_auditoria
 from django.utils.crypto import get_random_string
 from django.apps import apps
 from .services import procesar_bitacoras_periodo
 from .filters import BitacoraFilter
 from django.core.management import call_command
-from django.contrib.sessions.models import Session
 from xhtml2pdf import pisa
 from django.core.paginator import Paginator
-import django_filters
+from django.utils.timezone import localtime
 from django.template.loader import get_template
 from django.utils import timezone
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 import openpyxl
-from .utils import obtener_ruta_dijkstra, calcular_distancia, buscar_coordenadas
-from django.forms import modelformset_factory
-from django.db import connection, transaction
-from django.http import JsonResponse, HttpResponseForbidden
+from django.db import models
+from django.db import transaction
+from django.http import HttpResponseForbidden
 from django.db.models import Q
 from django.http import HttpResponse
 from decimal import Decimal
 import json
 import io
+from django.conf import settings 
+from django.http import JsonResponse
 from datetime import datetime, timedelta
 
 @login_required
@@ -44,9 +44,6 @@ def dashboard_view(request):
     if request.user.rol == 'chofer':
         return dashboard_chofer(request)
     
-    elif request.user.rol == 'bienes':
-        return dashboard_bienes(request)
-    
     elif request.user.rol in ['activos']:
         return dashboard_activos(request)
 
@@ -57,102 +54,194 @@ def dashboard_view(request):
 
 Usuario = get_user_model()
 
-# ==========================================
-# SECCIÓN CHOFER (CORREGIDA Y LIMPIA)
-# ==========================================
-
 @login_required
 def dashboard_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
     vehiculo = asignacion.vehiculo if asignacion else None
-
     viaje_activo = Bitacora.objects.filter(chofer=request.user, estado_viaje='en_curso').first()
+    # --- LÓGICA DE ARRASTRE DE SALDO (MATRIZ) ---
+    ultimo_registro = Bitacora.objects.filter(vehiculo=vehiculo, estado_viaje='finalizado').order_by('-fecha', '-id').first()
+    
+    if ultimo_registro:
+        saldo_para_nuevo_viaje = ultimo_registro.saldo_actual
+    elif vehiculo:
+        saldo_para_nuevo_viaje = vehiculo.combustible_inicial
+    else:
+        saldo_para_nuevo_viaje = Decimal('0.00')
+
+    alerta_rendimiento = False
+    if vehiculo:
+        dias_desde_update = (timezone.now().date() - vehiculo.fecha_actualizacion_rendimiento).days
+        if dias_desde_update >= 15:
+            alerta_rendimiento = True
+        ultima_bitacora_este_auto = Bitacora.objects.filter(
+            vehiculo=vehiculo, 
+            estado_viaje='finalizado'
+        ).order_by('-fecha', '-id').first()
+        
+        if ultima_bitacora_este_auto:
+            km_actual = ultima_bitacora_este_auto.km_final
+        else:
+            km_actual = vehiculo.kilometraje_actual
+    else:
+        km_actual = 0
+
+    # --- LÓGICA DEL GRÁFICO ---
+    ahora_bolivia = timezone.localtime(timezone.now())
+    hoy = ahora_bolivia.date()
+    lunes_semana = hoy - timedelta(days=hoy.weekday())
+    datos_grafico = []
+    nombres_dias = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM']
+    
+    for i in range(7):
+        fecha_dia = lunes_semana + timedelta(days=i)
+        stats = Bitacora.objects.filter(
+            chofer=request.user, 
+            fecha__date=fecha_dia, 
+            estado_viaje='finalizado'
+        ).aggregate(
+            km=Sum(F('km_final') - F('km_inicial')),
+            lts=Sum('cantidad_litros')
+        )
+        
+        km = float(stats['km'] or 0)
+        lts = float(stats['lts'] or 0)
+        eficiencia = round(km / lts, 1) if lts > 0 else 0
+
+        if eficiencia > 0:
+            altura = min(int((eficiencia / 20) * 100), 100)
+            if altura < 20: altura = 20 
+        else:
+            altura = 15
+        
+        datos_grafico.append({
+            'dia': nombres_dias[i],
+            'eficiencia': eficiencia,
+            'altura': altura,
+            'es_hoy': fecha_dia == hoy,
+        })
+    historial = Bitacora.objects.filter(chofer=request.user, estado_viaje='finalizado').order_by('-fecha')[:5]
+    ultima_eficiencia = 0
+    if historial.exists():
+        ult = historial[0]
+        dist = ult.km_final - ult.km_inicial
+        if ult.cantidad_litros > 0:
+            ultima_eficiencia = round(float(dist) / float(ult.cantidad_litros), 1)
 
     if request.method == 'POST' and vehiculo:
         accion = request.POST.get('accion') 
         
-        # ---------------------------------------------------------
-        # ACCIÓN 1: INICIAR VIAJE
-        # ---------------------------------------------------------
         if accion == 'iniciar':
+            hora_actual_bolivia = localtime(timezone.now()).time()
             motivo = request.POST.get('motivo')
             responsable = request.POST.get('responsable')
-            
-            km_salida = int(request.POST.get('km_salida', 0))
-            if vehiculo.kilometraje_actual > 0:
-                km_salida = vehiculo.kilometraje_actual
+            km_salida = vehiculo.kilometraje_actual
+            terreno = request.POST.get('terreno', 'plano')
+            carga = request.POST.get('carga', 'ligera')
                 
             Bitacora.objects.create(
                 vehiculo=vehiculo,
                 chofer=request.user,
                 estado_viaje='en_curso',
-                hora_salida=timezone.now().time(), 
+                hora_salida=hora_actual_bolivia,
                 km_inicial=km_salida,
-                km_final=km_salida, 
-                destino=motivo,
+                km_final=km_salida,
+                saldo_anterior=saldo_para_nuevo_viaje,     
+                destino=request.POST.get('destino'),
+                origen=request.POST.get('origen', 'Potosí'),
                 objetivo_comision=motivo,
-                responsable_viaje=responsable
+                responsable_viaje=responsable,
+                terreno=terreno,
+                carga=carga,
             )
             messages.success(request, "Viaje iniciado. ¡Conduce con precaución!")
             return redirect('dashboard')
-
-        # ---------------------------------------------------------
-        # ACCIÓN 2: FINALIZAR VIAJE
-        # ---------------------------------------------------------
+    
         elif accion == 'finalizar' and viaje_activo:
-            km_llegada = int(request.POST.get('km_llegada', 0))
+            km_llegada_raw = request.POST.get('km_llegada')
             
-            if km_llegada <= viaje_activo.km_inicial:
-                messages.error(request, "El KM de llegada debe ser mayor al de salida.")
-            else:
-                viaje_activo.km_final = km_llegada
-                viaje_activo.hora_llegada = timezone.now().time() 
-                viaje_activo.estado_viaje = 'finalizado'
-                
-                si_recargo = request.POST.get('toggle_combustible')
-                if si_recargo == 'on':
-                    viaje_activo.nro_vale_combustible = request.POST.get('nro_vale')
-                    cantidad = request.POST.get('cantidad') or 0
-                    viaje_activo.cantidad_litros = cantidad
-                    viaje_activo.costo_total = float(cantidad) * 3.74
-                
-                viaje_activo.save()
-                messages.success(request, "Viaje finalizado y bitácora guardada con éxito.")
+            if not km_llegada_raw:
+                messages.error(request, "Error: Debe ingresar el kilometraje de llegada.")
                 return redirect('dashboard')
 
-    historial = Bitacora.objects.filter(chofer=request.user, estado_viaje='finalizado').order_by('-fecha')[:5]
-    
+            km_llegada = int(km_llegada_raw) 
+            
+            if km_llegada <= viaje_activo.km_inicial:
+                messages.error(request, f"El KM de llegada ({km_llegada}) debe ser mayor al de salida ({viaje_activo.km_inicial}).")
+            else:
+                viaje_activo.km_final = km_llegada
+                viaje_activo.hora_llegada = localtime(timezone.now()).time()
+                viaje_activo.estado_viaje = 'finalizado'
+                
+                if request.POST.get('toggle_combustible') == 'on':
+                    viaje_activo.nro_vale_combustible = request.POST.get('nro_vale')
+                    cantidad_raw = request.POST.get('cantidad')
+                    viaje_activo.cantidad_litros = Decimal(cantidad_raw) if cantidad_raw else Decimal('0')
+                    viaje_activo.costo_total = viaje_activo.cantidad_litros * Decimal('3.74')
+                    viaje_activo.estacion_servicio = request.POST.get('estacion')
+                
+                viaje_activo.save()
+                messages.success(request, "Viaje finalizado. El kilometraje del vehículo ha sido actualizado.")
+                return redirect('dashboard')
     context = {
         'asignacion': asignacion,
         'vehiculo': vehiculo,
         'viaje_activo': viaje_activo,
         'historial': historial,
         'km_actual': vehiculo.kilometraje_actual if vehiculo else 0,
+        'datos_grafico': datos_grafico,
+        'ultima_eficiencia': ultima_eficiencia,
+        'saldo_tanque': saldo_para_nuevo_viaje,
+        'km_actual': km_actual,
     }
     return render(request, 'dashboard_chofer.html', context)
 
 @login_required
 def historial_viajes_chofer(request):
-    viajes = Bitacora.objects.filter(chofer=request.user).order_by('-fecha')
-    return render(request, 'chofer/historial.html', {'viajes': viajes})
+    if request.user.rol != 'chofer':
+        return redirect('dashboard')
+        
+    mes_filtro = request.GET.get('mes')
+    anio_filtro = request.GET.get('anio', datetime.now().year)
+    viajes_queryset = Bitacora.objects.filter(chofer=request.user, estado_viaje='finalizado').order_by('-fecha')
+
+    if mes_filtro and mes_filtro != "0":
+        viajes_queryset = viajes_queryset.filter(fecha__month=mes_filtro, fecha__year=anio_filtro)
+    
+    total_km = viajes_queryset.aggregate(
+        total=Sum(F('km_final') - F('km_inicial'))
+    )['total'] or 0
+
+    paginator = Paginator(viajes_queryset, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    meses = [
+        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'), (5, 'Mayo'), (6, 'Junio'),
+        (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+    ]
+    return render(request, 'chofer/historial.html', {
+        'page_obj': page_obj,
+        'total_km_historico': total_km,
+        'meses': meses,
+        'mes_actual': int(mes_filtro) if mes_filtro else 0
+    })
 
 @login_required
 def detalle_vehiculo_chofer(request):
     asignacion = Asignacion.objects.filter(chofer=request.user, esta_activo=True).first()
-    return render(request, 'chofer/vehiculo.html', {'asignacion': asignacion})
-
-from django.http import JsonResponse
-from .utils import obtener_ruta_dijkstra
-
-@login_required
-def calcular_ruta_ajax(request):
-    origen = request.GET.get('origen')
-    destino = request.GET.get('destino')
-    km = obtener_ruta_dijkstra(origen, destino)
     
-    # Asumimos rendimiento de 5 km/l según tu configuración
-    consumo = round(km / 5.0, 2)
-    return JsonResponse({'distancia': km, 'consumo': consumo})
+    historial = []
+    if asignacion:
+        historial = Bitacora.objects.filter(
+            vehiculo=asignacion.vehiculo,
+            estado_viaje='finalizado'
+        ).order_by('-fecha', '-id')[:5]
+
+    return render(request, 'chofer/vehiculo.html', {
+        'asignacion': asignacion,
+        'historial_reciente': historial
+    })
 
 @login_required
 @transaction.atomic
@@ -194,10 +283,44 @@ def registrar_bitacora_completa(request):
     return render(request, 'chofer/bitacora_completa.html', {'form': form, 'formset': viaje_formset})
 
 @login_required
-def lista_vales_peajes_chofer(request):
-    vales = Bitacora.objects.filter(chofer=request.user).exclude(nro_vale_combustible='')
-    peajes = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
-    return render(request, 'chofer/vales_peajes_lista.html', {'vales': vales, 'peajes': peajes})
+def vales_peajes_chofer(request):
+    if request.user.rol != 'chofer':
+        return redirect('dashboard')
+    
+    vales_list = Bitacora.objects.filter(chofer=request.user).exclude(
+        Q(nro_vale_combustible='') | Q(nro_vale_combustible='S/N') | Q(nro_vale_combustible__isnull=True)
+    ).order_by('-fecha')
+    
+    peajes_list = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
+
+    paginator_vales = Paginator(vales_list, 5)
+    page_vales = request.GET.get('page_vales')
+    vales_obj = paginator_vales.get_page(page_vales)
+
+    paginator_peajes = Paginator(peajes_list, 5)
+    page_peajes = request.GET.get('page_peajes')
+    peajes_obj = paginator_peajes.get_page(page_peajes)
+
+    total_peajes = peajes_list.aggregate(Sum('monto'))['monto__sum'] or 0
+
+    return render(request, 'chofer/vales_peajes_lista.html', {
+        'vales': vales_obj,    
+        'peajes': peajes_obj,   
+        'total_peajes': total_peajes
+    })
+
+@login_required
+def vales_peajes_admin(request):
+    if request.user.rol not in ['admin', 'superadmin', 'bienes']:
+        return redirect('dashboard')
+    
+    vales = Bitacora.objects.exclude(nro_vale_combustible='').order_by('-fecha')
+    peajes = Peaje.objects.all().order_by('-fecha')
+    
+    return render(request, 'admin_potosi/vales_peajes.html', {
+        'bitacoras': vales, 
+        'peajes': peajes
+    })
 
 @login_required
 def registrar_gasto_chofer(request):
@@ -214,31 +337,26 @@ def registrar_gasto_chofer(request):
                 comprobante=request.FILES.get('comprobante')
             )
             messages.success(request, "Peaje registrado exitosamente.")
-        return redirect('lista_vales_peajes') # Redirige a la lista
+        return redirect('lista_vales_peajes') 
         
     return render(request, 'chofer/registro_gasto.html')
 
-
-# ==========================================
-# RESTO DEL CÓDIGO (INTACTO)
-# ==========================================
-
 @login_required
 def dashboard_activos(request):
-    if request.user.rol not in ['activos', 'admin', 'superadmin']:
+    if request.user.rol not in ['activos', 'superadmin']:
         return redirect('dashboard')
 
     total_vehiculos = Vehiculo.objects.count()
     vehiculos_ok = Vehiculo.objects.filter(estado='operacional').count()
+    porcentaje = int((vehiculos_ok / total_vehiculos) * 100) if total_vehiculos > 0 else 0
     
-    porcentaje = 0
     if total_vehiculos > 0:
         porcentaje = int((vehiculos_ok / total_vehiculos) * 100)
 
     pendientes_validacion = Bitacora.objects.filter(estado_validacion='pendiente').count()
     pendientes_acta = Asignacion.objects.filter(esta_activo=True, documento_acta='').count()
     total_pendientes = pendientes_validacion + pendientes_acta
-    asignaciones = Asignacion.objects.filter(esta_activo=True).select_related('vehiculo', 'chofer')
+    asignaciones = Asignacion.objects.filter(esta_activo=True).select_related('vehiculo', 'chofer').order_by('-fecha_asignacion')[:5]
     conductores = Usuario.objects.filter(rol='chofer').prefetch_related('asignacion_set')
 
     context = {
@@ -250,31 +368,6 @@ def dashboard_activos(request):
         'fecha_actual': timezone.now(),
     }
     return render(request, 'dashboard_activos.html', context)
-
-@login_required
-def dashboard_bienes(request):
-    if request.user.rol not in ['bienes', 'admin', 'superadmin']:
-        return redirect('dashboard')
-
-    mes_actual = timezone.now().month
-    bitacoras_mes = Bitacora.objects.filter(fecha__month=mes_actual)
-    
-    consumo_diesel = bitacoras_mes.filter(vehiculo__tipo_combustible='Diesel').aggregate(total=Sum('cantidad_litros'))['total'] or 0
-    consumo_gasolina = bitacoras_mes.filter(vehiculo__tipo_combustible='Gasolina').aggregate(total=Sum('cantidad_litros'))['total'] or 0
-
-    pendientes = Bitacora.objects.filter(estado_validacion='pendiente').order_by('-fecha')
-    total_pendientes = pendientes.count()
-    
-    ultimos_registros = Bitacora.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha')[:10]
-
-    context = {
-        'consumo_diesel': consumo_diesel,
-        'consumo_gasolina': consumo_gasolina,
-        'total_pendientes': total_pendientes,
-        'pendientes': ultimos_registros,
-        'total_registros': Bitacora.objects.count(),
-    }
-    return render(request, 'dashboard_bienes.html', context)
 
 @login_required
 def validar_consumo_accion(request, pk, estado):
@@ -295,52 +388,46 @@ def supervision_combustible(request):
 
 @login_required
 def dashboard_admin(request):
+    if request.user.rol not in ['admin', 'superadmin']:
+        return redirect('dashboard')
+
     hoy = timezone.now().date()
-    hace_un_mes = hoy - timedelta(days=30)
-    inicio_mes_actual = hoy.replace(day=1)
-    
-    bitacoras_mes = Bitacora.objects.filter(fecha__date__gte=inicio_mes_actual)
-    
+    inicio_mes = hoy.replace(day=1)
+
+    # 1. Consumo Promedio Mensual
+    bitacoras_mes = Bitacora.objects.filter(fecha__date__gte=inicio_mes)
     stats = bitacoras_mes.aggregate(
-        total_distancia=Sum(F('km_final') - F('km_inicial')),
-        total_litros=Sum('cantidad_litros')
+        total_km=Sum(F('km_final') - F('km_inicial')),
+        total_lts=Sum('cantidad_litros')
     )
+    km = float(stats['total_km'] or 0)
+    lts = float(stats['total_lts'] or 1)
+    consumo_avg = round(km / lts, 1)
+
+    # 2. Resumen de Inventario
+    inv_diesel = InventarioCombustible.objects.filter(tipo='Diesel').first()
+    inv_gasolina = InventarioCombustible.objects.filter(tipo='Gasolina').first()
     
-    distancia = stats['total_distancia'] or 0
-    litros = stats['total_litros'] or 1 
-    consumo_avg = round(distancia / float(litros), 1)
-
-    km_hoy = Bitacora.objects.filter(fecha__date=hoy).aggregate(
-        total=Sum(F('km_final') - F('km_inicial'))
-    )['total'] or 0
-
     alertas_count = Bitacora.objects.filter(estado_validacion='anomalia').count()
 
-    limite_ruta = timezone.now() - timedelta(hours=4)
-    choferes = Usuario.objects.filter(rol='chofer')
-    
-    for chofer in choferes:
-        ultima_bitacora = Bitacora.objects.filter(chofer=chofer).order_by('-fecha').first()
-        if ultima_bitacora and ultima_bitacora.fecha >= limite_ruta:
-            chofer.estado_operativo = "EN RUTA"
-            chofer.ruta_actual = ultima_bitacora.destino
-        else:
-            chofer.estado_operativo = "DISPONIBLE"
-            chofer.ruta_actual = "En Base"
-    
-    filtro = request.GET.get('filtro', 'todos')
-    registros = Bitacora.objects.select_related('vehiculo', 'chofer').order_by('-fecha')
+    choferes = Usuario.objects.filter(rol='chofer').order_by('-id')[:4]
+    for c in choferes:
+        viaje = Bitacora.objects.filter(chofer=c, estado_viaje='en_curso').first()
+        c.estado_operativo = "EN RUTA" if viaje else "EN BASE"
 
-    if filtro == 'semana':
-        hace_una_semana = hoy - timedelta(days=7)
-        registros = registros.filter(fecha__date__gte=hace_una_semana)
     
+    registros_list = Bitacora.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha')
+    paginator = Paginator(registros_list, 10)
+    page_number = request.GET.get('page')
+    registros_obj = paginator.get_page(page_number)
+
     context = {
         'consumo_avg': consumo_avg,
-        'km_totales': km_hoy,
+        'diesel_stock': inv_diesel.cantidad_total if inv_diesel else 0,
+        'gasolina_stock': inv_gasolina.cantidad_total if inv_gasolina else 0,
         'alertas_count': alertas_count,
-        'monitoreo_choferes': choferes[:3],
-        'registros': registros[:10],       
+        'choferes': choferes,
+        'registros': registros_obj,
     }
     return render(request, 'dashboard_admin.html', context)
 
@@ -534,22 +621,35 @@ def lista_vehiculos(request):
 
 @login_required
 def exportar_usuarios_excel(request):
-    if request.user.rol != 'superadmin':
+    if request.user.rol not in ['superadmin', 'admin', 'activos']:
         return HttpResponse("No autorizado", status=403)
     
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Usuarios"
+    ws.title = "Personal de Conducción"
 
-    columns =['Username', 'Nombre', 'Apellido', 'Rol', 'CI', 'Email']
+    columns = ['Username', 'Nombre', 'Apellido', 'Rol', 'CI', 'Licencia', 'Vencimiento', 'Email']
     ws.append(columns)
 
-    usuarios = Usuario.objects.all()
+    if request.user.rol == 'activos':
+        usuarios = Usuario.objects.filter(rol='chofer')
+    else:
+        usuarios = Usuario.objects.all()
+
     for u in usuarios:
-        ws.append([u.username, u.first_name, u.last_name, u.get_rol_display(), u.ci, u.email])
+        ws.append([
+            u.username, 
+            u.first_name, 
+            u.last_name, 
+            u.get_rol_display(), 
+            u.ci, 
+            u.licencia_conducir, 
+            str(u.vencimiento_licencia), 
+            u.email
+        ])
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename="Reporte_Usuarios.xlsx"'
+    response['Content-Disposition'] = 'attachment; filename="Reporte_Personal_GADP.xlsx"'
     wb.save(response)
     return response
 
@@ -591,31 +691,49 @@ def configuracion_global(request):
         'ultima_mod': config.ultima_modificacion
     })
 
-@login_required
+
 def gestion_catalogos(request):
-    combustibles = TipoCombustible.objects.annotate(
-        total_vehiculos=Count('vehiculos')
+    hoy = timezone.now()
+    areas = Area.objects.annotate(
+        num_vehiculos=Count('vehiculo', distinct=True),
+        num_choferes=Count('usuario', distinct=True)
     ).order_by('nombre')
-    vehiculos = Vehiculo.objects.all().order_by('placa')
-    areas = Area.objects.all().order_by('nombre')
-    
+    combustibles_data = TipoCombustible.objects.all().order_by('nombre')
+    for c in combustibles_data:
+        c.num_vehiculos = Vehiculo.objects.filter(tipo_combustible=c).count()
+        stats = Bitacora.objects.filter(
+            vehiculo__tipo_combustible=c,
+            fecha__month=hoy.month,
+            fecha__year=hoy.year
+        ).aggregate(
+            total_lts=Sum('cantidad_litros'),
+            total_bs=Sum('costo_total')
+        )
+        
+        c.consumo_mes = stats['total_lts'] or 0
+        c.gasto_mes = stats['total_bs'] or 0
+        if c.consumo_mes > 0:
+            c.porcentaje_uso = min(int((float(c.consumo_mes) / 5000) * 100), 100)
+        else:
+            c.porcentaje_uso = 0
+        
     context = {
-        'vehiculos': vehiculos,
+        'vehiculos': Vehiculo.objects.all().order_by('placa'),
         'areas': areas,
-        'combustibles': combustibles,
+        'combustibles': combustibles_data,
     }
     return render(request, 'usuarios/catalogos.html', context)
 
 @login_required
 def crear_combustible(request):
-    if request.user.rol != 'superadmin':
+    if request.user.rol not in ['activos', 'superadmin']:
         return redirect('dashboard')
         
     if request.method == 'POST':
         form = TipoCombustibleForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Nuevo insumo registrado exitosamente.")
+            messages.success(request, "Nuevo tipo de combustible registrado exitosamente.")
             return redirect('gestion_catalogos')
     else:
         form = TipoCombustibleForm()
@@ -623,11 +741,30 @@ def crear_combustible(request):
     return render(request, 'catalogos/combustible_form.html', {'form': form})
 
 @login_required
+def detalle_vales_combustible(request, pk):
+    # 1. Obtenemos el objeto completo del combustible (esto tiene el ID y el Nombre)
+    tipo_insumo = get_object_or_404(TipoCombustible, pk=pk)
+    
+    # 2. Filtramos las bitácoras
+    # IMPORTANTE: Pasamos 'tipo_insumo' (el objeto), NO 'tipo_insumo.nombre'
+    vales = Bitacora.objects.filter(
+        vehiculo__tipo_combustible=tipo_insumo
+    ).exclude(
+        Q(nro_vale_combustible='') | 
+        Q(nro_vale_combustible='S/N') | 
+        Q(nro_vale_combustible__isnull=True)
+    ).order_by('-fecha')
+    
+    return render(request, 'catalogos/detalle_vales_combustible.html', {
+        'tipo': tipo_insumo,
+        'vales': vales
+    })
+
+@login_required
 def vista_roles(request):
     if request.user.rol != 'superadmin':
         return redirect('dashboard')
     
-    # Definición de capacidades por rol para dar sentido a la interfaz
     roles_data = [
         {
             'nombre': 'Super Administrador',
@@ -743,7 +880,6 @@ def forzar_respaldo(request):
         action_flag=CHANGE, 
         change_message="El usuario generó un respaldo completo del sistema (.json)"
     )
-    # Ejemplo en la función de backup:
     BitacoraActividad.objects.create(
         usuario=request.user,
         usuario_texto=request.user.username,
@@ -763,7 +899,7 @@ def forzar_respaldo(request):
 @login_required
 def crear_vehiculo(request):
     if request.method == 'POST':
-        form = VehiculoForm(request.POST)
+        form = VehiculoForm(request.POST, request.FILES)
         if form.is_valid():
             vehiculo = form.save()
             messages.success(request, f"Vehículo {vehiculo.placa} registrado con éxito.")
@@ -776,14 +912,20 @@ def crear_vehiculo(request):
 def editar_vehiculo(request, pk):
     vehiculo = get_object_or_404(Vehiculo, pk=pk)
     if request.method == 'POST':
-        form = VehiculoForm(request.POST, instance=vehiculo)
+        form = VehiculoForm(request.POST, request.FILES, instance=vehiculo)
         if form.is_valid():
             form.save()
             messages.success(request, f"Vehículo {vehiculo.placa} actualizado.")
             return redirect('gestion_catalogos')
+        else:
+            messages.error(request, "Error al actualizar. Revise los datos ingresados.")
     else:
         form = VehiculoForm(instance=vehiculo)
-    return render(request, 'catalogos/vehiculo_form.html', {'form': form, 'editando': True})
+    return render(request, 'catalogos/vehiculo_form.html', {
+        'form': form, 
+        'editando': True, 
+        'vehiculo': vehiculo
+    })
 
 @login_required
 def eliminar_vehiculo(request, pk):
@@ -795,95 +937,123 @@ def eliminar_vehiculo(request, pk):
 @login_required
 def reporte_oficial_chofer(request, chofer_id):
     chofer = get_object_or_404(Usuario, id=chofer_id)
+    
     anio = int(request.GET.get('anio', datetime.now().year))
-    periodo = request.GET.get('periodo', 'mensual')
-    mes_raw = request.GET.get('mes', '1')
-    mes_map = {'ENERO': 1, 'FEBRERO': 2, 'MARZO': 3, 'ABRIL': 4, 'MAYO': 5, 'JUNIO': 6, 
-               'JULIO': 7, 'AGOSTO': 8, 'SEPTIEMBRE': 9, 'OCTUBRE': 10, 'NOVIEMBRE': 11, 'DICIEMBRE': 12}
-    registros, totales, saldo_final = procesar_bitacoras_periodo(chofer, anio, mes)
-    
-    if mes_raw.isdigit():
-        mes = int(mes_raw)
-    else:
-        mes = mes_map.get(mes_raw.upper(), datetime.now().month)
+    mes_raw = request.GET.get('mes', datetime.now().month)
+    periodo = request.GET.get('periodo', 'mensual') 
 
-    periodo = request.GET.get('periodo', 'mensual')
+    mes_map = {'ENERO':1,'FEBRERO':2,'MARZO':3,'ABRIL':4,'MAYO':5,'JUNIO':6,'JULIO':7,'AGOSTO':8,'SEPTIEMBRE':9,'OCTUBRE':10,'NOVIEMBRE':11,'DICIEMBRE':12}
+    mes = int(mes_raw) if str(mes_raw).isdigit() else mes_map.get(str(mes_raw).upper(), datetime.now().month)
+
     vehiculo_asig = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first()
-    
-    # Filtros de Bitácora
-    bitacoras = Bitacora.objects.filter(chofer_id=chofer_id, chofer=chofer, fecha__year=anio, fecha__month=mes).exclude(estado_validacion='rechazado').order_by('fecha')
+    if not vehiculo_asig:
+        messages.error(request, "El chofer no tiene un vehículo asignado actualmente.")
+        return redirect('lista_reportes_chofer', chofer_id=chofer.id)
+
+    bitacoras = Bitacora.objects.filter(chofer=chofer, vehiculo=vehiculo_asig.vehiculo, fecha__year=anio, fecha__month=mes).order_by('fecha', 'id')
+
+    titulo_periodo = "Mes Completo"
     if periodo == 'quincena1':
         bitacoras = bitacoras.filter(fecha__day__lte=15)
+        titulo_periodo = "1ra Quincena (Día 1 al 15)"
     elif periodo == 'quincena2':
         bitacoras = bitacoras.filter(fecha__day__gt=15)
-    bitacoras = bitacoras.order_by('fecha')
+        titulo_periodo = "2da Quincena (Día 16 al 31)"
+    
+    if bitacoras.exists():
+        primera_del_reporte = bitacoras.first()
+        bitacora_previa = Bitacora.objects.filter(
+            vehiculo=vehiculo_asig.vehiculo, 
+            fecha__lt=primera_del_reporte.fecha,
+            estado_viaje='finalizado'
+        ).order_by('-fecha', '-id').first()
 
-    total_cargado = 0
-    total_recorrido = 0
-    total_utilizado = 0
+        if bitacora_previa:
+            saldo_anterior = bitacora_previa.saldo_actual
+            km_inicial_reporte = bitacora_previa.km_final
+        else:
+            saldo_anterior = vehiculo_asig.vehiculo.combustible_inicial
+            km_inicial_reporte = 0 
+    else:
+        saldo_anterior = Decimal('0.00')
+        km_inicial_reporte = 0
+
     registros_procesados = []
-    saldo_anterior = Decimal('133.90')
-    saldo_actual = saldo_anterior
-
+    total_recorrido = 0
+    total_cargado = 0
+    total_utilizado = 0
+    
     for b in bitacoras:
-        motivo_final = evaluar_tipo_bitacora(b)
         recorrido = b.km_final - b.km_inicial
-        rendimiento = vehiculo_asig.vehiculo.rendimiento_km_litro if vehiculo_asig else Decimal('5.0')
-        consumo_estimado = Decimal(recorrido) / rendimiento
-        saldo_actual = saldo_actual + b.cantidad_litros - consumo_estimado
-        
         registros_procesados.append({
             'fecha': b.fecha,
             'vale': b.nro_vale_combustible,
             'ingreso': b.cantidad_litros,
-            'utilizado': round(consumo_estimado, 2),
-            'saldo': round(saldo_actual, 2),
-            'objeto': motivo_final,
+            'utilizado': b.combustible_utilizado,
+            'saldo': b.saldo_actual,
+            'objeto': b.get_motivo_oficial(), 
             'salida': b.km_inicial,
             'llegada': b.km_final,
             'recorrido': recorrido,
         })
-        total_cargado += b.cantidad_litros
-        total_utilizado += consumo_estimado
         total_recorrido += recorrido
-    
+        total_cargado += b.cantidad_litros
+        total_utilizado += b.combustible_utilizado
+
+    nombres_meses = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'}
+
     context = {
-        'registros': registros,
-        'total_recorrido': totales['recorrido'],
-        'total_cargado': totales['cargado'],
-        'total_utilizado': round(totales['utilizado'], 2),
-        'user': request.user,
         'chofer': chofer,
-        'vehiculo': vehiculo_asig.vehiculo if vehiculo_asig else None,
+        'vehiculo': vehiculo_asig.vehiculo,
         'registros': registros_procesados,
-        'mes': "ENERO",
+        'mes': nombres_meses[mes],
         'anio': anio,
-        'km_inicial_mes': bitacoras.first().km_inicial if bitacoras.exists() else 0,
+        'periodo_nombre': titulo_periodo,
         'saldo_anterior': saldo_anterior,
-        'saldo_final': round(saldo_actual, 2),
+        'km_inicial_mes': km_inicial_reporte,
+        'total_recorrido': total_recorrido,
+        'total_cargado': total_cargado,
+        'total_utilizado': total_utilizado,
+        'saldo_final': registros_procesados[-1]['saldo'] if registros_procesados else saldo_anterior,
     }
 
-    # --- LÓGICA DE EXPORTACIÓN PDF ---
-    tipo = request.GET.get('tipo', 'html')
-    if tipo == 'pdf':
-        # USAMOS EL TEMPLATE LIMPIO
+    if request.GET.get('tipo') == 'pdf':
+        from django.template.loader import get_template
+        from xhtml2pdf import pisa
         template = get_template('reportes/planilla_pdf_solo.html')
         html = template.render(context)
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="Reporte_Oficial.pdf"'
-        
-        # Generar PDF
-        pisa_status = pisa.CreatePDF(html, dest=response)
-        if pisa_status.err:
-            return HttpResponse('Error al generar PDF', status=500)
+        response['Content-Disposition'] = f'attachment; filename="Planilla_{chofer.last_name}_{nombres_meses.get(mes)}.pdf"'
+        pisa_status = pisa.CreatePDF(html, dest=response, pagesize='letter landscape')
         return response
-    
-    # Si no es PDF, renderiza el normal con el sidebar
+
     return render(request, 'reportes/planilla_oficial.html', context)
 
 @login_required
+def reporte_diario_detalle(request, bitacora_id):
+    if request.user.rol not in ['admin', 'superadmin']:
+        return redirect('dashboard')
+    bitacora_ref = get_object_or_404(Bitacora, id=bitacora_id)
+
+    viajes_del_dia = Bitacora.objects.filter(
+        chofer=bitacora_ref.chofer,
+        fecha__date=bitacora_ref.fecha.date(),
+        estado_viaje='finalizado'
+    ).order_by('hora_salida')
+    
+    # 3. Calculamos el total de kilómetros del día
+    total_km_dia = sum((v.km_final - v.km_inicial) for v in viajes_del_dia)
+    
+    context = {
+        'bitacora': bitacora_ref,
+        'viajes': viajes_del_dia, # Pasamos la lista de bitácoras del día
+        'total_km_dia': total_km_dia,
+    }
+    
+    return render(request, 'reportes/reporte_diario.html', context)
+
+@login_required
 def cerrar_periodo_chofer(request, chofer_id, anio, mes):
-    # Bloqueamos todas las bitácoras del mes para ese chofer
     Bitacora.objects.filter(
         chofer_id=chofer_id, 
         fecha__year=anio, 
@@ -941,8 +1111,28 @@ def monitoreo_tiempo_real(request):
 
 @login_required
 def seleccionar_chofer_reporte(request):
-    choferes = Usuario.objects.filter(rol='chofer')
-    return render(request, 'admin_potosi/seleccionar_chofer.html', {'choferes': choferes})
+    if request.user.rol not in ['admin', 'superadmin']:
+        return redirect('dashboard')
+
+    choferes = Usuario.objects.filter(rol='chofer').prefetch_related(
+        models.Prefetch('asignacion_set', queryset=Asignacion.objects.filter(esta_activo=True), to_attr='asignacion_activa')
+    ).order_by('last_name')
+
+    anios = range(2024, datetime.now().year + 1)
+    meses = [
+        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'),
+        (5, 'Mayo'), (6, 'Junio'), (7, 'Julio'), (8, 'Agosto'),
+        (9, 'Septiembre'), (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+    ]
+
+    context = {
+        'choferes': choferes,
+        'anios': anios,
+        'meses': meses,
+        'anio_actual': datetime.now().year,
+        'mes_actual': datetime.now().month,
+    }
+    return render(request, 'admin_potosi/seleccionar_chofer.html', context)
 
 @login_required
 def seleccionar_vehiculo_reporte(request):
@@ -1018,8 +1208,37 @@ def crear_asignacion(request):
 
 @login_required
 def historial_asignaciones(request):
-    asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')
-    return render(request, 'admin_potosi/historial_asignaciones.html', {'asignaciones': asignaciones})
+    if request.user.rol not in ['activos', 'superadmin']:
+        return redirect('dashboard')
+    
+    query = request.GET.get('q', '')
+    estado = request.GET.get('estado', 'todos')
+    
+    qs = Asignacion.objects.all().select_related('vehiculo', 'chofer').order_by('-fecha_asignacion')
+    
+    if query:
+        qs = qs.filter(
+            Q(vehiculo__placa__icontains=query) | 
+            Q(chofer__username__icontains=query) | 
+            Q(chofer__first_name__icontains=query) | 
+            Q(chofer__last_name__icontains=query) |
+            Q(nro_memorandum__icontains=query)
+        )
+
+    if estado == 'vigentes':
+        qs = qs.filter(esta_activo=True)
+    elif estado == 'finalizados':
+        qs = qs.filter(esta_activo=False)
+
+    paginator = Paginator(qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'admin_potosi/historial_asignaciones.html', {
+        'asignaciones': page_obj, 
+        'query': query,
+        'estado_actual': estado
+    })
 
 @login_required
 def lista_memorandums(request):
@@ -1027,18 +1246,81 @@ def lista_memorandums(request):
     return render(request, 'admin_potosi/memorandums.html', {'asignaciones': asignaciones})
 
 @login_required
+def imprimir_memorandum(request, pk):
+    asignacion = get_object_or_404(Asignacion, pk=pk)
+    template_path = 'reportes/pdf_memorandum.html'
+    context = {'asig': asignacion, 'fecha': timezone.now()}
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Memorandum_{asignacion.nro_memorandum}.pdf"'
+    
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('Error al generar el reporte', status=500)
+    return response
+
+@login_required
+def ver_memorandum(request, pk):
+    asignacion = get_object_or_404(Asignacion, pk=pk)
+    if asignacion.documento_acta:
+        return redirect(asignacion.documento_acta.url)
+    else:
+        messages.warning(request, "No se ha cargado un documento digitalizado para este memorándum.")
+        return redirect('lista_memorandums')
+
+@login_required
 def lista_actas(request):
     asignaciones = Asignacion.objects.all().order_by('-fecha_asignacion')
     return render(request, 'admin_potosi/actas.html', {'asignaciones': asignaciones})
 
 @login_required
-def vista_vales_peajes(request):
-    bitacoras = Bitacora.objects.exclude(nro_vale_combustible='').order_by('-fecha')
-    peajes = Peaje.objects.all().order_by('-fecha')
+def subir_acta(request, pk):
+    if request.user.rol not in ['activos', 'admin', 'superadmin']:
+        return redirect('dashboard')
+        
+    asignacion = get_object_or_404(Asignacion, pk=pk)
     
-    return render(request, 'admin_potosi/vales_peajes.html', {
-        'bitacoras': bitacoras,
-        'peajes': peajes
+    if request.method == 'POST':
+        archivo = request.FILES.get('documento_acta')
+        if archivo:
+            asignacion.documento_acta = archivo
+            asignacion.save()
+            
+            # Registrar en Auditoría
+            LogAuditoria.objects.create(
+                usuario=request.user,
+                usuario_nombre=request.user.username,
+                accion='modificacion',
+                tabla='Asignacion',
+                descripcion=f"Se cargó acta digital para el vehículo {asignacion.vehiculo.placa}",
+                ip=obtener_ip(request)
+            )
+            messages.success(request, "Acta digitalizada cargada correctamente.")
+        else:
+            messages.error(request, "No se seleccionó ningún archivo.")
+            
+        return redirect('lista_actas')
+    
+    return render(request, 'activos/subir_acta_form.html', {'asignacion': asignacion})
+
+@login_required
+def vista_vales_peajes(request):
+    if request.user.rol in ['superadmin', 'admin', 'bienes', 'chofer']:
+        vales = Bitacora.objects.exclude(nro_vale_combustible__in=['', None]).order_by('-fecha')
+        peajes = Peaje.objects.all().order_by('-fecha')
+        es_admin = True
+    else:
+        vales = Bitacora.objects.filter(chofer=request.user).exclude(nro_vale_combustible__in=['', None]).order_by('-fecha')
+        peajes = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
+        es_admin = False
+
+    return render(request, 'chofer/vales_peajes_lista.html', {
+        'vales': vales,
+        'peajes': peajes,
+        'es_admin': es_admin
     })
 
 @login_required
@@ -1083,23 +1365,11 @@ def cambiar_estado_bitacora(request, pk, nuevo_estado):
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
 @login_required
-def lista_vales_peajes(request):
-    if request.user.rol != 'chofer':
-        return redirect('dashboard')
-        
-    vales = Bitacora.objects.filter(chofer=request.user).exclude(nro_vale_combustible='')
-    peajes = Peaje.objects.filter(chofer=request.user).order_by('-fecha')
-    
-    return render(request, 'chofer/vales_peajes_lista.html', {'vales': vales, 'peajes': peajes})
-
-@login_required
 def registrar_peaje(request):
-    # Validamos que solo el chofer pueda registrar peajes
     if request.user.rol != 'chofer':
         return redirect('dashboard')
         
     if request.method == 'POST':
-        # Guardamos el peaje con la foto del comprobante
         Peaje.objects.create(
             chofer=request.user,
             lugar=request.POST.get('lugar'),
@@ -1119,6 +1389,10 @@ def detalle_validacion(request, bitacora_id):
     bitacora = get_object_or_404(Bitacora, id=bitacora_id)
     viajes = bitacora.viajes.all()
     peajes = Peaje.objects.filter(chofer=bitacora.chofer, fecha__date=bitacora.fecha.date())
+    logs_enmienda = LogAuditoria.objects.filter(
+        tabla='Bitacora', 
+        descripcion__icontains=f"Registro {bitacora.id}"
+    ).order_by('-fecha_hora')
     identificador = bitacora.nro_vale_combustible if bitacora.nro_vale_combustible else f"PLACA {bitacora.vehiculo.placa}"
     
     context = {
@@ -1126,6 +1400,7 @@ def detalle_validacion(request, bitacora_id):
         'identificador': identificador,
         'viajes': viajes,
         'peajes': peajes,
+        'logs_enmienda': logs_enmienda
     }
     return render(request, 'admin_potosi/detalle_solicitud.html', context)
 
@@ -1159,8 +1434,6 @@ def historial_diario_chofer(request, chofer_id):
 
     chofer = get_object_or_404(Usuario, id=chofer_id)
     hoy = timezone.now().date()
-    
-    # Obtenemos las bitácoras del día del chofer
     bitacoras = Bitacora.objects.filter(chofer=chofer, fecha__date=hoy).order_by('hora_salida')
     
     return render(request, 'admin_potosi/historial_diario.html', {
@@ -1170,19 +1443,17 @@ def historial_diario_chofer(request, chofer_id):
     })
 
 @login_required
-@transaction.atomic # Si algo falla, se cancela todo
+@transaction.atomic 
 def registrar_chofer_con_asignacion(request):
     if request.method == 'POST':
         form = RegistroChoferCompletoForm(request.POST, request.FILES)
         if form.is_valid():
-            # Crear Chofer
             chofer = form.save(commit=False)
             chofer.rol = 'chofer'
             chofer.area = form.cleaned_data['area']
-            chofer.set_password('Potosi123') # Contraseña por defecto
+            chofer.set_password('Potosi123')
             chofer.save()
             
-            # Crear Asignación
             Asignacion.objects.create(
                 vehiculo=form.cleaned_data['vehiculo'],
                 chofer=chofer,
@@ -1231,7 +1502,6 @@ def dar_baja_chofer(request, asignacion_id):
         asignacion.documento_baja = request.FILES.get('documento_baja')
         asignacion.save()
         
-        # Opcional: Limpiar el área del usuario al dar de baja
         asignacion.chofer.area = None
         asignacion.chofer.save()
         
@@ -1246,7 +1516,6 @@ def ver_kardex_chofer(request, chofer_id):
         return redirect('dashboard')
         
     chofer = get_object_or_404(Usuario, id=chofer_id)
-    # Obtenemos todo el historial de cambios de vehículo
     historial = Asignacion.objects.filter(chofer=chofer).order_by('-fecha_asignacion')
     
     context= {
@@ -1259,9 +1528,7 @@ def ver_kardex_chofer(request, chofer_id):
 @login_required
 def cambio_secretaria(request, chofer_id):
     chofer = get_object_or_404(Usuario, id=chofer_id)
-    if request.method == 'POST':
-        # 1. Registrar baja de secretaría actual (puedes crear un modelo de 'HistoricoAreas')
-        # 2. Registrar alta en nueva secretaría
+    if request.method == 'POST':        
         nueva_area = request.POST.get('area')
         chofer.area_id = nueva_area
         chofer.save()
@@ -1276,7 +1543,6 @@ def enviar_a_mantenimiento(request, vehiculo_id):
     vehiculo = get_object_or_404(Vehiculo, id=vehiculo_id)
     
     if request.method == 'POST':
-        # 1. Creamos el registro de taller
         RegistroMantenimiento.objects.create(
             vehiculo=vehiculo,
             fecha_ingreso=request.POST.get('fecha_ingreso'),
@@ -1285,11 +1551,9 @@ def enviar_a_mantenimiento(request, vehiculo_id):
             encargado_taller=request.POST.get('taller')
         )
         
-        # 2. Cambiamos el estado del activo para bloquear asignaciones
         vehiculo.estado = 'mantenimiento'
         vehiculo.save()
         
-        # 3. Si el vehículo tenía una asignación activa, la finalizamos (opcional según norma interna)
         Asignacion.objects.filter(vehiculo=vehiculo, esta_activo=True).update(esta_activo=False)
         
         messages.warning(request, f"El vehículo {vehiculo.placa} ha sido enviado a mantenimiento y bloqueado para uso.")
@@ -1305,7 +1569,6 @@ def finalizar_mantenimiento(request, registro_id):
         registro.finalizado = True
         registro.save()
         
-        # Liberamos el vehículo
         vehiculo = registro.vehiculo
         vehiculo.estado = 'operacional'
         vehiculo.save()
@@ -1321,7 +1584,6 @@ def finalizar_mantenimiento(request, vehiculo_id):
         
     vehiculo = get_object_or_404(Vehiculo, id=vehiculo_id)
     
-    # Buscamos el registro de mantenimiento que sigue abierto
     registro = RegistroMantenimiento.objects.filter(vehiculo=vehiculo, finalizado=False).last()
     
     if registro:
@@ -1329,7 +1591,6 @@ def finalizar_mantenimiento(request, vehiculo_id):
         registro.finalizado = True
         registro.save()
     
-    # Devolvemos el vehículo al estado operacional
     vehiculo.estado = 'operacional'
     vehiculo.save()
     
@@ -1345,15 +1606,11 @@ def dar_baja_asignacion(request, asignacion_id):
     asignacion = get_object_or_404(Asignacion, id=asignacion_id)
     
     if request.method == 'POST':
-        # 1. Registramos los datos de la baja
         asignacion.esta_activo = False
         asignacion.fecha_fin = timezone.now().date()
         asignacion.motivo_baja = request.POST.get('motivo')
         asignacion.documento_baja = request.FILES.get('documento_baja')
-        asignacion.save()
-        
-        # 2. Opcional: El vehículo vuelve a estar disponible (opcional según tu lógica)
-        # 3. El chofer queda sin área asignada para que pueda ser re-asignado formalmente
+        asignacion.save()        
         chofer = asignacion.chofer
         chofer.area = None
         chofer.save()
@@ -1366,12 +1623,10 @@ def dar_baja_asignacion(request, asignacion_id):
 @login_required
 def habilitar_vehiculo(request, vehiculo_id):
     vehiculo = get_object_or_404(Vehiculo, id=vehiculo_id)
-    # Cerramos el mantenimiento pendiente
     RegistroMantenimiento.objects.filter(vehiculo=vehiculo, finalizado=False).update(
         finalizado=True, 
         fecha_salida=timezone.now().date()
     )
-    # Cambiamos estado del vehículo
     vehiculo.estado = 'operacional'
     vehiculo.save()
     messages.success(request, f"Vehículo {vehiculo.placa} habilitado correctamente.")
@@ -1386,7 +1641,6 @@ def traspaso_secretaria(request, chofer_id):
     if request.method == 'POST':
         form = TraspasoAreaForm(request.POST, request.FILES)
         if form.is_valid():
-            # 1. Cerrar la asignación actual (manteniendo el histórico)
             if asignacion_actual:
                 asignacion_actual.esta_activo = False
                 asignacion_actual.fecha_fin = timezone.now().date()
@@ -1394,15 +1648,12 @@ def traspaso_secretaria(request, chofer_id):
                 asignacion_actual.save()
                 vehiculo = asignacion_actual.vehiculo
             else:
-                # Si no tenía vehículo, solo necesitamos el dato del área
                 vehiculo = None
 
-            # 2. Actualizar el área en el perfil del Chofer
             nueva_area = form.cleaned_data['nueva_area']
             chofer.area = nueva_area
             chofer.save()
 
-            # 3. Crear nueva asignación con el MISMO vehículo pero NUEVA área
             if vehiculo:
                 Asignacion.objects.create(
                     vehiculo=vehiculo,
@@ -1442,7 +1693,7 @@ def dar_baja_usuario(request, pk):
     if request.method == 'POST':
         motivo = request.POST.get('motivo')
         usuario_objetivo.estado = 'inactivo'
-        usuario_objetivo.is_active = False # Bloquea el acceso al sistema
+        usuario_objetivo.is_active = False 
         usuario_objetivo.fecha_baja = timezone.now()
         usuario_objetivo.motivo_baja = motivo
         usuario_objetivo.baja_por = request.user
@@ -1496,18 +1747,15 @@ def reactivar_usuario(request, pk):
 @login_required
 @transaction.atomic
 def enmienda_bitacora_critica(request, pk):
-    # Seguridad absoluta: Solo Superadmin
     if request.user.rol != 'superadmin':
         return HttpResponseForbidden("Acceso denegado. Solo la alta dirección puede enmendar registros.")
 
     bitacora = get_object_or_404(Bitacora, pk=pk)
-    # Guardamos el valor anterior para el LOG antes de cambiar nada
     valor_anterior = model_to_dict(bitacora)
 
     if request.method == 'POST':
         form = EnmiendaBitacoraForm(request.POST, request.FILES, instance=bitacora)
         if form.is_valid():
-            # 1. Creamos el respaldo legal de la corrección
             JustificacionEdicion.objects.create(
                 superusuario=request.user,
                 tabla_afectada='Bitacora',
@@ -1517,10 +1765,8 @@ def enmienda_bitacora_critica(request, pk):
                 observacion_adicional=f"Se corrigió de {valor_anterior['km_final']} a {bitacora.km_final} KM."
             )
 
-            # 2. Guardamos la bitácora corregida
             form.save()
 
-            # 3. Disparamos el Log de Auditoría Forense
             registrar_auditoria(bitacora, 'modificacion', anterior=valor_anterior)
 
             messages.success(request, "El registro ha sido enmendado legalmente con su respaldo.")
@@ -1536,7 +1782,6 @@ def centro_backups(request):
         return redirect('dashboard')
 
     if request.method == 'POST':
-        # Mapeo de opciones a modelos
         mapeo = {
             'usuarios': ['Usuario'],
             'vehiculos': ['Vehiculo'],
@@ -1557,7 +1802,6 @@ def centro_backups(request):
                 sql_final += f"-- Módulo: {item} | Tabla: {m}\n"
                 sql_final += generar_sql_insert(m) + "\n\n"
 
-        # Registro en Log de Seguridad
         LogAuditoria.objects.create(
             usuario=request.user,
             usuario_nombre=request.user.username,
@@ -1578,26 +1822,21 @@ def backup_total_sql(request):
     if request.user.rol != 'superadmin':
         return HttpResponse("No autorizado", status=403)
 
-    # 1. Obtenemos todos los modelos de la app 'gestion'
     app_config = apps.get_app_config('gestion')
     modelos = [model.__name__ for model in app_config.get_models()]
 
-    # 2. Construcción del encabezado del archivo
     sql_final = "-- ==================================================\n"
-    sql_final += "-- BACKUP TOTAL SOBERANÍA POTOSÍ (ESTRUCTURA Y DATOS)\n"
+    sql_final += "-- BACKUP TOTAL GADP POTOSÍ (ESTRUCTURA Y DATOS)\n"
     sql_final += f"-- Generado: {timezone.now()}\n"
     sql_final += f"-- Superusuario: {request.user.username}\n"
     sql_final += "-- ==================================================\n\n"
     
-    # Desactivar restricciones de llaves foráneas para permitir la importación limpia
     sql_final += "SET CONSTRAINTS ALL DEFERRED;\n\n"
 
-    # 3. Generamos los INSERT para cada tabla del sistema
     for m in modelos:
         sql_final += f"-- TABLA: {m}\n"
         sql_final += generar_sql_insert(m) + "\n\n"
 
-    # 4. Registrar la acción en el Log de Auditoría Forense
     LogAuditoria.objects.create(
         usuario=request.user,
         usuario_nombre=request.user.username,
@@ -1607,56 +1846,9 @@ def backup_total_sql(request):
         ip=obtener_ip(request)
     )
 
-    # 5. Retornar el archivo para descarga inmediata
     response = HttpResponse(sql_final, content_type='application/sql')
     response['Content-Disposition'] = 'attachment; filename="backup_completo_potosi.sql"'
     return response
-
-@login_required
-def restaurar_backup(request):
-    if request.user.rol != 'superadmin':
-        return HttpResponse("No autorizado", status=403)
-
-    if request.method == 'POST' and request.FILES.get('archivo_sql'):
-        sql_file = request.FILES['archivo_sql']
-        
-        if not sql_file.name.endswith('.sql'):
-            messages.error(request, "Error: Solo se permiten archivos .sql")
-            return redirect('restaurar_backup')
-
-        try:
-            # Leer el archivo
-            queries = sql_file.read().decode('utf-8')
-
-            with transaction.atomic():
-                with connection.cursor() as cursor:
-                    # 1. DESACTIVAR RESTRICCIONES TEMPORALMENTE (Para evitar errores de llaves foráneas)
-                    cursor.execute("SET CONSTRAINTS ALL DEFERRED;")
-
-                    # 2. LIMPIAR TODAS LAS TABLAS Y REINICIAR CONTADORES (IDs)
-                    # He puesto todas tus tablas aquí:
-                    tablas = [
-                        "gestion_viaje", "gestion_peaje", "gestion_bitacora", 
-                        "gestion_asignacion", "gestion_vehiculo", "gestion_area", 
-                        "gestion_tipocombustible", "gestion_inventariocombustible",
-                        "gestion_logauditoria", "gestion_ajustesistema"
-                    ]
-                    
-                    # Ejecutamos la limpieza masiva
-                    cursor.execute(f"TRUNCATE TABLE {', '.join(tablas)} RESTART IDENTITY CASCADE;")
-
-                    # 3. EJECUTAR EL CONTENIDO DEL SQL
-                    cursor.execute(queries)
-
-            messages.success(request, "SISTEMA RESTAURADO: La base de datos se ha actualizado con éxito desde el respaldo.")
-            return redirect('dashboard')
-
-        except Exception as e:
-            # Si algo falla, el 'transaction.atomic' hace que no se borre nada
-            messages.error(request, f"ERROR CRÍTICO DE INTEGRIDAD: {str(e).upper()}")
-            return redirect('restaurar_backup')
-
-    return render(request, 'superadmin/restaurar.html')
 
 @login_required
 def dar_baja_vehiculo(request, pk):
@@ -1691,15 +1883,10 @@ def reactivar_vehiculo(request, pk):
         return redirect('dashboard')
         
     vehiculo = get_object_or_404(Vehiculo, pk=pk)
-    
-    # Guardamos el estado anterior para la auditoría
     valor_anterior = {'estado': vehiculo.estado}
-    
-    # Cambiamos el estado a operacional
     vehiculo.estado = 'operacional'
     vehiculo.save()
     
-    # Registramos la acción en el Log de Auditoría
     LogAuditoria.objects.create(
         usuario=request.user,
         usuario_nombre=request.user.username,
@@ -1717,29 +1904,30 @@ def reactivar_vehiculo(request, pk):
 
 @login_required
 def editar_secretaria(request, pk):
-    # Solo personal administrativo puede editar
     if request.user.rol not in ['activos', 'admin', 'superadmin']:
         return redirect('dashboard')
         
-    area = get_object_or_404(Area, pk=pk)
+    secretaria = get_object_or_404(Area, pk=pk)
+    
+    num_vehiculos = Vehiculo.objects.filter(area=secretaria).count()
+    num_choferes = Usuario.objects.filter(area=secretaria).count()
     
     if request.method == 'POST':
-        form = AreaForm(request.POST, instance=area)
+        form = AreaForm(request.POST, instance=secretaria)
         if form.is_valid():
             form.save()
-            messages.success(request, f"La secretaría '{area.nombre}' ha sido actualizada.")
+            messages.success(request, f"Cambios guardados en {secretaria.nombre}")
             return redirect('gestion_catalogos')
     else:
-        form = AreaForm(instance=area)
+        form = AreaForm(instance=secretaria)
         
     return render(request, 'activos/secretaria_form.html', {
         'form': form, 
-        'editando': True,
-        'area': area
+        'editando': True, 
+        'secretaria': secretaria,
+        'num_v': num_vehiculos,
+        'num_c': num_choferes
     })
-
-# gestion/views.py
-from .forms import TipoCombustibleForm
 
 @login_required
 def editar_combustible(request, pk):
@@ -1757,7 +1945,7 @@ def editar_combustible(request, pk):
     else:
         form = TipoCombustibleForm(instance=combustible)
         
-    return render(request, 'catalogos/combustible_form.html', {'form': form, 'combustible': combustible})
+    return render(request, 'catalogos/combustible_form.html', {'form': form, 'editando':True, 'combustible': combustible})
 
 @login_required
 def kardex_logs_usuario(request, user_id):
@@ -1777,13 +1965,12 @@ def kardex_logs_usuario(request, user_id):
 def procesar_baja_usuario(request, pk):
     usuario = get_object_or_404(Usuario, pk=pk)
     if request.method == 'POST':
-        usuario.estado = 'inactivo' # O el nombre que uses para las bajas
-        usuario.is_active = False   # Desactiva el acceso al sistema
+        usuario.estado = 'inactivo' 
+        usuario.is_active = False  
         usuario.fecha_baja = timezone.now()
         usuario.motivo_baja = request.POST.get('motivo')
         usuario.save()
-        
-        # Registrar en Logs
+    
         registrar_auditoria(request, 'baja', 'Usuario', f"Baja de usuario {usuario.username}")
         
         messages.warning(request, f"El usuario {usuario.username} ha sido pasado al archivo de bajas.")
@@ -1791,18 +1978,198 @@ def procesar_baja_usuario(request, pk):
     
 @login_required
 def solicitar_correccion(request, bitacora_id):
-    bitacora = get_object_or_404(Bitacora, id=bitacora_id, chofer=request.user)
-    bitacora.solicitud_correccion = True
-    bitacora.save()
+    if request.method == 'POST':
+        bitacora = get_object_or_404(Bitacora, id=bitacora_id, chofer=request.user)
+        
+        if bitacora.solicitud_correccion:
+            messages.info(request, "Ya existe una solicitud pendiente para este registro.")
+            return redirect('dashboard')
+
+        motivo = request.POST.get('motivo_ajuste', 'No especificado')
+        
+        bitacora.solicitud_correccion = True
+        bitacora.motivo_correccion = motivo
+        bitacora.save()
+        
+        LogAuditoria.objects.create(
+            usuario=request.user,
+            usuario_nombre=request.user.username,
+            rol=request.user.get_rol_display(),
+            accion='modificacion',
+            tabla='Bitacora',
+            descripcion=f"SOLICITUD DE EDICIÓN: El chofer reporta error en Vale {bitacora.nro_vale_combustible}. Motivo: {motivo}",
+            ip=obtener_ip(request)
+        )
+        
+        messages.success(request, "Solicitud de rectificación enviada al Superadministrador.")
+        return redirect('dashboard')
     
-    LogAuditoria.objects.create(
-        usuario=request.user,
-        usuario_nombre=request.user.username,
-        accion='modificacion',
-        tabla='Bitacora',
-        descripcion=f"El chofer solicitó corrección para el vale {bitacora.nro_vale_combustible}",
-        ip=obtener_ip(request)
-    )
+    return redirect('dashboard')
+
+@login_required
+def kardex_vehiculo(request, pk):
+    vehiculo = get_object_or_404(Vehiculo, pk=pk)
     
-    messages.warning(request, "Solicitud enviada al Superadministrador.")
-    return redirect('historial_chofer')
+    historial_asignaciones = Asignacion.objects.filter(vehiculo=vehiculo).order_by('-fecha_asignacion')
+    
+    historial_mantenimiento = RegistroMantenimiento.objects.filter(vehiculo=vehiculo).order_by('-fecha_ingreso')
+
+    return render(request, 'catalogos/kardex_vehiculo.html', {
+        'vehiculo': vehiculo,
+        'asignaciones': historial_asignaciones,
+        'mantenimientos': historial_mantenimiento
+    })
+
+@login_required
+def editar_bitacora_admin(request, pk):
+    if request.user.rol != 'superadmin':
+        messages.error(request, "Acceso denegado. Solo el Superadmin puede realizar enmiendas.")
+        return redirect('dashboard')
+        
+    bitacora = get_object_or_404(Bitacora, pk=pk)
+    
+    if request.method == 'POST':
+        form = EnmiendaBitacoraForm(request.POST, request.FILES, instance=bitacora)
+        if form.is_valid():
+            enmienda = form.save(commit=False)
+            nuevo_destino = request.POST.get('destino')
+            nuevo_km = request.POST.get('km_final')
+            nuevos_litros = request.POST.get('cantidad_litros')
+            archivo = request.FILES.get('documento_respaldo')
+            if not archivo:
+                messages.error(request, "ERROR: Es obligatorio subir la Nota de Respaldo (Foto o PDF) para aplicar la enmienda.")
+                return render(request, 'superadmin/enmienda_form.html', {
+                    'form': form, 
+                    'bitacora': bitacora
+                })
+            enmienda.documento_enmienda = archivo
+            enmienda.solicitud_correccion = False
+            enmienda.estado_validacion = 'validado'
+            enmienda.save()
+            bitacora.destino = nuevo_destino
+            bitacora.km_final = int(nuevo_km)
+            bitacora.cantidad_litros = Decimal(nuevos_litros)
+            bitacora.documento_enmienda = archivo
+            
+            bitacora.solicitud_correccion = False 
+            bitacora.estado_validacion = 'validado'
+            bitacora.save()
+            justificacion = request.POST.get('justificacion')
+            LogAuditoria.objects.create(
+                usuario=request.user,
+                usuario_nombre=request.user.username,
+                rol="SUPERADMIN",
+                accion='modificacion',
+                tabla='Bitacora',
+                descripcion=f"ENMIENDA CRÍTICA: Registro {bitacora.id}. Motivo: {form.cleaned_data['motivo_enmienda']}",
+                ip=obtener_ip(request)
+            )
+        
+            messages.success(request, "Enmienda legal aplicada y registrada en el historial forense.")
+            return redirect('registros_visualizacion')  
+        else:
+            messages.error(request, "Error en el formulario. Asegúrese de subir el documento de respaldo.")
+    else:
+        form = EnmiendaBitacoraForm(instance=bitacora)
+
+    return render(request, 'superadmin/enmienda_form.html', {
+        'form': form, 
+        'bitacora': bitacora
+    })  
+
+@login_required
+def lista_solicitudes_enmienda(request):
+    if request.user.rol != 'superadmin':
+        return redirect('dashboard')
+        
+    solicitudes = Bitacora.objects.filter(solicitud_correccion=True).order_by('-fecha')
+    
+    return render(request, 'superadmin/solicitudes_list.html', {
+        'solicitudes': solicitudes
+    })
+
+@login_required
+def api_choferes_por_area(request, area_id):
+    area = get_object_or_404(Area, id=area_id)
+    choferes = Usuario.objects.filter(area=area, rol='chofer').values('first_name', 'last_name', 'ci', 'foto')
+    
+    lista_choferes = []
+    for c in choferes:
+        lista_choferes.append({
+            'nombre': f"{c['first_name']} {c['last_name']}",
+            'ci': c['ci'] if c['ci'] else "S/N",
+            'foto': f"{settings.MEDIA_URL}{c['foto']}" if c['foto'] else None
+        })
+        
+    return JsonResponse({
+        'area': area.nombre,
+        'total': len(lista_choferes),
+        'choferes': lista_choferes
+    })
+
+@login_required
+def imprimir_acta_entrega(request, pk):
+    asignacion = get_object_or_404(Asignacion, pk=pk)
+    template_path = 'reportes/pdf_acta_entrega.html'
+    context = {'asig': asignacion, 'fecha': timezone.now()}
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Acta_Entrega_{asignacion.vehiculo.placa}.pdf"'
+    template = get_template(template_path)
+    html = template.render(context)
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    return response
+
+@login_required
+def lista_reportes_chofer(request, chofer_id):
+    if request.user.rol not in ['admin', 'superadmin']:
+        return redirect('dashboard')
+
+    chofer = get_object_or_404(Usuario, id=chofer_id)
+    
+    meses_raw = Bitacora.objects.filter(chofer=chofer).dates('fecha', 'month', order='DESC')
+    
+    reportes_por_mes = []
+    nombres_meses = {
+        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio',
+        7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+    }
+    meses_disponibles = Bitacora.objects.filter(chofer=chofer).dates('fecha', 'month', order='DESC')
+    dias_disponibles = Bitacora.objects.filter(chofer=chofer).order_by('-fecha')[:15] 
+    for fecha in meses_raw:
+        bitacoras_del_mes = Bitacora.objects.filter(
+            chofer=chofer, 
+            fecha__year=fecha.year, 
+            fecha__month=fecha.month
+        ).order_by('-fecha')
+
+        reportes_por_mes.append({
+            'anio': fecha.year,
+            'mes_num': fecha.month,
+            'mes_nombre': nombres_meses[fecha.month],
+            'bitacoras_diarias': bitacoras_del_mes 
+        })
+        
+    context = {
+        'chofer': chofer,
+        'meses': meses_disponibles,
+        'dias': dias_disponibles,
+        'reportes': reportes_por_mes,
+        'anio_actual': datetime.now().year,
+    }
+
+    return render(request, 'admin_potosi/lista_reportes.html', context)
+
+@login_required
+def buscar_diario_por_fecha(request, chofer_id):
+    fecha_sel = request.GET.get('fecha')
+    if not fecha_sel:
+        messages.error(request, "Seleccione una fecha válida.")
+        return redirect('lista_reportes_chofer', chofer_id=chofer_id)
+    
+    bitacora = Bitacora.objects.filter(chofer_id=chofer_id, fecha__date=fecha_sel).first()
+    
+    if bitacora:
+        return redirect('reporte_diario_detalle', bitacora_id=bitacora.id)
+    else:
+        messages.error(request, f"No se encontró actividad registrada para el día {fecha_sel}")
+        return redirect('lista_reportes_chofer', chofer_id=chofer_id)

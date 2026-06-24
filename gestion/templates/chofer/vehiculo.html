@@ -1,30 +1,163 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-3xl mx-auto">
-    <h2 class="text-3xl font-black font-headline uppercase text-slate-900 mb-8">Estado de mi Vehículo</h2>
-    
-    {% if asignacion %}
-    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 space-y-6">
-        <div class="flex items-center gap-6 border-b pb-6">
-            <div class="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center text-red-800">
-                <span class="material-symbols-outlined text-4xl">directions_car</span>
-            </div>
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- CABECERA DE FICHA -->
+    <div class="relative overflow-hidden rounded-[2.5rem] bg-white border border-slate-100 p-8 shadow-sm">
+        <div class="relative z-10 flex justify-between items-center">
             <div>
-                <h3 class="text-2xl font-black uppercase">{{ asignacion.vehiculo.marca }} {{ asignacion.vehiculo.modelo }}</h3>
-                <p class="text-sm font-bold text-primary uppercase">Placa: {{ asignacion.vehiculo.placa }}</p>
+                <span class="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-2 block">Ficha Técnica de Activo</span>
+                <h2 class="text-4xl font-black font-headline text-slate-900 uppercase tracking-tight">Estado de mi Vehículo</h2>
+                <p class="text-slate-500 font-medium mt-1">Información oficial y técnica de la unidad asignada por el GADP.</p>
+            </div>
+            <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl hidden md:block">
+                <p class="text-[9px] font-black uppercase opacity-60 tracking-widest">Kilometraje Actual</p>
+                <p class="text-2xl font-black font-mono">
+                    {% if asignacion %}{{ asignacion.vehiculo.kilometraje_actual }}{% else %}0{% endif %} 
+                    <span class="text-xs">KM</span>
+                </p>
             </div>
         </div>
+        <span class="material-symbols-outlined absolute -right-6 -bottom-6 text-slate-50 text-[12rem] notranslate select-none">directions_car</span>
+    </div>
+
+    {% if asignacion %}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <div class="grid grid-cols-2 gap-6 text-sm">
-            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Kilometraje Actual</p><p class="font-black">{{ asignacion.vehiculo.kilometraje_actual }} KM</p></div>
-            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Combustible</p><p class="font-black">{{ asignacion.vehiculo.tipo_combustible }}</p></div>
-            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Estado Técnico</p><p class="font-black text-green-600">{{ asignacion.vehiculo.get_estado_display }}</p></div>
-            <div><p class="text-[10px] font-bold text-slate-400 uppercase">Nº Chasis</p><p class="font-mono font-bold">{{ asignacion.vehiculo.nro_chasis }}</p></div>
+        <!-- COLUMNA IZQUIERDA: IDENTIDAD DEL VEHÍCULO -->
+        <div class="lg:col-span-5 space-y-6">
+            <div class="bg-white p-6 rounded-[3rem] shadow-xl border border-slate-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+                
+                <!-- Foto del Vehículo -->
+                <div class="w-full aspect-video rounded-[2rem] overflow-hidden shadow-inner border-4 border-white bg-slate-100 mb-6">
+                    {% if asignacion.vehiculo.foto %}
+                        <img src="{{ asignacion.vehiculo.foto.url }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                            <span class="material-symbols-outlined text-7xl notranslate">image</span>
+                            <p class="text-[10px] font-black uppercase mt-2">Sin foto oficial</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="text-center space-y-4">
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900 uppercase">{{ asignacion.vehiculo.marca }}</h3>
+                        <p class="text-primary font-bold uppercase text-xs tracking-[0.2em]">{{ asignacion.vehiculo.modelo }}</p>
+                    </div>
+                    
+                    <div class="inline-block bg-slate-900 text-white px-8 py-2 rounded-xl text-xl font-black tracking-tighter shadow-lg uppercase">
+                        {{ asignacion.vehiculo.placa }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado de Documentación -->
+            <div class="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-200">
+                <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Documentación de Respaldo</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-600">Memorándum de Asignación</span>
+                        <span class="text-[10px] font-black text-green-600 uppercase">Vigente</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-600">SOAT Gestión {% now "Y" %}</span>
+                        <span class="text-[10px] font-black text-green-600 uppercase">Al día</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: ESPECIFICACIONES Y KARDEX -->
+        <div class="lg:col-span-7 space-y-8">
+            <!-- Especificaciones Técnicas -->
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-3">
+                    <span class="w-1.5 h-6 bg-primary rounded-full"></span>
+                    Especificaciones Técnicas
+                </h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-4">
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tipo de Insumo</p>
+                        <p class="font-bold text-slate-700 uppercase">{{ asignacion.vehiculo.tipo_combustible|default:"Gasolina" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Color de Unidad</p>
+                        <p class="font-bold text-slate-700 uppercase">{{ asignacion.vehiculo.color|default:"No definido" }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Año / Gestión</p>
+                        <p class="font-bold text-slate-700">{{ asignacion.vehiculo.anio|default:"---" }}</p>
+                    </div>
+                    <div class="space-y-1 ">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nº de Chasis</p>
+                        <p class="font-mono font-bold text-slate-700 text-xs">{{ asignacion.vehiculo.nro_chasis }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rendimiento</p>
+                        <p class="font-bold text-slate-700">{{ asignacion.vehiculo.rendimiento_km_litro }} KM/L</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Estado Operativo</p>
+                        <span class="text-[10px] font-black text-green-600 uppercase">{{ asignacion.vehiculo.get_estado_display }}</span>
+                    </div>
+                    <!-- Kilometraje y Combustible Destacados -->
+                    <div class="space-y-1 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kilometraje</p>
+                        <p class="text-lg font-black text-slate-900">{{ asignacion.vehiculo.kilometraje_actual }} <span class="text-[10px]">KM</span></p>
+                    </div>
+                    <div class="space-y-1 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 col-span-2">
+                        <p class="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Saldo Combustible Actual</p>
+                        <p class="text-xl font-black text-emerald-900">
+                            {{ asignacion.vehiculo.combustible_actual|floatformat:2 }} <span class="text-xs">LTS</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mi Kardex con este Vehículo -->
+            <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-slate-100">
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-3">
+                    <span class="material-symbols-outlined text-primary notranslate">history</span>
+                    Mi Historial con esta Unidad
+                </h3>
+                <div class="space-y-4">
+                    {% for b in historial_reciente %}
+                    <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-md transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
+                                <span class="material-symbols-outlined text-sm notranslate">route</span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900 uppercase">{{ b.destino }}</p>
+                                <p class="text-[9px] text-slate-400 font-bold uppercase">{{ b.fecha|date:"d M Y" }} — {{ b.hora_salida|time:"H:i" }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <!-- Usamos la propiedad recorrido_real que ya definimos en el modelo -->
+                            <p class="text-sm font-black text-slate-900">{{ b.recorrido_real }} KM</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase">Recorrido</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="py-10 text-center">
+                        <span class="material-symbols-outlined text-slate-200 text-5xl mb-2 notranslate">history_toggle_off</span>
+                        <p class="text-xs text-slate-400 italic">Aún no has registrado viajes finalizados con este vehículo.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
     {% else %}
-    <div class="bg-amber-50 p-10 rounded-2xl text-center border border-amber-200">
-        <p class="text-amber-800 font-bold">No tienes un vehículo asignado actualmente.</p>
+    <!-- Pantalla si no tiene vehículo -->
+    <div class="bg-white p-20 rounded-[3rem] shadow-sm border border-dashed border-slate-200 text-center">
+        <span class="material-symbols-outlined text-slate-200 text-8xl mb-4 notranslate">no_transport</span>
+        <h3 class="text-2xl font-black text-slate-400 uppercase">Sin Vehículo Asignado</h3>
+        <p class="text-slate-400 mt-2">Usted no figura como responsable de ninguna unidad vehicular actualmente.</p>
     </div>
     {% endif %}
 </div>

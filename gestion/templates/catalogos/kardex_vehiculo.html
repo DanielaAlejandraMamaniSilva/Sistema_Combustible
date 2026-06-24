@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Cabecera de Acción -->
+    <div class="flex justify-between items-center no-print">
+        <a href="{% url 'gestion_catalogos' %}" class="flex items-center gap-2 text-slate-500 hover:text-primary transition-all font-bold text-xs uppercase">
+            <span class="material-symbols-outlined">arrow_back</span> Volver al Catálogo
+        </a>
+    </div>
+
+    <!-- FICHA MAESTRA DEL VEHÍCULO -->
+    <div class="bg-white rounded-[3rem] shadow-xl border border-slate-100 overflow-hidden relative">
+        <div class="absolute top-0 left-0 w-full h-3 bg-primary"></div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+            <!-- Lado Izquierdo: Foto y Placa -->
+            <div class="lg:col-span-5 bg-slate-50/50 p-10 border-r border-slate-100 flex flex-col items-center justify-center">
+                <div class="w-full aspect-video rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white mb-8">
+                    {% if vehiculo.foto %}
+                        <img src="{{ vehiculo.foto.url }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-slate-200 flex flex-col items-center justify-center text-slate-400">
+                            <span class="material-symbols-outlined text-6xl mb-2">image_not_supported</span>
+                            <p class="text-[10px] font-black uppercase">Sin fotografía oficial</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="text-center">
+                    <span class="bg-primary text-white px-6 py-2 rounded-xl text-2xl font-black tracking-tighter shadow-lg shadow-red-900/20">
+                        {{ vehiculo.placa }}
+                    </span>
+                    <p class="mt-4 text-slate-400 font-black uppercase text-[10px] tracking-[0.3em]">Identificación Oficial GADP</p>
+                </div>
+            </div>
+
+            <!-- Lado Derecho: Especificaciones -->
+            <div class="lg:col-span-7 p-12 space-y-10">
+                <div>
+                    <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">{{ vehiculo.marca }} {{ vehiculo.modelo }}</h2>
+                    <p class="text-primary font-bold uppercase text-xs tracking-widest mt-1">{{ vehiculo.tipo }} — GESTIÓN {{ vehiculo.anio }}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-y-8 gap-x-12">
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Color de Unidad</p>
+                        <p class="font-bold text-slate-700 uppercase">{{ vehiculo.color }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rendimiento Técnico</p>
+                        <p class="font-bold text-slate-700">{{ vehiculo.rendimiento_km_litro }} KM / LITRO</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Capacidad de Tanque</p>
+                        <p class="font-bold text-slate-700">{{ vehiculo.capacidad_tanque }} LITROS</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Nº de Chasis</p>
+                        <p class="font-mono font-bold text-slate-700">{{ vehiculo.nro_chasis }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-100 flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full {% if vehiculo.estado == 'operacional' %}bg-green-500{% else %}bg-amber-500{% endif %}"></span>
+                        <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Estado: {{ vehiculo.get_estado_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HISTORIALES -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Historial de Asignaciones -->
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">person_pin</span> Historial de Conductores
+            </h3>
+            <div class="space-y-4">
+                {% for asig in asignaciones %}
+                <div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div>
+                        <p class="text-xs font-bold text-slate-900">{{ asig.chofer.get_full_name }}</p>
+                        <p class="text-[9px] text-slate-400 uppercase font-medium">{{ asig.fecha_asignacion|date:"d M Y" }} — {% if asig.esta_activo %}Actual{% else %}{{ asig.fecha_fin|date:"d M Y" }}{% endif %}</p>
+                    </div>
+                    {% if asig.esta_activo %}
+                        <span class="bg-green-100 text-green-700 text-[8px] font-black px-2 py-0.5 rounded-full uppercase">Vigente</span>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-400 italic">Sin registros de asignación.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Historial de Mantenimiento -->
+        <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+            <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">build_circle</span> Registro de Taller
+            </h3>
+            <div class="space-y-4">
+                {% for mant in mantenimientos %}
+                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex justify-between mb-1">
+                        <p class="text-xs font-bold text-slate-900">{{ mant.motivo }}</p>
+                        <p class="text-[9px] font-black text-slate-400">{{ mant.fecha_ingreso|date:"d/m/Y" }}</p>
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-tight">{{ mant.observaciones|truncatechars:80 }}</p>
+                </div>
+                {% empty %}
+                <p class="text-xs text-slate-400 italic">Sin ingresos a mantenimiento registrados.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white; }
+        .max-w-6xl { max-width: 100%; }
+    }
+</style>
+{% endblock %}

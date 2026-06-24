@@ -1,30 +1,177 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm border p-10">
-    <div class="mb-8 border-b pb-6">
-        <h2 class="text-3xl font-black text-slate-900 font-headline uppercase">
-            {% if editando %}Editar Vehículo{% else %}Registrar Nueva Unidad{% endif %}
-        </h2>
-        <p class="text-slate-500 font-medium">Ingrese los datos técnicos del vehículo oficial.</p>
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Cabecera -->
+    <div class="flex justify-between items-center border-b border-slate-200 pb-6">
+        <div>
+            <h2 class="text-3xl font-black font-headline text-slate-900 uppercase tracking-tight">
+                {% if editando %}Edición de Activo{% else %}Registro de Nueva Unidad{% endif %}
+            </h2>
+            <p class="text-slate-500 font-medium uppercase text-xs tracking-widest">Gestión de Activos Fijos - GADP Potosí</p>
+        </div>
     </div>
 
-    <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <form method="POST" enctype="multipart/form-data" class="space-y-10">
         {% csrf_token %}
-        {% for field in form %}
-        <div class="flex flex-col gap-2">
-            <label class="text-[10px] font-black uppercase text-slate-400 tracking-widest">{{ field.label }}</label>
-            {{ field }}
-        </div>
-        {% endfor %}
 
-        <div class="md:col-span-2 pt-6 flex gap-4">
-            <button type="submit" class="bg-primary-container text-white px-8 py-4 rounded-xl font-black uppercase tracking-widest shadow-lg hover:bg-primary transition-all">
-                Guardar Vehículo
-            </button>
-            <a href="{% url 'gestion_catalogos' %}" class="bg-slate-100 text-slate-600 px-8 py-4 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center">
-                Cancelar
-            </a>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            
+            <!-- COLUMNA IZQUIERDA: FOTOGRAFÍA -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white p-8 rounded-[3rem] shadow-2xl border border-slate-100 text-center relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-3 bg-primary"></div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-6">Imagen del Vehículo</p>
+                    
+                    <!-- Área de Carga de Imagen -->
+                    <div class="relative group cursor-pointer mx-auto w-full aspect-video bg-slate-50 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl transition-all hover:ring-8 hover:ring-primary/10" 
+                         onclick="document.getElementById('id_foto').click();">
+                        
+                        {% if editando and form.instance.foto %}
+                            <img src="{{ form.instance.foto.url }}" id="preview" class="w-full h-full object-cover">
+                        {% else %}
+                            <div id="placeholder-img" class="w-full h-full flex flex-col items-center justify-center text-slate-300">
+                                <span class="material-symbols-outlined text-6xl notranslate">directions_car</span>
+                                <p class="text-[10px] font-black mt-2 uppercase tracking-widest">Subir Fotografía</p>
+                            </div>
+                            <img id="preview" class="w-full h-full object-cover hidden">
+                        {% endif %}
+
+                        <!-- Overlay -->
+                        <div class="absolute inset-0 bg-primary/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                            <div class="bg-white p-3 rounded-full shadow-xl">
+                                <span class="material-symbols-outlined text-primary text-3xl notranslate">add_a_photo</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase">Formatos permitidos: JPG, PNG</p>
+                    </div>
+
+                    <!-- Input oculto -->
+                    <div class="hidden">
+                        {{ form.foto }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: DATOS TÉCNICOS -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- Bloque 1: Identificación (Añadidos Año, Tipo y Color) -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                        <span class="w-2 h-2 bg-primary rounded-full"></span> Identificación de la Unidad
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Placa</label>
+                            {{ form.placa }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Marca</label>
+                            {{ form.marca }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Modelo</label>
+                            {{ form.modelo }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Año</label>
+                            {{ form.anio }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Tipo (Ej: Vagoneta)</label>
+                            {{ form.tipo }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Color</label>
+                            {{ form.color }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bloque 2: Especificaciones y Legal (Añadido Vencimiento SOAT) -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                        <span class="w-2 h-2 bg-amber-500 rounded-full"></span> Especificaciones y Legal
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Rendimiento (KM/L)</label>
+                            {{ form.rendimiento_km_litro }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Capacidad Tanque (Lts)</label>
+                            {{ form.capacidad_tanque }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Litros Iniciales en Tanque</label>
+                            {{ form.combustible_inicial }}
+                            <p class="text-[8px] text-slate-400 mt-1 ml-2">* Saldo con el que inicia el Reporte Matriz.</p>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Kilometraje Actual del Vehiculo</label>
+                            {{ form.kilometraje_actual }}
+                            <p class="text-[8px] text-slate-400 mt-1 ml-2">* Kilometraje de vehiculo para bitacora.</p>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Nº de Chasis</label>
+                            {{ form.nro_chasis }}
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Vencimiento SOAT</label>
+                            {{ form.vencimiento_soat }}
+                        </div>
+                        <div class="space-y-1 md:col-span-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase ml-2">Estado Operativo</label>
+                            {{ form.estado }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones -->
+                <div class="flex gap-4 pt-4">
+                    {% if form.errors %}
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                            <strong class="font-bold">Errores encontrados:</strong>
+                            <ul>
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <button type="submit" class="flex-1 bg-primary text-white py-5 rounded-[1.5rem] font-black uppercase tracking-[0.2em] shadow-xl shadow-red-900/20 hover:bg-red-900 transition-all active:scale-95">
+                        {% if editando %}ACTUALIZAR ACTIVO{% else %}REGISTRAR VEHÍCULO{% endif %}
+                    </button>
+                    <a href="{% url 'gestion_catalogos' %}" class="px-12 py-5 bg-slate-100 text-slate-500 rounded-[1.5rem] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all text-center">
+                        CANCELAR
+                    </a>
+                </div>
+            </div>
         </div>
     </form>
 </div>
+
+<script>
+    const fotoInput = document.getElementById('id_foto');
+    const preview = document.getElementById('preview');
+    const placeholder = document.getElementById('placeholder-img');
+
+    if (fotoInput) {
+        fotoInput.onchange = evt => {
+            const [file] = fotoInput.files;
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        }
+    }
+</script>
 {% endblock %}
