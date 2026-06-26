@@ -273,28 +273,20 @@ class Bitacora(models.Model):
     def recorrido_real(self):
         return self.km_final - self.km_inicial
     def get_motivo_oficial(self):
-        """
-        Lógica de Negocio: Si todos los viajes del día son en Potosí/Tomás Frías,
-        devuelve 'APOYO LOCAL'. De lo contrario, devuelve el motivo real.
-        """
-        # Palabras clave para identificar la zona local
+        
         zona_local = ['potosí', 'potosi', 'tomas frías', 'tomas frias', 'tomás frías']
         
-        # Obtenemos los viajes registrados en el formset para esta bitácora
         viajes = self.viajes.all()
         
-        # Si el chofer no registró tramos detallados, usamos el objetivo general
         if not viajes.exists():
             return self.objetivo_comision
             
         es_todo_local = True
         
         for v in viajes:
-            # Verificamos origen y destino de cada tramo
             o = v.origen.lower()
             d = v.destino.lower()
             
-            # Si algún punto NO es local, marcamos como falso
             o_es_local = any(zona in o for zona in zona_local)
             d_es_local = any(zona in d for zona in zona_local)
             
@@ -500,3 +492,20 @@ class SolicitudEdicion(models.Model):
 
     def __str__(self):
         return f"Solicitud de {self.chofer.username} para Bitácora #{self.bitacora.id}"
+
+class ReporteFolio(models.Model):
+    numero = models.PositiveIntegerField()
+    chofer = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    mes = models.IntegerField()
+    anio = models.IntegerField()
+    periodo = models.CharField(max_length=20) 
+    fecha_generacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['numero', 'periodo'], name='unique_reporte_periodo')
+        ]
+    
+    def __str__(self):
+        return f"{self.periodo} Nº {self.numero}"
+    

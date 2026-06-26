@@ -8,7 +8,7 @@
     /* Estilos de Documento Formal */
     .report-body {
         background-color: #f1f5f9;
-        padding: 3rem 1rem;
+        padding: 2rem 1rem;
         min-height: 100vh;
         font-family: 'Inter', 'Roboto', sans-serif;
     }
@@ -17,7 +17,7 @@
         background: white;
         width: 297mm; /* Tamaño A4 Horizontal */
         margin: 0 auto;
-        padding: 2cm;
+        padding: 1.5cm; /* Reducido un poco para aprovechar espacio */
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
         position: relative;
         color: #1e293b;
@@ -32,7 +32,7 @@
         transform: translate(-50%, -50%);
         width: 400px;
         height: 400px;
-        background-image: url('{% static "img/escudo_potosi.png" %}');
+        background-image: url('{% static "img/logo_potosi.png" %}');
         background-size: contain;
         background-repeat: no-repeat;
         opacity: 0.03;
@@ -48,14 +48,14 @@
 
     .table-official th, .table-official td {
         border: 1px solid #334155;
-        padding: 6px 8px;
+        padding: 5px 8px; /* Ajustado para ser más compacto */
     }
 
-    /* Colores de Auditoría Sofisticados */
-    .bg-header-yellow { background-color: #fffbeb !important; } /* Amarillo crema */
-    .bg-data-green { background-color: #f0fdf4 !important; }   /* Verde menta suave */
-    .bg-calc-orange { background-color: #fff7ed !important; }  /* Naranja melocotón */
-    .bg-label-gray { background-color: #f8fafc !important; }   /* Gris azulado */
+    /* Colores de Auditoría */
+    .bg-header-yellow { background-color: #fffbeb !important; }
+    .bg-data-green { background-color: #f0fdf4 !important; }
+    .bg-calc-orange { background-color: #fff7ed !important; }
+    .bg-label-gray { background-color: #f8fafc !important; }
 
     .text-primary-potosi { color: #770003; }
 
@@ -75,7 +75,7 @@
 
 <div class="report-body">
     <!-- BARRA DE HERRAMIENTAS SUPERIOR -->
-    <div class="max-w-[297mm] mx-auto no-print flex justify-between items-center mb-10">
+    <div class="max-w-[297mm] mx-auto no-print flex justify-between items-center mb-6">
         <div class="flex items-center gap-4">
             <a href="{% url 'lista_reportes_chofer' chofer.id %}" class="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200 text-slate-400 hover:text-primary transition-all">
                 <span class="material-symbols-outlined">arrow_back</span>
@@ -98,32 +98,31 @@
     <!-- HOJA DE REPORTE -->
     <div class="sheet">
         <!-- ENCABEZADO INSTITUCIONAL -->
-        <div class="flex justify-between items-start mb-8 border-b-2 border-slate-900 pb-6">
+        <div class="flex justify-between items-start mb-6 border-b-2 border-slate-900 pb-4">
             <div class="flex items-center gap-6">
-                <img src="{% static 'img/logo_potosi.png' %}" class="h-20 w-auto" alt="Escudo Potosí">
+                <img src="{% static 'img/logo_potosi.png' %}" class="h-16 w-auto" alt="Escudo Potosí">
                 <div class="space-y-0.5">
-                    <h1 class="text-lg font-black text-slate-900 leading-none uppercase">Gobierno Autónomo Departamental de Potosí</h1>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Secretaría Departamental Administrativa y Financiera</p>
-                    <p class="text-[9px] font-medium text-slate-400 uppercase">Unidad de Activos Fijos y Control de Combustible</p>
+                    <h1 class="text-base font-black text-slate-900 leading-none uppercase">Gobierno Autónomo Departamental de Potosí</h1>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Secretaría Departamental Administrativa y Financiera</p>
+                    <p class="text-[8px] font-medium text-slate-400 uppercase">Unidad de Activos Fijos y Control de Combustible</p>
                 </div>
             </div>
             <div class="text-right">
-                <div class="inline-block border-2 border-primary px-4 py-2 rounded-xl">
-                    <p class="text-[10px] font-black text-primary uppercase tracking-widest">Formulario Matriz</p>
-                    <p class="text-xl font-black text-slate-900">Nº {{ bitacoras.0.id|default:"000" }}</p>
+                <div class="inline-block border-2 border-primary px-6 py-2 rounded-2xl">
+                    <p class="text-[9px] font-black text-primary uppercase tracking-widest">Formulario Matriz</p>
+                    <p class="text-2xl font-black text-slate-900">Nº {{ nro_reporte }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Dentro de planilla_oficial.html -->
-        <tr>
-            <th colspan="12" class="text-center font-bold text-sm py-2">
+        <div class="mb-4 text-center">
+            <h2 class="font-black text-sm uppercase tracking-widest text-slate-800">
                 REPORTE DE USO DE COMBUSTIBLE - {{ periodo_nombre|upper }}
-            </th>
-        </tr>
+            </h2>
+        </div>
 
         <!-- BLOQUE DE INFORMACIÓN GENERAL -->
-        <table class="table-official mb-6">
+        <table class="table-official mb-4">
             <tr class="bg-header-yellow">
                 <td class="font-black text-slate-500 w-32">GESTIÓN</td>
                 <td class="font-bold text-slate-900">{{ anio }}</td>
@@ -132,7 +131,7 @@
             </tr>
             <tr class="bg-header-yellow">
                 <td class="font-black text-slate-500">MES</td>
-                <td class="font-bold text-slate-900">{{ mes }}</td>
+                <td class="font-bold text-slate-900">{{ mes_nombre }}</td>
                 <td class="font-black text-slate-500">TIPO VEHÍCULO</td>
                 <td class="font-bold text-slate-900">{{ vehiculo.tipo|upper }}</td>
                 <td class="font-black text-slate-500 w-32">PLACA</td>
@@ -189,23 +188,15 @@
                     <td class="text-center">{{ r.llegada }}</td>
                     <td class="bg-calc-orange text-center font-black">{{ r.recorrido }}</td>
                     <td class="text-center font-bold">{{ vehiculo.rendimiento_km_litro }}</td>
-                    <td class="text-center text-[8px]">{{ chofer.last_name }}</td>
+                    <td class="text-center uppercase" style="font-size: 8px;">{{ r.responsable }}</td>
                 </tr>
                 {% endfor %}
-
-                <!-- FILAS DE RELLENO PARA ESTÉTICA -->
-                {% with ""|center:8 as range %}
-                {% for _ in range %}
-                <tr>
-                    {% for i in "123456789012" %}<td class="py-3">&nbsp;</td>{% endfor %}
-                </tr>
-                {% endfor %}
-                {% endwith %}
+                <!-- SE ELIMINARON LAS FILAS DE RELLENO AQUÍ -->
             </tbody>
         </table>
 
         <!-- RESUMEN TÉCNICO Y FIRMAS -->
-        <div class="mt-8 flex gap-10 items-start">
+        <div class="mt-6 flex gap-10 items-start">
             <!-- Cuadro de Totales -->
             <div class="w-1/3">
                 <table class="table-official">
@@ -219,7 +210,7 @@
             </div>
 
             <!-- Bloque de Firmas Formal -->
-            <div class="flex-1 grid grid-cols-5 gap-0 border border-slate-900 h-32">
+            <div class="flex-1 grid grid-cols-5 gap-0 border border-slate-900 h-28">
                 <div class="border-r border-slate-900 flex flex-col justify-end p-2 text-center text-[7px] font-black uppercase">
                     <div class="border-t border-slate-400 mx-2 mb-2"></div>
                     Firma Conductor
@@ -244,20 +235,20 @@
         </div>
 
         <!-- OBSERVACIONES -->
-        <div class="mt-6">
+        <div class="mt-4">
             <table class="table-official">
                 <tr>
                     <td class="bg-label-gray font-black w-32 text-center">OBSERVACIONES</td>
-                    <td class="bg-data-green h-12"></td>
+                    <td class="bg-data-green h-10"></td>
                 </tr>
             </table>
         </div>
 
         <!-- Footer de página -->
-        <div class="mt-10 flex justify-between items-center text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+        <div class="mt-6 flex justify-between items-center text-[7px] font-bold text-slate-400 uppercase tracking-widest">
             <span>Generado por: {{ user.get_full_name }}</span>
             <span>Fecha de Emisión: {% now "d/m/Y H:i" %}</span>
-            <span>Soberanía Potosí - Sistema de Gestión de Flotas</span>
+            <span>GADP Potosí - Sistema de Gestión de Flotas</span>
         </div>
     </div>
 </div>

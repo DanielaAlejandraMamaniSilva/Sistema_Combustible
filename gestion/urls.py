@@ -56,7 +56,6 @@ urlpatterns = [
     path('validacion/detalle/<int:bitacora_id>/', views.detalle_validacion, name='detalle_validacion'),
     path('validacion/procesar/<int:bitacora_id>/', views.procesar_validacion, name='procesar_validacion'),
 
-    path('reportes/diario/<int:bitacora_id>/', views.reporte_diario_detallado, name='reporte_diario'),
     path('reportes/chofer/<int:chofer_id>/lista/', views.lista_reportes_chofer, name='lista_reportes_chofer'),
     path('monitoreo/detalle/<int:chofer_id>/', views.historial_diario_chofer, name='historial_diario_admin'),
     path('activos/secretarias/', views.lista_secretarias, name='lista_secretarias'),

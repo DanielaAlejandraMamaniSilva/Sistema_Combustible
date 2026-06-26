@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema, InventarioCombustible, Peaje, Viaje, ValeCombustible, RegistroMantenimiento,BitacoraActividad, JustificacionEdicion, LogAuditoria
+from .models import Usuario, Vehiculo, Asignacion, Bitacora, Area, TipoCombustible, AjusteSistema, InventarioCombustible, Peaje, RegistroMantenimiento,BitacoraActividad, JustificacionEdicion, LogAuditoria, ReporteFolio
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import get_user_model
 from django.forms.models import model_to_dict
@@ -9,7 +9,6 @@ from django.contrib import messages
 from .utils import obtener_ip, generar_sql_insert,evaluar_tipo_bitacora, registrar_auditoria
 from django.utils.crypto import get_random_string
 from django.apps import apps
-from .services import procesar_bitacoras_periodo
 from .filters import BitacoraFilter
 from django.core.management import call_command
 from xhtml2pdf import pisa
@@ -20,17 +19,18 @@ from django.utils import timezone
 from django.contrib.admin.models import LogEntry, CHANGE
 from django.contrib.contenttypes.models import ContentType
 import openpyxl
-from django.db import models
-from django.db import transaction
+import calendar
+from django.db import transaction, models
 from django.http import HttpResponseForbidden
 from django.db.models import Q
 from django.http import HttpResponse
 from decimal import Decimal
 import json
+from django.db.models.functions import TruncDate
 import io
 from django.conf import settings 
 from django.http import JsonResponse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 @login_required
 def dashboard_view(request):
@@ -937,120 +937,174 @@ def eliminar_vehiculo(request, pk):
 @login_required
 def reporte_oficial_chofer(request, chofer_id):
     chofer = get_object_or_404(Usuario, id=chofer_id)
-    
-    anio = int(request.GET.get('anio', datetime.now().year))
-    mes_raw = request.GET.get('mes', datetime.now().month)
-    periodo = request.GET.get('periodo', 'mensual') 
+    ahora = timezone.localtime(timezone.now())
+
+    anio = int(request.GET.get('anio', ahora.year))
+    mes_raw = request.GET.get('mes', ahora.month)
+    periodo = request.GET.get('periodo', 'mensual')
 
     mes_map = {'ENERO':1,'FEBRERO':2,'MARZO':3,'ABRIL':4,'MAYO':5,'JUNIO':6,'JULIO':7,'AGOSTO':8,'SEPTIEMBRE':9,'OCTUBRE':10,'NOVIEMBRE':11,'DICIEMBRE':12}
-    mes = int(mes_raw) if str(mes_raw).isdigit() else mes_map.get(str(mes_raw).upper(), datetime.now().month)
-
-    vehiculo_asig = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first()
-    if not vehiculo_asig:
-        messages.error(request, "El chofer no tiene un vehículo asignado actualmente.")
-        return redirect('lista_reportes_chofer', chofer_id=chofer.id)
-
-    bitacoras = Bitacora.objects.filter(chofer=chofer, vehiculo=vehiculo_asig.vehiculo, fecha__year=anio, fecha__month=mes).order_by('fecha', 'id')
-
-    titulo_periodo = "Mes Completo"
-    if periodo == 'quincena1':
-        bitacoras = bitacoras.filter(fecha__day__lte=15)
-        titulo_periodo = "1ra Quincena (Día 1 al 15)"
-    elif periodo == 'quincena2':
-        bitacoras = bitacoras.filter(fecha__day__gt=15)
-        titulo_periodo = "2da Quincena (Día 16 al 31)"
+    mes = int(mes_raw) if str(mes_raw).isdigit() else mes_map.get(str(mes_raw).upper(), ahora.month)
     
-    if bitacoras.exists():
-        primera_del_reporte = bitacoras.first()
-        bitacora_previa = Bitacora.objects.filter(
-            vehiculo=vehiculo_asig.vehiculo, 
-            fecha__lt=primera_del_reporte.fecha,
-            estado_viaje='finalizado'
-        ).order_by('-fecha', '-id').first()
+    def obtener_nro_folio(c, a, m, p):
+        existente = ReporteFolio.objects.filter(chofer=c, anio=a, mes=m, periodo=p).first()
+        if existente:
+            return existente.numero
 
-        if bitacora_previa:
-            saldo_anterior = bitacora_previa.saldo_actual
-            km_inicial_reporte = bitacora_previa.km_final
+
+        if p.startswith('quincena'):
+            ultimo = ReporteFolio.objects.filter(periodo__startswith='quincena').order_by('numero').last()
         else:
-            saldo_anterior = vehiculo_asig.vehiculo.combustible_inicial
-            km_inicial_reporte = 0 
-    else:
-        saldo_anterior = Decimal('0.00')
-        km_inicial_reporte = 0
+            ultimo = ReporteFolio.objects.filter(periodo='mensual').order_by('numero').last()
 
-    registros_procesados = []
-    total_recorrido = 0
-    total_cargado = 0
-    total_utilizado = 0
+        nuevo_nro = (ultimo.numero + 1) if ultimo else 1
+        
+        ReporteFolio.objects.create(numero=nuevo_nro, chofer=c, anio=a, mes=m, periodo=p)
+        return nuevo_nro
+
+    nro_raw = obtener_nro_folio(chofer, anio, mes, periodo)
+    nro_reporte = f"{int(nro_raw):03d}"
     
-    for b in bitacoras:
-        recorrido = b.km_final - b.km_inicial
-        registros_procesados.append({
-            'fecha': b.fecha,
-            'vale': b.nro_vale_combustible,
-            'ingreso': b.cantidad_litros,
-            'utilizado': b.combustible_utilizado,
-            'saldo': b.saldo_actual,
-            'objeto': b.get_motivo_oficial(), 
-            'salida': b.km_inicial,
-            'llegada': b.km_final,
-            'recorrido': recorrido,
-        })
-        total_recorrido += recorrido
-        total_cargado += b.cantidad_litros
-        total_utilizado += b.combustible_utilizado
+    try:
+        nro_reporte = int(nro_raw)
+    except (ValueError, TypeError):
+        nro_reporte = 1
 
-    nombres_meses = {1:'Enero', 2:'Febrero', 3:'Marzo', 4:'Abril', 5:'Mayo', 6:'Junio', 7:'Julio', 8:'Agosto', 9:'Septiembre', 10:'Octubre', 11:'Noviembre', 12:'Diciembre'}
+    asignacion_actual = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first()
+    if not asignacion_actual:
+        messages.error(request, "El chofer no tiene un vehículo asignado actualmente.")
+        return redirect('dashboard')    
+
+    vehiculo = Asignacion.objects.filter(chofer=chofer, esta_activo=True).first().vehiculo
+    rendimiento = vehiculo.rendimiento_km_litro
+
+    ultimo_dia_mes = calendar.monthrange(anio, mes)[1]
+    if periodo == 'quincena1':
+        dia_inicio, dia_fin = 1, 15
+    elif periodo == 'quincena2':
+        dia_inicio, dia_fin = 16, ultimo_dia_mes
+    else:
+        dia_inicio, dia_fin = 1, ultimo_dia_mes
+
+    fecha_inicio_reporte = date(anio, mes, dia_inicio)
+    bitacora_previa = Bitacora.objects.filter(
+        vehiculo=vehiculo, 
+        fecha__date__lt=fecha_inicio_reporte,
+        estado_viaje='finalizado'
+    ).order_by('-fecha', '-id').first()
+
+    saldo_acumulado = bitacora_previa.saldo_actual if bitacora_previa else vehiculo.combustible_inicial
+    km_acumulado = bitacora_previa.km_final if bitacora_previa else vehiculo.kilometraje_actual
+    
+    saldo_anterior_fijo = saldo_acumulado
+    km_inicial_fijo = km_acumulado
+
+    registros_finales = []
+    total_cargado_periodo = 0
+    total_utilizado_periodo = 0
+
+    for d in range(dia_inicio, dia_fin + 1):
+        fecha_dia = date(anio, mes, d)
+        viajes_dia = Bitacora.objects.filter(
+            chofer=chofer, 
+            fecha__date=fecha_dia, 
+            estado_viaje='finalizado'
+        ).order_by('id')
+
+        if viajes_dia.exists():
+            ingreso_dia = viajes_dia.aggregate(Sum('cantidad_litros'))['cantidad_litros__sum'] or 0
+            vale_dia = viajes_dia.exclude(nro_vale_combustible='S/N').first()
+            nro_vale = vale_dia.nro_vale_combustible if vale_dia else "--"
+            
+            km_salida_dia = viajes_dia.first().km_inicial
+            km_llegada_dia = viajes_dia.last().km_final
+            recorrido_dia = km_llegada_dia - km_salida_dia
+            objeto_viaje = viajes_dia.first().get_motivo_oficial()
+            responsable_dia = viajes_dia.first().responsable_viaje if viajes_dia.first().responsable_viaje else "--"
+        else:
+            ingreso_dia = 0
+            nro_vale = "--"
+            km_salida_dia = km_acumulado
+            km_llegada_dia = km_acumulado
+            recorrido_dia = 0
+            objeto_viaje = "APOYO LOCAL"
+            responsable_dia = "--"
+
+        utilizado_dia = Decimal(recorrido_dia) / rendimiento if rendimiento > 0 else 0
+        saldo_acumulado = saldo_acumulado + Decimal(ingreso_dia) - utilizado_dia
+        
+        km_acumulado = km_llegada_dia
+
+        registros_finales.append({
+            'fecha': fecha_dia,
+            'vale': nro_vale,
+            'ingreso': ingreso_dia,
+            'utilizado': round(utilizado_dia, 2),
+            'saldo': round(saldo_acumulado, 2),
+            'salida': km_salida_dia,
+            'llegada': km_llegada_dia,
+            'recorrido': recorrido_dia,
+            'objeto': objeto_viaje,
+            'responsable': responsable_dia
+        })
+        
+        total_cargado_periodo += ingreso_dia
+        total_utilizado_periodo += utilizado_dia
+
+    nombres_meses = {1:'ENERO', 2:'FEBRERO', 3:'MARZO', 4:'ABRIL', 5:'MAYO', 6:'JUNIO', 7:'JULIO', 8:'AGOSTO', 9:'SEPTIEMBRE', 10:'OCTUBRE', 11:'NOVIEMBRE', 12:'DICIEMBRE'}
 
     context = {
         'chofer': chofer,
-        'vehiculo': vehiculo_asig.vehiculo,
-        'registros': registros_procesados,
-        'mes': nombres_meses[mes],
+        'vehiculo': vehiculo,
+        'registros': registros_finales,
+        'mes_nombre': nombres_meses.get(mes),
         'anio': anio,
-        'periodo_nombre': titulo_periodo,
-        'saldo_anterior': saldo_anterior,
-        'km_inicial_mes': km_inicial_reporte,
-        'total_recorrido': total_recorrido,
-        'total_cargado': total_cargado,
-        'total_utilizado': total_utilizado,
-        'saldo_final': registros_procesados[-1]['saldo'] if registros_procesados else saldo_anterior,
+        'saldo_anterior': saldo_anterior_fijo,
+        'km_inicial_mes': km_inicial_fijo,
+        'total_recorrido': sum(r['recorrido'] for r in registros_finales),
+        'total_cargado': total_cargado_periodo,
+        'total_utilizado': round(total_utilizado_periodo, 2),
+        'saldo_final': round(saldo_acumulado, 2),
+        'nro_reporte': f"{int(nro_reporte):03d}",
+        'periodo': periodo
     }
-
-    if request.GET.get('tipo') == 'pdf':
-        from django.template.loader import get_template
-        from xhtml2pdf import pisa
-        template = get_template('reportes/planilla_pdf_solo.html')
-        html = template.render(context)
-        response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="Planilla_{chofer.last_name}_{nombres_meses.get(mes)}.pdf"'
-        pisa_status = pisa.CreatePDF(html, dest=response, pagesize='letter landscape')
-        return response
-
     return render(request, 'reportes/planilla_oficial.html', context)
 
 @login_required
 def reporte_diario_detalle(request, bitacora_id):
     if request.user.rol not in ['admin', 'superadmin']:
         return redirect('dashboard')
+        
     bitacora_ref = get_object_or_404(Bitacora, id=bitacora_id)
-
-    viajes_del_dia = Bitacora.objects.filter(
+    
+    fecha_local_completa = timezone.localtime(bitacora_ref.fecha)
+    fecha_sel = fecha_local_completa.date()
+    
+    nro_correlativo = Bitacora.objects.filter(
         chofer=bitacora_ref.chofer,
-        fecha__date=bitacora_ref.fecha.date(),
+        estado_viaje='finalizado',
+        fecha__date__lte=fecha_sel
+    ).annotate(
+        dia_bolivia=TruncDate('fecha', tzinfo=timezone.get_current_timezone())
+    ).values('dia_bolivia').distinct().count()
+
+    viajes = Bitacora.objects.annotate(
+        fecha_bolivia=TruncDate('fecha', tzinfo=timezone.get_current_timezone())
+    ).filter(
+        chofer=bitacora_ref.chofer,
+        fecha_bolivia=fecha_sel,
         estado_viaje='finalizado'
     ).order_by('hora_salida')
     
-    # 3. Calculamos el total de kilómetros del día
-    total_km_dia = sum((v.km_final - v.km_inicial) for v in viajes_del_dia)
-    
-    context = {
+    total_km = sum((v.km_final - v.km_inicial) for v in viajes)
+
+    return render(request, 'reportes/reporte_diario.html', {
         'bitacora': bitacora_ref,
-        'viajes': viajes_del_dia, # Pasamos la lista de bitácoras del día
-        'total_km_dia': total_km_dia,
-    }
-    
-    return render(request, 'reportes/reporte_diario.html', context)
+        'viajes': viajes,
+        'fecha_sel': fecha_sel,
+        'total_km': total_km,
+        'nro_correlativo': nro_correlativo 
+    })
 
 @login_required
 def cerrar_periodo_chofer(request, chofer_id, anio, mes):
@@ -1413,19 +1467,6 @@ def procesar_validacion(request, bitacora_id):
         bitacora.save()
         messages.success(request, f"Registro {bitacora.nro_vale_combustible} procesado exitosamente.")
     return redirect('validar_registros')
-
-@login_required
-def reporte_diario_detallado(request, bitacora_id):
-    bitacora = get_object_or_404(Bitacora, id=bitacora_id)
-    viajes = bitacora.viajes.all().order_by('hora_inicio')
-    
-    context = {
-        'bitacora': bitacora,
-        'viajes': viajes,
-        'chofer': bitacora.chofer,
-        'vehiculo': bitacora.vehiculo,
-    }
-    return render(request, 'admin_potosi/reporte_diario.html', context)
 
 @login_required
 def historial_diario_chofer(request, chofer_id):
